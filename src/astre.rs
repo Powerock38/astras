@@ -2,7 +2,7 @@ use crate::constants::COLORS;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use rand::{seq::SliceRandom, Rng};
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Astre {
     pub name: String,
     pub mass: f32,
@@ -22,7 +22,10 @@ pub fn spawn_astre(
     orbit_speed: f32,
     orbit_direction: bool,
     nb_children: u32,
+    z_value: u32,
 ) {
+    let gravity_range = mass + radius;
+
     let mut rng = rand::thread_rng();
 
     let color = COLORS.choose(&mut rng).unwrap();
@@ -30,7 +33,7 @@ pub fn spawn_astre(
 
     let mesh = shape::RegularPolygon::new(radius, 6);
 
-    let transform = Transform::from_translation(position.extend(0.));
+    let transform = Transform::from_translation(position.extend(z_value as f32));
 
     let astre = Astre {
         name: String::from("Astre"),
@@ -40,7 +43,7 @@ pub fn spawn_astre(
         orbit_direction,
     };
 
-    let mut orbit_distance = radius + mass;
+    let mut orbit_distance = gravity_range;
 
     c.spawn(MaterialMesh2dBundle {
         mesh: meshes.add(mesh.into()).into(),
@@ -51,7 +54,6 @@ pub fn spawn_astre(
     .insert(astre)
     .with_children(|c| {
         for i in 0..nb_children {
-
             let max_nb_children = (nb_children - 1).max(0);
 
             let child_nb_children = rand::thread_rng().gen_range(0..=max_nb_children);
@@ -82,6 +84,7 @@ pub fn spawn_astre(
                 child_orbit_speed,
                 child_orbit_direction,
                 child_nb_children,
+                z_value + 1,
             );
 
             orbit_distance += rand::thread_rng().gen_range((child_mass * 0.2)..=(child_mass * 1.5));

@@ -1,19 +1,21 @@
 use astre::*;
-use bevy::prelude::*;
+use bevy::{prelude::*, transform::TransformSystem};
 use rand::Rng;
 use ship::*;
 
 mod astre;
-mod ship;
 mod constants;
+mod ship;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_startup_system(setup_universe)
-        .add_system(update_astres)
-        .add_system(update_ship)
-        .add_system(update_camera)
+        .add_systems(Startup, setup_universe)
+        .add_systems(Update, (update_astres, update_ship, update_camera))
+        .add_systems(
+            PostUpdate,
+            update_ship_on_astre.after(TransformSystem::TransformPropagate),
+        )
         .run();
 }
 
@@ -53,6 +55,7 @@ fn spawn_solar_system(
                 0.,
                 true,
                 nb_children,
+                0,
             );
         })
         .with_children(|c| {
