@@ -31,7 +31,9 @@ pub fn spawn_astre(
     let color = COLORS.choose(&mut rng).unwrap();
     let material = ColorMaterial::from(color.clone());
 
-    let mesh = shape::RegularPolygon::new(radius, 6);
+    let nb_sides = rand::thread_rng().gen_range(4..=12);
+
+    let mesh = shape::RegularPolygon::new(radius, nb_sides);
 
     let transform = Transform::from_translation(position.extend(z_value as f32));
 
@@ -54,9 +56,7 @@ pub fn spawn_astre(
     .insert(astre)
     .with_children(|c| {
         for i in 0..nb_children {
-            let max_nb_children = (nb_children - 1).max(0);
-
-            let child_nb_children = rand::thread_rng().gen_range(0..=max_nb_children);
+            let child_nb_children = rand::thread_rng().gen_range(0..=(0.1 * nb_children as f32) as u32);
 
             let child_angle = (i as f32 / nb_children as f32) * 2. * std::f32::consts::PI;
 

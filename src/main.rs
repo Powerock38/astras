@@ -38,7 +38,7 @@ fn spawn_solar_system(
     let radius = rand::thread_rng().gen_range((300.)..1000.);
     let mass = rand::thread_rng().gen_range((100.)..3000.);
     let position = Vec2::new(0., 0.);
-    let nb_children = rand::thread_rng().gen_range(3..=10);
+    let nb_children = rand::thread_rng().gen_range(3..=20);
 
     commands
         .spawn(SpatialBundle::default())
