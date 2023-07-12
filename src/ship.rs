@@ -3,7 +3,7 @@ use bevy::{
     sprite::MaterialMesh2dBundle,
 };
 
-use crate::{astre::Astre, SolarSystem};
+use crate::{astre::Astre, utils::ToReparent, SolarSystem};
 
 #[derive(Component)]
 pub struct Ship {
@@ -64,12 +64,12 @@ pub fn update_ship(
 
 pub fn update_ship_on_astre(
     mut commands: Commands,
-    mut q_ship: Query<(Entity, &mut Transform, &GlobalTransform), With<Ship>>,
+    mut q_ship: Query<(Entity, &GlobalTransform), With<Ship>>,
     mut q_astre: Query<(Entity, &mut Astre, &Transform, &GlobalTransform), Without<Ship>>,
-    q_solar_system: Query<(Entity, &GlobalTransform), With<SolarSystem>>,
+    q_solar_system: Query<Entity, With<SolarSystem>>,
 ) {
-    for (entity_ship, mut ship_transform, ship_global_transform) in q_ship.iter_mut() {
-        let mut on_astre_option: Option<(Entity, &GlobalTransform, f32)> = None;
+    for (entity_ship, ship_global_transform) in q_ship.iter_mut() {
+        let mut on_astre_option: Option<(Entity, f32)> = None;
 
         for (entity_astre, astre, astre_transform, astre_global_transform) in q_astre.iter_mut() {
             let distance = ship_global_transform.translation().truncate()
@@ -77,31 +77,27 @@ pub fn update_ship_on_astre(
             let distance = distance.length();
 
             if distance < astre.radius + astre.mass {
-                if let Some((_, _, z)) = on_astre_option {
+                if let Some((_, z)) = on_astre_option {
                     if z <= astre_transform.translation.z {
                         continue; // Already on a closer astre
                     }
                 }
 
-                on_astre_option = Some((
-                    entity_astre,
-                    astre_global_transform,
-                    astre_transform.translation.z,
-                ));
+                on_astre_option = Some((entity_astre, astre_transform.translation.z));
             }
         }
 
-        if let Some((entity_astre, astre_global_transform, _)) = on_astre_option {
+        if let Some((entity_astre, _)) = on_astre_option {
             // In gravity field, ship stays in referential of astre
-            *ship_transform = ship_global_transform.reparented_to(astre_global_transform);
-            commands.entity(entity_ship).set_parent(entity_astre);
+            commands.entity(entity_ship).insert(ToReparent {
+                new_parent: entity_astre,
+            });
         } else {
             // Not in gravity field, ship stays in referential of solar system
-            for (entity_solar_system, solar_system_global_transform) in q_solar_system.iter() {
-                *ship_transform =
-                    ship_global_transform.reparented_to(solar_system_global_transform);
-                commands.entity(entity_ship).set_parent(entity_solar_system);
-            }
+            let entity_solar_system = q_solar_system.single();
+            commands.entity(entity_ship).insert(ToReparent {
+                new_parent: entity_solar_system,
+            });
         }
     }
 }

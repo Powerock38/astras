@@ -1,17 +1,30 @@
 use astre::*;
 use bevy::{prelude::*, transform::TransformSystem};
+use marker::*;
 use rand::Rng;
 use ship::*;
+use utils::reparent_system;
 
 mod astre;
 mod constants;
+mod marker;
 mod ship;
+mod utils;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup_universe)
-        .add_systems(Update, (update_astres, update_ship, update_camera))
+        .add_systems(
+            Update,
+            (
+                update_astres,
+                update_ship,
+                update_camera,
+                update_marker,
+                reparent_system,
+            ),
+        )
         .add_systems(
             PostUpdate,
             update_ship_on_astre.after(TransformSystem::TransformPropagate),
