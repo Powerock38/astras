@@ -27,7 +27,14 @@ pub fn spawn_worm(
     let color = COLORS.choose(&mut rand::thread_rng()).unwrap();
     let material = ColorMaterial::from(color.clone());
 
-    let mesh = shape::Box::new(2. * size, size, 0.);
+    let head_x_length = 4. * size;
+    let head_y_length = 2. * size;
+
+    let segment_x_length = 2. * size;
+    let segment_y_length = size;
+
+    let mesh_head = shape::Box::new(head_x_length, head_y_length, 0.);
+    let mesh_segments = shape::Box::new(segment_x_length, segment_y_length, 0.);
 
     let transform = Transform::from_translation(position.extend(0.))
         .with_rotation(Quat::from_rotation_z(PI / 2.));
@@ -41,7 +48,7 @@ pub fn spawn_worm(
     };
 
     c.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(mesh.into()).into(),
+        mesh: meshes.add(mesh_head.into()).into(),
         material: materials.add(material.clone()),
         transform,
         ..default()
@@ -49,7 +56,7 @@ pub fn spawn_worm(
     .insert(worm)
     .with_children(|c| {
         for n_segment in 1..length {
-            let child_position = Vec2::new(-2. * size * n_segment as f32, 0.);
+            let child_position = Vec2::new(-segment_x_length * n_segment as f32 - (head_y_length as f32 * 0.5), 0.);
 
             let color = COLORS.choose(&mut rand::thread_rng()).unwrap();
             let material = ColorMaterial::from(color.clone());
@@ -57,7 +64,7 @@ pub fn spawn_worm(
             let transform = Transform::from_translation(child_position.extend(0.));
 
             c.spawn(MaterialMesh2dBundle {
-                mesh: meshes.add(mesh.into()).into(),
+                mesh: meshes.add(mesh_segments.into()).into(),
                 material: materials.add(material.clone()),
                 transform,
                 ..default()
@@ -73,7 +80,7 @@ pub fn update_worms(
 ) {
     for (mut worm, mut transform, segments) in query.iter_mut() {
         if worm.change_direction_cooldown.tick(time.delta()).finished() {
-            let clamped_angle = PI / 16.;
+            let clamped_angle = PI / 128.;
             let add_angle = rand::thread_rng().gen_range(0.0..=clamped_angle) - clamped_angle;
 
             transform.rotate(Quat::from_rotation_z(add_angle));
@@ -99,7 +106,11 @@ pub fn update_worms(
 
             let x = (i as f32) / (worm.length as f32);
 
-            segment_transform.translation.y = (PI * x + time_factor).sin() * 100.;
+            segment_transform.translation.y = ((2. * PI * x + time_factor).sin()) * ((i + 1) as f32) * 10.;
+
+            let scale_factor = 1. + ((2. * PI * x + time_factor).sin()) * 0.2;
+
+            segment_transform.scale = Vec3::new(1., scale_factor, 1.);
         }
     }
 }

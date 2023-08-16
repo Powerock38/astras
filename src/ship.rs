@@ -34,6 +34,10 @@ pub fn setup_ship(
                 clear_color: ClearColorConfig::Custom(Color::BLACK),
             },
             transform: Transform::from_translation(Vec3::new(0., 0., 100.)),
+            projection: OrthographicProjection {
+                scale: 5.,
+                ..default()
+            },
             ..default()
         });
     });
@@ -47,16 +51,16 @@ pub fn update_ship(
     for (ship, mut transform) in query.iter_mut() {
         let mut movement = Vec3::new(0., 0., 0.);
 
-        if keyboard_input.pressed(KeyCode::Left) {
+        if keyboard_input.any_pressed(vec![KeyCode::Left, KeyCode::Q]) {
             movement.x -= 1.;
         }
-        if keyboard_input.pressed(KeyCode::Right) {
+        if keyboard_input.any_pressed(vec![KeyCode::Right, KeyCode::D]) {
             movement.x += 1.;
         }
-        if keyboard_input.pressed(KeyCode::Up) {
+        if keyboard_input.any_pressed(vec![KeyCode::Up, KeyCode::Z]) {
             movement.y += 1.;
         }
-        if keyboard_input.pressed(KeyCode::Down) {
+        if keyboard_input.any_pressed(vec![KeyCode::Down, KeyCode::S]) {
             movement.y -= 1.;
         }
 
