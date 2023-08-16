@@ -8,6 +8,7 @@ use crate::{astre::Astre, utils::ToReparent, SolarSystem};
 #[derive(Component)]
 pub struct Ship {
     speed: f32,
+    on_astre: Option<Entity>,
 }
 
 pub fn setup_ship(
@@ -25,6 +26,7 @@ pub fn setup_ship(
     })
     .insert(Ship {
         speed: 3000., // pixels per second
+        on_astre: None,
     })
     .with_children(|c| {
         c.spawn(Camera2dBundle {
@@ -64,11 +66,11 @@ pub fn update_ship(
 
 pub fn update_ship_on_astre(
     mut commands: Commands,
-    mut q_ship: Query<(Entity, &GlobalTransform), With<Ship>>,
+    mut q_ship: Query<(&mut Ship, Entity, &GlobalTransform)>,
     mut q_astre: Query<(Entity, &mut Astre, &Transform, &GlobalTransform), Without<Ship>>,
     q_solar_system: Query<Entity, With<SolarSystem>>,
 ) {
-    for (entity_ship, ship_global_transform) in q_ship.iter_mut() {
+    for (mut ship, entity_ship, ship_global_transform) in q_ship.iter_mut() {
         let mut on_astre_option: Option<(Entity, f32)> = None;
 
         for (entity_astre, astre, astre_transform, astre_global_transform) in q_astre.iter_mut() {
@@ -88,16 +90,26 @@ pub fn update_ship_on_astre(
         }
 
         if let Some((entity_astre, _)) = on_astre_option {
+            if let Some(entity_on_astre) = ship.on_astre {
+                if entity_on_astre == entity_astre {
+                    continue;
+                }
+            }
+
             // In gravity field, ship stays in referential of astre
             commands.entity(entity_ship).insert(ToReparent {
                 new_parent: entity_astre,
             });
-        } else {
+
+            ship.on_astre = Some(entity_astre.clone());
+        } else if ship.on_astre.is_some() {
             // Not in gravity field, ship stays in referential of solar system
             let entity_solar_system = q_solar_system.single();
             commands.entity(entity_ship).insert(ToReparent {
                 new_parent: entity_solar_system,
             });
+
+            ship.on_astre = None;
         }
     }
 }
