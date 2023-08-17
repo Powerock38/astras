@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use rand::prelude::*;
 
-use crate::constants::COLORS;
+use crate::{constants::COLORS, dockable_on_astre::DockableOnAstre};
 
 #[derive(Component, Debug)]
 pub struct Worm {
@@ -53,10 +53,13 @@ pub fn spawn_worm(
         transform,
         ..default()
     })
-    .insert(worm)
+    .insert((worm, DockableOnAstre::default()))
     .with_children(|c| {
         for n_segment in 1..length {
-            let child_position = Vec2::new(-segment_x_length * n_segment as f32 - (head_y_length as f32 * 0.5), 0.);
+            let child_position = Vec2::new(
+                -segment_x_length * n_segment as f32 - (head_y_length as f32 * 0.5),
+                0.,
+            );
 
             let color = COLORS.choose(&mut rand::thread_rng()).unwrap();
             let material = ColorMaterial::from(color.clone());
@@ -106,7 +109,8 @@ pub fn update_worms(
 
             let x = (i as f32) / (worm.length as f32);
 
-            segment_transform.translation.y = ((2. * PI * x + time_factor).sin()) * ((i + 1) as f32) * 10.;
+            segment_transform.translation.y =
+                ((2. * PI * x + time_factor).sin()) * ((i + 1) as f32) * 10.;
 
             let scale_factor = 1. + ((2. * PI * x + time_factor).sin()) * 0.2;
 

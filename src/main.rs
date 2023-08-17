@@ -1,5 +1,6 @@
 use astre::*;
 use bevy::{prelude::*, transform::TransformSystem};
+use dockable_on_astre::*;
 use marker::*;
 use rand::Rng;
 use ship::*;
@@ -8,6 +9,7 @@ use worm::*;
 
 mod astre;
 mod constants;
+mod dockable_on_astre;
 mod marker;
 mod ship;
 mod utils;
@@ -30,7 +32,7 @@ fn main() {
         )
         .add_systems(
             PostUpdate,
-            update_ship_on_astre.after(TransformSystem::TransformPropagate),
+            update_dockable_on_astre.after(TransformSystem::TransformPropagate),
         )
         .run();
 }

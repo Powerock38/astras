@@ -18,7 +18,7 @@ pub fn reparent_system(
                 .remove::<ToReparent>()
                 .set_parent(to_reparent.new_parent);
 
-            eprintln!("Reparented {:?} to {:?}", entity, to_reparent.new_parent);
+            // eprintln!("Reparented {:?} to {:?}", entity, to_reparent.new_parent);
         }
     }
 }
