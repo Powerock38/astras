@@ -1,4 +1,4 @@
-use crate::constants::COLORS;
+use crate::{constants::COLORS, utils::PlanetMaterial};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use rand::{seq::SliceRandom, Rng};
 
@@ -14,7 +14,7 @@ pub struct Astre {
 pub fn spawn_astre(
     c: &mut ChildBuilder,
     meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
+    materials: &mut ResMut<Assets<PlanetMaterial>>,
     angle: f32,
     radius: f32,
     mass: f32,
@@ -29,7 +29,10 @@ pub fn spawn_astre(
     let mut rng = rand::thread_rng();
 
     let color = COLORS.choose(&mut rng).unwrap();
-    let material = ColorMaterial::from(color.clone());
+    //let material = ColorMaterial::from(color.clone());
+    let material = PlanetMaterial {
+        color: color.clone(),
+    };
 
     let nb_sides = rand::thread_rng().gen_range(4..=12);
 

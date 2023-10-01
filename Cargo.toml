@@ -9,8 +9,7 @@ path = "src/lib.rs"
 crate-type = ["rlib", "dylib"]
 
 [dependencies]
-dexterous_developer = "0.0.4"
+dexterous_developer = "0.0.11"
 serde = "1"
 bevy = "0.11.2"
-bevy_prototype_lyon = "0.9.0"
 rand = "0.8.5"

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{astre::spawn_astre, ship::setup_ship, worm::spawn_worm};
+use crate::{astre::spawn_astre, ship::setup_ship, worm::spawn_worm, utils::PlanetMaterial};
 
 #[derive(Component)]
 pub struct SolarSystem;
@@ -9,9 +9,10 @@ pub struct SolarSystem;
 pub fn spawn_solar_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut perlin_materials: ResMut<Assets<PlanetMaterial>>,
+    mut color_materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let radius = rand::thread_rng().gen_range((300.)..1000.);
+    let radius = rand::thread_rng().gen_range((1000.)..2000.);
     let mass = rand::thread_rng().gen_range((100.)..3000.);
     let position = Vec2::new(0., 0.);
     let nb_children = rand::thread_rng().gen_range(3..=20);
@@ -23,7 +24,7 @@ pub fn spawn_solar_system(
             spawn_astre(
                 &mut c,
                 &mut meshes,
-                &mut materials,
+                &mut perlin_materials,
                 0.,
                 radius,
                 mass,
@@ -52,7 +53,7 @@ pub fn spawn_solar_system(
                 spawn_worm(
                     c,
                     &mut meshes,
-                    &mut materials,
+                    &mut color_materials,
                     position,
                     size,
                     speed,
@@ -62,6 +63,6 @@ pub fn spawn_solar_system(
             }
         })
         .with_children(|c| {
-            setup_ship(c, meshes, materials);
+            setup_ship(c, meshes, color_materials);
         });
 }
