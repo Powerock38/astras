@@ -2,6 +2,9 @@
 
 struct PlanetMaterial {
     color: vec4<f32>,
+    seed: f32,
+    scale: f32,
+    u: f32,
 };
 
 @group(1) @binding(0) var<uniform> material: PlanetMaterial;
@@ -35,9 +38,19 @@ fn voroNoise2(x: vec2f, u: f32, v: f32) -> f32 {
 
 @fragment
 fn fragment(
-    mesh: MeshVertexOutput,
+    in: MeshVertexOutput,
 ) -> @location(0) vec4<f32> {
-    let noise = voroNoise2(mesh.uv * 10.0, 1.0, 0.0);
+    let noise = voroNoise2((in.uv + material.seed) * material.scale, material.u, 0.0);
+    var color = material.color.xyz * max(0.1, noise * 0.5);
 
-    return material.color * noise;
+    // Calculate the glow factor based on the brightness of the noise
+    let glowThreshold = 0.7;
+    let glowFactor = max(0.0, (noise - glowThreshold) / (1.0 - glowThreshold));
+
+    let glowColor = material.color.xyz * 10.0;
+
+    // Add the glow effect
+    color += glowColor * glowFactor;
+
+    return vec4f(color, 1.0);
 }

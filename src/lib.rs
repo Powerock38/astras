@@ -1,5 +1,10 @@
+use std::time::Duration;
+
 use astre::*;
-use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
+use background::*;
+use bevy::{
+    asset::ChangeWatcher, prelude::*, sprite::Material2dPlugin, transform::TransformSystem,
+};
 use dexterous_developer::{
     dexterous_developer_setup, hot_bevy_main, InitialPlugins, ReloadableApp, ReloadableAppContents,
     ReloadableElementsSetup,
@@ -8,10 +13,11 @@ use dockable_on_astre::*;
 use marker::*;
 use ship::*;
 use solar_system::*;
-use utils::{reparent_system, PlanetMaterial};
+use utils::reparent_system;
 use worm::*;
 
 mod astre;
+mod background;
 mod constants;
 mod dockable_on_astre;
 mod marker;
@@ -50,18 +56,18 @@ fn reloadable(app: &mut ReloadableAppContents) {
 #[hot_bevy_main]
 fn bevy_main(initial_plugins: impl InitialPlugins) {
     App::new()
-        .add_plugins(initial_plugins.initialize::<DefaultPlugins>())
-        .add_plugins(Material2dPlugin::<PlanetMaterial>::default())
-        .add_systems(Startup, setup_universe)
+        .add_plugins(
+            initial_plugins
+                .initialize::<DefaultPlugins>()
+                .set(AssetPlugin {
+                    watch_for_changes: Some(ChangeWatcher {
+                        delay: Duration::from_secs(1),
+                    }),
+                    ..Default::default()
+                }),
+        )
+        .add_plugins((Material2dPlugin::<PlanetMaterial>::default(), Material2dPlugin::<BackgroundMaterial>::default()))
+        .add_systems(Startup, spawn_solar_system)
         .add_plugins(AstrasPlugin)
         .run();
-}
-
-fn setup_universe(
-    commands: Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    color_materials: ResMut<Assets<ColorMaterial>>,
-    perlin_materials: ResMut<Assets<PlanetMaterial>>,
-) {
-    spawn_solar_system(commands, meshes, perlin_materials, color_materials)
 }

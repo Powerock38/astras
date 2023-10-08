@@ -3,6 +3,7 @@ use bevy::{
     sprite::MaterialMesh2dBundle,
 };
 
+use crate::background::*;
 use crate::dockable_on_astre::DockableOnAstre;
 
 #[derive(Component)]
@@ -14,6 +15,7 @@ pub fn setup_ship(
     c: &mut ChildBuilder,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    background_materials: ResMut<Assets<BackgroundMaterial>>,
 ) {
     let position = Vec2::new(0., 0.);
 
@@ -41,6 +43,8 @@ pub fn setup_ship(
             },
             ..default()
         });
+
+        spawn_background(c, meshes, background_materials);
     });
 }
 
@@ -73,10 +77,19 @@ pub fn update_camera(
     time: Res<Time>,
     mut scroll_evr: EventReader<MouseWheel>,
     mut query: Query<&mut OrthographicProjection, With<Camera>>,
+    mut background_query: Query<&mut Transform, With<Background>>,
+    window: Query<&Window>,
 ) {
+    let window = window.single();
+
     for scroll in scroll_evr.iter() {
         for mut projection in query.iter_mut() {
             projection.scale *= 1. + 2. * scroll.y * time.delta_seconds();
+
+            for mut transform in background_query.iter_mut() {
+                transform.scale =
+                    Vec3::new(window.width(), window.height(), 0.0) * projection.scale;
+            }
         }
     }
 }

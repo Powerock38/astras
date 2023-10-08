@@ -1,9 +1,4 @@
-use bevy::{
-    prelude::*,
-    reflect::{TypePath, TypeUuid},
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
-};
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct ToReparent {
@@ -25,18 +20,5 @@ pub fn reparent_system(
 
             // eprintln!("Reparented {:?} to {:?}", entity, to_reparent.new_parent);
         }
-    }
-}
-
-#[derive(AsBindGroup, TypeUuid, TypePath, Debug, Clone)]
-#[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
-pub struct PlanetMaterial {
-    #[uniform(0)]
-    pub color: Color,
-}
-
-impl Material2d for PlanetMaterial {
-    fn fragment_shader() -> ShaderRef {
-        "shaders/planet.wgsl".into()
     }
 }

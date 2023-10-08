@@ -1,5 +1,10 @@
-use crate::{constants::COLORS, utils::PlanetMaterial};
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use crate::constants::COLORS;
+use bevy::{
+    prelude::*,
+    reflect::{TypePath, TypeUuid},
+    render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::{Material2d, MaterialMesh2dBundle},
+};
 use rand::{seq::SliceRandom, Rng};
 
 #[derive(Component, Debug)]
@@ -9,6 +14,25 @@ pub struct Astre {
     pub radius: f32,
     pub orbit_speed: f32,
     pub orbit_direction: bool,
+}
+
+#[derive(AsBindGroup, TypeUuid, TypePath, Debug, Clone)]
+#[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
+pub struct PlanetMaterial {
+    #[uniform(0)]
+    pub color: Color,
+    #[uniform(0)]
+    pub seed: f32,
+    #[uniform(0)]
+    pub scale: f32,
+    #[uniform(0)]
+    pub u: f32,
+}
+
+impl Material2d for PlanetMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/planet.wgsl".into()
+    }
 }
 
 pub fn spawn_astre(
@@ -29,14 +53,22 @@ pub fn spawn_astre(
     let mut rng = rand::thread_rng();
 
     let color = COLORS.choose(&mut rng).unwrap();
-    //let material = ColorMaterial::from(color.clone());
+
+    let u = 1. - (rng.gen::<f32>() - 1.).powf(4.);
+
     let material = PlanetMaterial {
         color: color.clone(),
+        seed: rng.gen::<f32>() * 1000.,
+        scale: rng.gen_range(1.0..10.0),
+        u,
     };
 
-    let nb_sides = rand::thread_rng().gen_range(4..=12);
-
-    let mesh = shape::RegularPolygon::new(radius, nb_sides);
+    //let nb_sides = rand::thread_rng().gen_range(4..=12);
+    //let mesh = shape::RegularPolygon::new(radius, nb_sides);
+    let mesh = shape::Circle {
+        radius,
+        ..Default::default()
+    };
 
     let transform = Transform::from_translation(position.extend(z_value as f32));
 
@@ -59,7 +91,8 @@ pub fn spawn_astre(
     .insert(astre)
     .with_children(|c| {
         for i in 0..nb_children {
-            let child_nb_children = rand::thread_rng().gen_range(0..=(0.1 * nb_children as f32) as u32);
+            let child_nb_children =
+                rand::thread_rng().gen_range(0..=(0.1 * nb_children as f32) as u32);
 
             let child_angle = (i as f32 / nb_children as f32) * 2. * std::f32::consts::PI;
 
