@@ -20,13 +20,19 @@ pub struct Astre {
 #[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
 pub struct PlanetMaterial {
     #[uniform(0)]
-    pub color: Color,
+    pub planet_color: Color,
     #[uniform(0)]
     pub seed: f32,
     #[uniform(0)]
-    pub scale: f32,
+    pub noise_scale: f32,
     #[uniform(0)]
     pub u: f32,
+    #[uniform(0)]
+    pub atmosphere_scale: f32,
+    #[uniform(0)]
+    pub atmosphere_density: f32,
+    #[uniform(0)]
+    pub atmosphere_color: Color,
 }
 
 impl Material2d for PlanetMaterial {
@@ -52,15 +58,19 @@ pub fn spawn_astre(
 
     let mut rng = rand::thread_rng();
 
-    let color = COLORS.choose(&mut rng).unwrap();
+    let planet_color = COLORS.choose(&mut rng).unwrap();
+    let atmosphere_color = COLORS.choose(&mut rng).unwrap();
 
     let u = 1. - (rng.gen::<f32>() - 1.).powf(4.);
 
     let material = PlanetMaterial {
-        color: color.clone(),
+        planet_color: planet_color.clone(),
         seed: rng.gen::<f32>() * 1000.,
-        scale: rng.gen_range(1.0..10.0),
+        noise_scale: rng.gen_range(1.0..10.0),
         u,
+        atmosphere_scale: rng.gen_range(0.01..0.2),
+        atmosphere_density: rng.gen_range(0.01..0.5),
+        atmosphere_color: atmosphere_color.clone(),
     };
 
     //let nb_sides = rand::thread_rng().gen_range(4..=12);
