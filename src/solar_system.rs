@@ -12,6 +12,7 @@ pub fn spawn_solar_system(
     mut color_materials: ResMut<Assets<ColorMaterial>>,
     mut planet_materials: ResMut<Assets<PlanetMaterial>>,
     background_materials: ResMut<Assets<BackgroundMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     let radius = rand::thread_rng().gen_range((1000.)..2000.);
     let mass = rand::thread_rng().gen_range((100.)..3000.);
@@ -64,6 +65,6 @@ pub fn spawn_solar_system(
             }
         })
         .with_children(|c| {
-            setup_ship(c, meshes, color_materials,  background_materials);
+            setup_ship(c, meshes, asset_server,  background_materials);
         });
 }

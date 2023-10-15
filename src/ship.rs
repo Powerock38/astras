@@ -1,7 +1,4 @@
-use bevy::{
-    core_pipeline::clear_color::ClearColorConfig, input::mouse::MouseWheel, prelude::*,
-    sprite::MaterialMesh2dBundle,
-};
+use bevy::{core_pipeline::clear_color::ClearColorConfig, input::mouse::MouseWheel, prelude::*};
 
 use crate::background::*;
 use crate::dockable_on_astre::DockableOnAstre;
@@ -11,31 +8,45 @@ const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
 #[derive(Component)]
 pub struct Ship {
     speed: Vec2,
+    max_speed: f32,
     thrust: f32,
 }
 
+#[derive(Component)]
+pub struct ShipSprite;
+
 pub fn setup_ship(
     c: &mut ChildBuilder,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    meshes: ResMut<Assets<Mesh>>,
+    asset_server: Res<AssetServer>,
     background_materials: ResMut<Assets<BackgroundMaterial>>,
 ) {
     let position = Vec2::new(0., 0.);
 
-    c.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(shape::RegularPolygon::new(50., 3).into()).into(), // Triangle
-        material: materials.add(ColorMaterial::from(Color::GOLD)),
-        transform: Transform::from_translation(position.extend(1.)),
-        ..default()
-    })
-    .insert((
+    // Ship is just a SpatialBundle
+    c.spawn((
         Ship {
             speed: Vec2::new(0., 0.),
+            max_speed: 50.,
             thrust: 3000.,
         },
         DockableOnAstre::default(),
+        SpatialBundle {
+            transform: Transform::from_translation(position.extend(1.)),
+            ..default()
+        },
     ))
     .with_children(|c| {
+        // Ship sprite as a child of ship, so we can rotate the sprite without rotating camera
+        c.spawn((
+            ShipSprite,
+            SpriteBundle {
+                texture: asset_server.load("sprites/ship-simple-downscale.png"),
+                ..default()
+            },
+        ));
+
+        // Camera as a child of ship, so it follows the ship
         c.spawn(Camera2dBundle {
             camera_2d: Camera2d {
                 clear_color: ClearColorConfig::Custom(Color::BLACK),
@@ -48,6 +59,7 @@ pub fn setup_ship(
             ..default()
         });
 
+        // same for background
         spawn_background(c, meshes, background_materials);
     });
 }
@@ -55,10 +67,15 @@ pub fn setup_ship(
 pub fn update_ship(
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Ship, &mut Transform)>,
+    mut q_ship: Query<(&mut Ship, &mut Transform), Without<ShipSprite>>,
+    mut q_ship_sprite: Query<&mut Transform, With<ShipSprite>>,
 ) {
-    for (mut ship, mut transform) in query.iter_mut() {
+    for (mut ship, mut transform) in q_ship.iter_mut() {
         let mut movement = Vec2::new(0., 0.);
+
+        if keyboard_input.pressed(KeyCode::Space) {
+            ship.speed *= 0.9;
+        }
 
         if keyboard_input.any_pressed(vec![KeyCode::Left, KeyCode::Q]) {
             movement.x -= 1.;
@@ -75,9 +92,15 @@ pub fn update_ship(
 
         let acceleration = movement * ship.thrust;
 
-        ship.speed += acceleration * time.delta_seconds();
+        let max_speed = ship.max_speed;
+
+        ship.speed += (acceleration * time.delta_seconds()).clamp_length_max(max_speed);
 
         transform.translation += (ship.speed * time.delta_seconds()).extend(0.);
+
+        for mut sprite_transform in q_ship_sprite.iter_mut() {
+            sprite_transform.rotation = Quat::from_rotation_z(-ship.speed.angle_between(Vec2::Y));
+        }
     }
 }
 
