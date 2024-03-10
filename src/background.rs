@@ -1,10 +1,7 @@
 use bevy::reflect::TypePath;
 use bevy::render::render_resource::AsBindGroup;
 use bevy::render::render_resource::ShaderRef;
-use bevy::{
-    reflect::TypeUuid,
-    sprite::{Material2d, MaterialMesh2dBundle},
-};
+use bevy::sprite::{Material2d, MaterialMesh2dBundle};
 use rand::Rng;
 
 use bevy::prelude::*;
@@ -12,8 +9,7 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct Background;
 
-#[derive(AsBindGroup, TypeUuid, TypePath, Debug, Clone)]
-#[uuid = "d1776d38-712a-11ec-90d6-0242ac120003"]
+#[derive(Asset, AsBindGroup, TypePath, Debug, Clone)]
 pub struct BackgroundMaterial {
     #[uniform(0)]
     pub seed: f32,
@@ -33,7 +29,7 @@ pub fn spawn_background(
     c.spawn((
         Background,
         MaterialMesh2dBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad::default())).into(),
+            mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
             transform: Transform {
                 translation: Vec3::new(0.0, 0.0, -100.0),
                 ..default()

@@ -1,4 +1,4 @@
-use bevy::{core_pipeline::clear_color::ClearColorConfig, input::mouse::MouseWheel, prelude::*};
+use bevy::{input::mouse::MouseWheel, prelude::*};
 
 use crate::background::*;
 use crate::dockable_on_astre::DockableOnAstre;
@@ -48,9 +48,6 @@ pub fn setup_ship(
 
         // Camera as a child of ship, so it follows the ship
         c.spawn(Camera2dBundle {
-            camera_2d: Camera2d {
-                clear_color: ClearColorConfig::Custom(Color::BLACK),
-            },
             transform: Transform::from_translation(Vec3::new(0., 0., 100.)),
             projection: OrthographicProjection {
                 scale: 5.,
@@ -66,7 +63,7 @@ pub fn setup_ship(
 
 pub fn update_ship(
     time: Res<Time>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut q_ship: Query<(&mut Ship, &mut Transform), Without<ShipSprite>>,
     mut q_ship_sprite: Query<&mut Transform, With<ShipSprite>>,
 ) {
@@ -77,16 +74,16 @@ pub fn update_ship(
             ship.speed *= 0.9;
         }
 
-        if keyboard_input.any_pressed(vec![KeyCode::Left, KeyCode::Q]) {
+        if keyboard_input.any_pressed(vec![KeyCode::ArrowLeft, KeyCode::KeyQ]) {
             movement.x -= 1.;
         }
-        if keyboard_input.any_pressed(vec![KeyCode::Right, KeyCode::D]) {
+        if keyboard_input.any_pressed(vec![KeyCode::ArrowRight, KeyCode::KeyD]) {
             movement.x += 1.;
         }
-        if keyboard_input.any_pressed(vec![KeyCode::Up, KeyCode::Z]) {
+        if keyboard_input.any_pressed(vec![KeyCode::ArrowUp, KeyCode::KeyZ]) {
             movement.y += 1.;
         }
-        if keyboard_input.any_pressed(vec![KeyCode::Down, KeyCode::S]) {
+        if keyboard_input.any_pressed(vec![KeyCode::ArrowDown, KeyCode::KeyS]) {
             movement.y -= 1.;
         }
 
@@ -116,7 +113,7 @@ pub fn update_camera(
 
     let mut projection = query.single_mut();
 
-    for scroll in scroll_evr.iter() {
+    for scroll in scroll_evr.read() {
         projection.scale *= 1. + 2. * scroll.y * time.delta_seconds();
     }
 

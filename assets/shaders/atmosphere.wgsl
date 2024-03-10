@@ -1,4 +1,4 @@
-#import bevy_sprite::mesh2d_view_bindings   globals
+#import bevy_sprite::mesh2d_view_bindings::globals
 
 const SPEED: f32 = 0.5;
 

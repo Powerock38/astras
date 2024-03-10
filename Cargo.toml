@@ -3,13 +3,12 @@ name = "astras"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-name = "lib_astras"
-path = "src/lib.rs"
-crate-type = ["rlib", "dylib"]
-
 [dependencies]
-dexterous_developer = "0.0.11"
-serde = "1"
-bevy = "0.11.2"
+bevy = "0.13.0"
 rand = "0.8.5"
+
+[features]
+dev = [
+  "bevy/dynamic_linking",
+  "bevy/file_watcher",
+]

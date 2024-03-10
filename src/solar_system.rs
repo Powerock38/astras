@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{astre::spawn_astre, ship::setup_ship, worm::spawn_worm, astre::PlanetMaterial, background::BackgroundMaterial};
+use crate::{
+    astre::spawn_astre, astre::PlanetMaterial, background::BackgroundMaterial, ship::setup_ship,
+    worm::spawn_worm,
+};
 
 #[derive(Component)]
 pub struct SolarSystem;
@@ -65,6 +68,6 @@ pub fn spawn_solar_system(
             }
         })
         .with_children(|c| {
-            setup_ship(c, meshes, asset_server,  background_materials);
+            setup_ship(c, meshes, asset_server, background_materials);
         });
 }

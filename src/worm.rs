@@ -33,8 +33,8 @@ pub fn spawn_worm(
     let segment_x_length = 2. * size;
     let segment_y_length = size;
 
-    let mesh_head = shape::Box::new(head_x_length, head_y_length, 0.);
-    let mesh_segments = shape::Box::new(segment_x_length, segment_y_length, 0.);
+    let mesh_head = Cuboid::new(head_x_length, head_y_length, 0.);
+    let mesh_segments = Cuboid::new(segment_x_length, segment_y_length, 0.);
 
     let transform = Transform::from_translation(position.extend(0.))
         .with_rotation(Quat::from_rotation_z(PI / 2.));
@@ -48,7 +48,7 @@ pub fn spawn_worm(
     };
 
     c.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(mesh_head.into()).into(),
+        mesh: meshes.add(mesh_head).into(),
         material: materials.add(material.clone()),
         transform,
         ..default()
@@ -67,7 +67,7 @@ pub fn spawn_worm(
             let transform = Transform::from_translation(child_position.extend(0.));
 
             c.spawn(MaterialMesh2dBundle {
-                mesh: meshes.add(mesh_segments.into()).into(),
+                mesh: meshes.add(mesh_segments).into(),
                 material: materials.add(material.clone()),
                 transform,
                 ..default()

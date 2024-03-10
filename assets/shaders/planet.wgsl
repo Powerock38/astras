@@ -1,7 +1,5 @@
-#import bevy_pbr::mesh_vertex_output MeshVertexOutput
-#import bevy_sprite::mesh2d_view_bindings   globals
-
-#import "shaders/atmosphere.wgsl" atmosphere
+#import bevy_pbr::forward_io::VertexOutput
+#import "shaders/atmosphere.wgsl"::atmosphere
 
 struct PlanetMaterial {
     color: vec4<f32>,
@@ -13,11 +11,11 @@ struct PlanetMaterial {
     atmosphere_color: vec4<f32>,
 };
 
-@group(1) @binding(0) var<uniform> material: PlanetMaterial;
+@group(2) @binding(0) var<uniform> material: PlanetMaterial;
 
 @fragment
 fn fragment(
-    in: MeshVertexOutput,
+    in: VertexOutput,
 ) -> @location(0) vec4<f32> {
     let len = length(in.uv - vec2f(0.5, 0.5));
 

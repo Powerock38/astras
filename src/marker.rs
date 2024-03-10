@@ -16,24 +16,25 @@ pub fn spawn_marker(
 
     let material = ColorMaterial::from(color);
 
-    let mesh = shape::RegularPolygon::new(radius, 4);
+    let mesh = RegularPolygon::new(radius, 4);
 
     let transform = Transform::from_translation(position.extend(0.));
 
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(mesh.into()).into(),
-        material: materials.add(material),
-        transform,
-        ..default()
-    })
-    .insert(Marker);
+    commands
+        .spawn(MaterialMesh2dBundle {
+            mesh: meshes.add(mesh).into(),
+            material: materials.add(material),
+            transform,
+            ..default()
+        })
+        .insert(Marker);
 }
 
 pub fn update_marker(
     mut commands: Commands,
     meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<ColorMaterial>>,
-    mouse_input: Res<Input<MouseButton>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     q_windows: Query<&Window, With<PrimaryWindow>>,
     mut q_marker: Query<(Entity, &mut Transform), With<Marker>>,

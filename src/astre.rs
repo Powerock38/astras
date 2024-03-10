@@ -1,7 +1,7 @@
 use crate::constants::COLORS;
 use bevy::{
     prelude::*,
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{Material2d, MaterialMesh2dBundle},
 };
@@ -16,8 +16,7 @@ pub struct Astre {
     pub orbit_direction: bool,
 }
 
-#[derive(AsBindGroup, TypeUuid, TypePath, Debug, Clone)]
-#[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
+#[derive(Asset, AsBindGroup, TypePath, Debug, Clone)]
 pub struct PlanetMaterial {
     #[uniform(0)]
     pub planet_color: Color,
@@ -75,7 +74,7 @@ pub fn spawn_astre(
 
     //let nb_sides = rand::thread_rng().gen_range(4..=12);
     //let mesh = shape::RegularPolygon::new(radius, nb_sides);
-    let mesh = shape::Circle {
+    let mesh = Circle {
         radius,
         ..Default::default()
     };
@@ -93,7 +92,7 @@ pub fn spawn_astre(
     let mut orbit_distance = gravity_range;
 
     c.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(mesh.into()).into(),
+        mesh: meshes.add(mesh).into(),
         material: materials.add(material),
         transform,
         ..default()
