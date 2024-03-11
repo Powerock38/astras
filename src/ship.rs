@@ -74,13 +74,13 @@ pub fn update_ship(
             ship.speed *= 0.9;
         }
 
-        if keyboard_input.any_pressed(vec![KeyCode::ArrowLeft, KeyCode::KeyQ]) {
+        if keyboard_input.any_pressed(vec![KeyCode::ArrowLeft, KeyCode::KeyA]) {
             movement.x -= 1.;
         }
         if keyboard_input.any_pressed(vec![KeyCode::ArrowRight, KeyCode::KeyD]) {
             movement.x += 1.;
         }
-        if keyboard_input.any_pressed(vec![KeyCode::ArrowUp, KeyCode::KeyZ]) {
+        if keyboard_input.any_pressed(vec![KeyCode::ArrowUp, KeyCode::KeyW]) {
             movement.y += 1.;
         }
         if keyboard_input.any_pressed(vec![KeyCode::ArrowDown, KeyCode::KeyS]) {

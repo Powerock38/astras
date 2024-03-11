@@ -1,21 +1,22 @@
+use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
+
 use astre::*;
 use background::*;
-use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
+use building::*;
 use dockable_on_astre::*;
-use marker::*;
+use hud::*;
 use ship::*;
 use solar_system::*;
-use utils::reparent_system;
 use worm::*;
 
 mod astre;
 mod background;
+mod building;
 mod constants;
 mod dockable_on_astre;
-mod marker;
+mod hud;
 mod ship;
 mod solar_system;
-mod utils;
 mod worm;
 
 fn main() {
@@ -25,7 +26,7 @@ fn main() {
             Material2dPlugin::<PlanetMaterial>::default(),
             Material2dPlugin::<BackgroundMaterial>::default(),
         ))
-        .add_systems(Startup, spawn_solar_system)
+        .add_systems(Startup, (spawn_solar_system, setup_hud))
         .add_systems(
             Update,
             (
@@ -33,8 +34,8 @@ fn main() {
                 update_worms,
                 update_ship,
                 update_camera,
-                update_marker,
-                reparent_system,
+                update_hud,
+                place_building,
             ),
         )
         .add_systems(
