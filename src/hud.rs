@@ -6,10 +6,16 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
-const HUD_BUTTONS: [HudButtonData; 1] = [HudButtonData {
-    action: |commands| commands.insert_resource(PlacingBuilding(BUILDINGS[0])),
-    text: "Spawn Quarry",
-}];
+const HUD_BUTTONS: [HudButtonData; 2] = [
+    HudButtonData {
+        action: |commands| commands.insert_resource(PlacingBuilding(BUILDINGS[0])),
+        text: "Spawn Quarry",
+    },
+    HudButtonData {
+        action: |commands| commands.insert_resource(PlacingBuilding(BUILDINGS[1])),
+        text: "Spawn Cargo Stop",
+    },
+];
 
 struct HudButtonData {
     pub action: fn(&mut Commands),

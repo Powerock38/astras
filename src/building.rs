@@ -2,19 +2,50 @@ use bevy::{prelude::*, window::PrimaryWindow};
 
 use crate::DockableOnAstre;
 
-pub const BUILDINGS: [BuildingData; 1] = [BuildingData {
-    name: "Quarry",
-    sprite_name: "quarry",
-}];
+pub const BUILDINGS: [BuildingData; 2] = [
+    BuildingData {
+        name: "Quarry",
+        sprite_name: "quarry",
+        location: PlacingLocation::AstreSurface,
+        build_time_seconds: 3.,
+    },
+    BuildingData {
+        name: "Cargo Stop",
+        sprite_name: "cargo-stop",
+        location: PlacingLocation::AstreSurfaceOrbit,
+        build_time_seconds: 2.,
+    },
+];
+
+#[derive(Resource, Debug)]
+pub struct PlacingBuilding(pub BuildingData);
 
 #[derive(Clone, Copy, Debug)]
 pub struct BuildingData {
     pub name: &'static str,
     pub sprite_name: &'static str,
+    pub location: PlacingLocation,
+    pub build_time_seconds: f32,
 }
 
-#[derive(Resource, Debug)]
-pub struct PlacingBuilding(pub BuildingData);
+#[derive(Clone, Copy, Debug)]
+pub enum PlacingLocation {
+    AstreSurface,
+    AstreOrbit,
+    AstreSurfaceOrbit,
+}
+
+impl Default for PlacingLocation {
+    fn default() -> Self {
+        Self::AstreSurfaceOrbit
+    }
+}
+
+#[derive(Component)]
+pub struct ConstructingBuilding {
+    pub building: BuildingData,
+    pub build_timer: Timer,
+}
 
 #[derive(Component)]
 pub struct BuildingPreview;
@@ -69,27 +100,55 @@ pub fn place_building(
             let left = mouse_input.just_pressed(MouseButton::Left);
             let right = mouse_input.just_pressed(MouseButton::Right);
 
-            // Place building
-            if left {
-                let transform = Transform::from_translation(world_position);
+            if let Some((building_preview_entity, mut building_preview_transform)) =
+                q_building_preview.iter_mut().next()
+            {
+                // Place building
+                if left {
+                    // recycle the building preview entity to keep sprite texture
+                    commands
+                        .entity(building_preview_entity)
+                        .retain::<SpriteBundle>()
+                        .insert((
+                            ConstructingBuilding {
+                                building: placing_building.0,
+                                build_timer: Timer::from_seconds(
+                                    placing_building.0.build_time_seconds,
+                                    TimerMode::Once,
+                                ),
+                            },
+                            DockableOnAstre::instant_location(placing_building.0.location),
+                        ));
 
-                commands
-                    .spawn(SpriteBundle {
-                        texture: asset_server
-                            .load(format!("sprites/{}.png", placing_building.0.sprite_name)),
-                        transform,
-                        ..default()
-                    })
-                    .insert((Building(placing_building.0), DockableOnAstre::forever()));
-            }
+                    *building_preview_transform = Transform::from_translation(world_position);
 
-            // Stop placing building
-            if left || right {
-                for (entity, _) in q_building_preview.iter_mut() {
-                    commands.entity(entity).despawn();
+                    commands.remove_resource::<PlacingBuilding>();
                 }
-                commands.remove_resource::<PlacingBuilding>();
+
+                // Cancel placing building
+                if right {
+                    commands.entity(building_preview_entity).despawn();
+                    commands.remove_resource::<PlacingBuilding>();
+                }
             }
+        }
+    }
+}
+
+pub fn constructing_building(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut q_building: Query<(Entity, &mut ConstructingBuilding)>,
+) {
+    for (entity, mut constructing_building) in q_building.iter_mut() {
+        // Tick build timer
+        constructing_building.build_timer.tick(time.delta());
+        if constructing_building.build_timer.finished() {
+            // Spawn building: recycle the ConstructingBuilding entity to keep parent, position and sprite texture
+            commands
+                .entity(entity)
+                .retain::<(Parent, SpriteBundle)>()
+                .insert((Sprite::default(), Building(constructing_building.building)));
         }
     }
 }

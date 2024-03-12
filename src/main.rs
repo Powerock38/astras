@@ -36,6 +36,7 @@ fn main() {
                 update_camera,
                 update_hud,
                 place_building,
+                constructing_building,
             ),
         )
         .add_systems(
