@@ -1,7 +1,5 @@
 #import bevy_sprite::mesh2d_view_bindings::globals
 
-const SPEED: f32 = 0.5;
-
 fn random(x: f32) -> f32 {
     return fract(sin(x) * 10000.0);
 }
@@ -44,20 +42,41 @@ fn fractalNoise(p: vec2<f32>) -> f32 {
     return x;
 }
 
-fn movingNoise(p: vec2<f32>) -> f32 {
-    let x = fractalNoise(p + globals.time * SPEED);
-    let y = fractalNoise(p - globals.time * SPEED);
+fn movingNoise(p: vec2<f32>, speed: f32) -> f32 {
+    let x = fractalNoise(p + globals.time * speed);
+    let y = fractalNoise(p - globals.time * speed);
     return fractalNoise(p + vec2<f32>(x, y));
 }
 
-fn nestedNoise(p: vec2<f32>) -> f32 {
-    let x = movingNoise(p);
-    let y = movingNoise(p + vec2<f32>(100.0));
-    return movingNoise(p + vec2<f32>(x, y));
+fn nestedNoise(p: vec2<f32>, speed: f32) -> f32 {
+    let x = movingNoise(p, speed);
+    let y = movingNoise(p + vec2<f32>(100.0), speed);
+    return movingNoise(p + vec2<f32>(x, y), speed);
 }
 
-fn atmosphere(uv: vec2f, color: vec3f, density: f32) -> vec4f {
-    let n: f32 = nestedNoise(uv * 6.0);
+fn hash23(p: vec2f) -> vec3f {
+    let q = vec3f(dot(p, vec2f(127.1, 311.7)),
+        dot(p, vec2f(269.5, 183.3)),
+        dot(p, vec2f(419.2, 371.9)));
+    return fract(sin(q) * 43758.5453);
+}
 
-    return vec4<f32>(color * n, density);
+fn voroNoise2(x: vec2f, u: f32, v: f32) -> f32 {
+    let p = floor(x);
+    let f = fract(x);
+    let k = 1. + 63. * pow(1. - v, 4.);
+    var va: f32 = 0.;
+    var wt: f32 = 0.;
+    for(var j: i32 = -2; j <= 2; j = j + 1) {
+        for(var i: i32 = -2; i <= 2; i = i + 1) {
+            let g = vec2f(f32(i), f32(j));
+            let o = hash23(p + g) * vec3f(u, u, 1.);
+            let r = g - f + o.xy;
+            let d = dot(r, r);
+            let ww = pow(1. - smoothstep(0., 1.414, sqrt(d)), k);
+            va = va + o.z * ww;
+            wt = wt + ww;
+        }
+    }
+    return va / wt;
 }

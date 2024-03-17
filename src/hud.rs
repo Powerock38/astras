@@ -6,7 +6,7 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
-const HUD_BUTTONS: [HudButtonData; 2] = [
+const HUD_BUTTONS: &[HudButtonData] = &[
     HudButtonData {
         action: |commands| commands.insert_resource(PlacingBuilding(BUILDINGS[0])),
         text: "Spawn Quarry",
@@ -17,6 +17,7 @@ const HUD_BUTTONS: [HudButtonData; 2] = [
     },
 ];
 
+#[derive(Clone, Copy)]
 struct HudButtonData {
     pub action: fn(&mut Commands),
     pub text: &'static str,
@@ -92,7 +93,7 @@ pub fn setup_hud(mut commands: Commands) {
                         background_color: NORMAL_BUTTON.into(),
                         ..default()
                     })
-                    .insert(HudButton(hud_button_data))
+                    .insert(HudButton(*hud_button_data))
                     .with_children(|parent| {
                         parent.spawn(TextBundle::from_section(
                             "",

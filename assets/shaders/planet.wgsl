@@ -1,76 +1,62 @@
 #import bevy_pbr::forward_io::VertexOutput
-#import "shaders/atmosphere.wgsl"::atmosphere
+#import "shaders/noise.wgsl"::{nestedNoise, voroNoise2}
 
 struct PlanetMaterial {
     color: vec4<f32>,
     seed: f32,
     noise_scale: f32,
-    u: f32,
-    atmosphere_scale: f32,
+    planet_radius_normalized: f32,
     atmosphere_density: f32,
     atmosphere_color: vec4<f32>,
 };
 
 @group(2) @binding(0) var<uniform> material: PlanetMaterial;
 
+const PLANET_GLOW_THRESHOLD: f32 = 0.7;
+const PLANET_GLOW_MULTIPLIER: f32 = 4.0;
+const VORONOISE_U: f32 = 0.0;
+const VORONOISE_V: f32 = 0.7;
+const ATMOSPHERE_PLANET_MIX: f32 = 0.2;
+const ATMOSPHERE_NOISE_SCALE: f32 = 16.0;
+const ATMOSPHERE_SPEED: f32 = 0.5;
+
 @fragment
 fn fragment(
     in: VertexOutput,
 ) -> @location(0) vec4<f32> {
-    let len = length(in.uv - vec2f(0.5, 0.5));
+    let len = length(in.uv - vec2f(0.5));
 
-    let atmo = atmosphere(in.uv, material.atmosphere_color.xyz, material.atmosphere_density);
+    let atmo = atmosphere(in.uv);
 
-    if (len < (0.5 - material.atmosphere_scale)) {
-        return planet(in.uv) + atmo * 0.5;
-    } else {
+    if (len > material.planet_radius_normalized / 2.0) {
         return atmo;
+    } else {
+        return planet(in.uv) + atmo * ATMOSPHERE_PLANET_MIX;
     }
 }
 
 // Planet
 
-fn hash23(p: vec2f) -> vec3f {
-    let q = vec3f(dot(p, vec2f(127.1, 311.7)),
-        dot(p, vec2f(269.5, 183.3)),
-        dot(p, vec2f(419.2, 371.9)));
-    return fract(sin(q) * 43758.5453);
-}
-
-fn voroNoise2(x: vec2f, u: f32, v: f32) -> f32 {
-    let p = floor(x);
-    let f = fract(x);
-    let k = 1. + 63. * pow(1. - v, 4.);
-    var va: f32 = 0.;
-    var wt: f32 = 0.;
-    for(var j: i32 = -2; j <= 2; j = j + 1) {
-        for(var i: i32 = -2; i <= 2; i = i + 1) {
-            let g = vec2f(f32(i), f32(j));
-            let o = hash23(p + g) * vec3f(u, u, 1.);
-            let r = g - f + o.xy;
-            let d = dot(r, r);
-            let ww = pow(1. - smoothstep(0., 1.414, sqrt(d)), k);
-            va = va + o.z * ww;
-            wt = wt + ww;
-        }
-    }
-    return va / wt;
-}
-
 fn planet(
   uv: vec2<f32>,
 ) -> vec4<f32> {
-    let noise = voroNoise2((uv + material.seed) * material.noise_scale, material.u, 0.0);
+    let noise = voroNoise2((uv + material.seed) * material.noise_scale, VORONOISE_U, VORONOISE_V);
     var color = material.color.xyz * max(0.1, noise * 0.5);
 
     // Calculate the glow factor based on the brightness of the noise
-    let glowThreshold = 0.7;
-    let glowFactor = max(0.0, (noise - glowThreshold) / (1.0 - glowThreshold));
-
-    let glowColor = material.color.xyz * 10.0;
-
-    // Add the glow effect
+    let glowFactor = max(0.0, (noise - PLANET_GLOW_THRESHOLD) / (1.0 - PLANET_GLOW_THRESHOLD));
+    let glowColor = material.color.xyz * PLANET_GLOW_MULTIPLIER;
     color += glowColor * glowFactor;
 
     return vec4f(color, 1.0);
+}
+
+// Atmosphere
+
+fn atmosphere(uv: vec2f) -> vec4f {
+    let n: f32 = nestedNoise(uv * ATMOSPHERE_NOISE_SCALE, ATMOSPHERE_SPEED);
+
+    let d = length(uv - vec2f(0.5)) / 0.5;
+
+    return vec4<f32>(material.atmosphere_color.xyz * n, material.atmosphere_density * (1.0 - d));
 }

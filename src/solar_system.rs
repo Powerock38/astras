@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    astre::spawn_astre, astre::PlanetMaterial, background::BackgroundMaterial, ship::setup_ship,
-    worm::spawn_worm,
+    background::BackgroundMaterial, planet::PlanetMaterial, ship::setup_ship, spawn_star,
+    worm::spawn_worm, StarMaterial,
 };
 
 #[derive(Component)]
@@ -13,37 +13,37 @@ pub fn spawn_solar_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
+    mut star_materials: ResMut<Assets<StarMaterial>>,
     mut planet_materials: ResMut<Assets<PlanetMaterial>>,
     background_materials: ResMut<Assets<BackgroundMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    let radius = rand::thread_rng().gen_range((1000.)..2000.);
-    let mass = rand::thread_rng().gen_range((100.)..3000.);
+    let mut rng = rand::thread_rng();
+
+    let radius = rng.gen_range((5000.)..10000.);
+    let nb_children = rng.gen_range(5..=15);
+
     let position = Vec2::new(0., 0.);
-    let nb_children = rand::thread_rng().gen_range(3..=20);
 
     commands
         .spawn(SpatialBundle::default())
         .insert(SolarSystem)
         .with_children(|mut c| {
-            spawn_astre(
+            spawn_star(
                 &mut c,
                 &mut meshes,
+                &mut star_materials,
                 &mut planet_materials,
-                0.,
                 radius,
-                mass,
                 position,
-                0.,
-                true,
                 nb_children,
-                0,
             );
         })
         .with_children(|c| {
             let radius = 10000.;
+            let nb_worms = 0;
 
-            for _ in 0..10 {
+            for _ in 0..nb_worms {
                 let position = Vec2::new(
                     rand::thread_rng().gen_range(-radius..radius),
                     rand::thread_rng().gen_range(-radius..radius),

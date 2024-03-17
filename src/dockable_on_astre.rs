@@ -1,4 +1,4 @@
-use crate::{astre::Astre, PlacingLocation, SolarSystem};
+use crate::{planet::Planet, PlacingLocation, SolarSystem};
 use bevy::prelude::*;
 
 #[derive(Component, Default)]
@@ -26,26 +26,26 @@ pub fn update_dockable_on_astre(
         &mut Transform,
         &GlobalTransform,
     )>,
-    mut q_astre: Query<
-        (Entity, &mut Astre, &Transform, &GlobalTransform),
-        Without<DockableOnAstre>,
-    >,
+    q_astre: Query<(Entity, &Planet, &Transform, &GlobalTransform), Without<DockableOnAstre>>,
     q_solar_system: Query<(Entity, &GlobalTransform), With<SolarSystem>>,
 ) {
     for (mut dockable, entity_dockable, mut transform, global_transform) in q_dockable.iter_mut() {
         let mut on_astre_option: Option<(Entity, &GlobalTransform, f32)> = None;
 
-        for (entity_astre, astre, astre_transform, astre_global_transform) in q_astre.iter_mut() {
+        for (entity_astre, astre, astre_transform, astre_global_transform) in q_astre.iter() {
             let distance = global_transform.translation().truncate()
                 - astre_global_transform.translation().truncate();
             let distance = distance.length();
 
             let can_dock = match dockable.location {
-                PlacingLocation::AstreSurface => distance < astre.radius,
-                PlacingLocation::AstreOrbit => {
-                   distance < astre.radius + astre.mass && distance > astre.radius //FIXME
+                PlacingLocation::Surface => distance < astre.surface_radius,
+                PlacingLocation::Orbit => {
+                    distance < astre.surface_radius + astre.atmosphere_radius
+                        && distance > astre.surface_radius //FIXME
                 }
-                PlacingLocation::AstreSurfaceOrbit => distance < astre.radius + astre.mass,
+                PlacingLocation::SurfaceOrbit => {
+                    distance < astre.surface_radius + astre.atmosphere_radius
+                }
             };
 
             if can_dock {

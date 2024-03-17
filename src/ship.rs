@@ -4,6 +4,7 @@ use crate::background::*;
 use crate::dockable_on_astre::DockableOnAstre;
 
 const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
+pub const SHIP_Z: f32 = 100.;
 
 #[derive(Component)]
 pub struct Ship {
@@ -48,7 +49,7 @@ pub fn setup_ship(
 
         // Camera as a child of ship, so it follows the ship
         c.spawn(Camera2dBundle {
-            transform: Transform::from_translation(Vec3::new(0., 0., 100.)),
+            transform: Transform::from_translation(Vec3::new(0., 0., SHIP_Z)),
             projection: OrthographicProjection {
                 scale: 5.,
                 ..default()
