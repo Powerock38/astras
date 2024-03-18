@@ -5,9 +5,8 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.13.0"
-bevy_common_assets = { version = "0.10.0", features = ["ron"] }
 rand = "0.8.5"
-serde = "1"
+phf = { version = "0.11", features = ["macros"] }
 
 [features]
 dev = ["bevy/dynamic_linking", "bevy/file_watcher"]

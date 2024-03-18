@@ -8,6 +8,7 @@ struct PlanetMaterial {
     planet_radius_normalized: f32,
     atmosphere_density: f32,
     atmosphere_color: vec4<f32>,
+    atmosphere_speed: f32,
 };
 
 @group(2) @binding(0) var<uniform> material: PlanetMaterial;
@@ -18,7 +19,6 @@ const VORONOISE_U: f32 = 0.0;
 const VORONOISE_V: f32 = 0.7;
 const ATMOSPHERE_PLANET_MIX: f32 = 0.2;
 const ATMOSPHERE_NOISE_SCALE: f32 = 16.0;
-const ATMOSPHERE_SPEED: f32 = 0.5;
 
 @fragment
 fn fragment(
@@ -54,7 +54,7 @@ fn planet(
 // Atmosphere
 
 fn atmosphere(uv: vec2f) -> vec4f {
-    let n: f32 = nestedNoise(uv * ATMOSPHERE_NOISE_SCALE, ATMOSPHERE_SPEED);
+    let n: f32 = nestedNoise(uv * ATMOSPHERE_NOISE_SCALE, material.atmosphere_speed);
 
     let d = length(uv - vec2f(0.5)) / 0.5;
 

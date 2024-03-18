@@ -4,10 +4,20 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{Material2d, MaterialMesh2dBundle},
 };
-use rand::{seq::SliceRandom, Rng};
+use rand::Rng;
 use std::f32::consts::PI;
 
-use crate::constants::COLORS;
+use crate::{
+    astre::Astre,
+    items::{ElementOnAstre, ElementState, ELEMENTS},
+};
+
+#[derive(Bundle)]
+pub struct PlanetBundle {
+    pub planet: Planet,
+    pub astre: Astre,
+    pub mesh: MaterialMesh2dBundle<PlanetMaterial>,
+}
 
 #[derive(Component, Debug)]
 pub struct Planet {
@@ -30,6 +40,8 @@ pub struct PlanetMaterial {
     pub atmosphere_density: f32,
     #[uniform(0)]
     pub atmosphere_color: Color,
+    #[uniform(0)]
+    pub atmosphere_speed: f32,
 }
 
 impl Material2d for PlanetMaterial {
@@ -53,37 +65,59 @@ pub fn spawn_planet(
 
     let mut rng = rand::thread_rng();
 
-    let planet_color = COLORS.choose(&mut rng).unwrap();
-    let atmosphere_color = COLORS.choose(&mut rng).unwrap();
-
-    let material = PlanetMaterial {
-        color: *planet_color,
-        seed: rng.gen::<f32>() * 1000.,
-        noise_scale: rng.gen_range(1.0..10.0),
-        planet_radius_normalized: surface_radius / total_radius,
-        atmosphere_density: rng.gen_range(0.01..0.5),
-        atmosphere_color: *atmosphere_color,
-    };
-
     let mesh = Circle::new(total_radius);
 
     let transform = Transform::from_translation(position.extend(z_value as f32));
 
-    let planet = Planet {
-        atmosphere_radius,
-        surface_radius,
-        orbit_speed,
-    };
-
     let orbit_distance = total_radius * 2.0;
 
-    c.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(mesh).into(),
-        material: materials.add(material),
-        transform,
-        ..default()
+    let temperature = rng.gen_range(20..=1000);
+
+    let mut composition = ElementOnAstre::random_elements(
+        rng.gen_range(1..=ELEMENTS.len()) as u32,
+        rng.gen_range(1_000..=1_000_000),
+        &[ElementState::Solid, ElementState::Liquid],
+    );
+
+    let atmoshpere_composition = ElementOnAstre::random_elements(
+        rng.gen_range(1..=5),
+        rng.gen_range(1_000..=100_000),
+        &[ElementState::Gas],
+    );
+
+    let planet_color = ElementOnAstre::get_color(&composition);
+
+    let atmosphere_color = ElementOnAstre::get_color(&atmoshpere_composition);
+
+    composition.extend(atmoshpere_composition);
+
+    let material = PlanetMaterial {
+        color: planet_color,
+        seed: rng.gen::<f32>() * 1000.,
+        noise_scale: rng.gen_range(1.0..10.0),
+        planet_radius_normalized: surface_radius / total_radius,
+        atmosphere_density: rng.gen_range(0.01..0.5),
+        atmosphere_color,
+        atmosphere_speed: rng.gen_range(0.01..1.0),
+    };
+
+    c.spawn(PlanetBundle {
+        planet: Planet {
+            atmosphere_radius,
+            surface_radius,
+            orbit_speed,
+        },
+        astre: Astre {
+            composition,
+            temperature,
+        },
+        mesh: MaterialMesh2dBundle {
+            mesh: meshes.add(mesh).into(),
+            material: materials.add(material),
+            transform,
+            ..default()
+        },
     })
-    .insert(planet)
     .with_children(|c| {
         spawn_planet_c(
             c,
@@ -141,7 +175,7 @@ pub fn spawn_planet_c(
             position,
             c_orbit_speed,
             c_nb_children,
-            z_value + 1,
+            z_value + i + 1,
         );
 
         orbit_distance += rng.gen_range((c_atmosphere_radius * 0.2)..=(c_atmosphere_radius * 1.5));

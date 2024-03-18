@@ -51,7 +51,7 @@ pub fn setup_ship(
         c.spawn(Camera2dBundle {
             transform: Transform::from_translation(Vec3::new(0., 0., SHIP_Z)),
             projection: OrthographicProjection {
-                scale: 5.,
+                scale: 100.0,
                 ..default()
             },
             ..default()

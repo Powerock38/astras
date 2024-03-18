@@ -3,9 +3,20 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{Material2d, MaterialMesh2dBundle},
 };
-use rand::prelude::SliceRandom;
+use rand::Rng;
 
-use crate::{constants::COLORS, spawn_planet_c, PlanetMaterial};
+use crate::{
+    astre::Astre,
+    items::{ElementOnAstre, ElementState},
+    spawn_planet_c, PlanetMaterial,
+};
+
+#[derive(Bundle)]
+pub struct StarBundle {
+    pub star: Star,
+    pub astre: Astre,
+    pub mesh: MaterialMesh2dBundle<StarMaterial>,
+}
 
 #[derive(Asset, AsBindGroup, TypePath, Debug, Clone)]
 pub struct StarMaterial {
@@ -35,25 +46,34 @@ pub fn spawn_star(
 ) {
     let mut rng = rand::thread_rng();
 
-    let color = COLORS.choose(&mut rng).unwrap();
-
-    let material = StarMaterial { color: *color };
-
     let mesh = Circle::new(radius);
 
     let transform = Transform::from_translation(position.extend(0.));
 
-    let star = Star { radius };
-
     let orbit_distance = radius * 2.;
 
-    c.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(mesh).into(),
-        material: materials.add(material),
-        transform,
-        ..default()
+    let temperature = rng.gen_range(1_000..=1_000_000_000);
+
+    let composition =
+        ElementOnAstre::random_elements(3, 100, &[ElementState::Gas, ElementState::Plasma]);
+
+    let color = ElementOnAstre::get_color(&composition);
+
+    let material = StarMaterial { color };
+
+    c.spawn(StarBundle {
+        star: Star { radius },
+        astre: Astre {
+            composition,
+            temperature,
+        },
+        mesh: MaterialMesh2dBundle {
+            mesh: meshes.add(mesh).into(),
+            material: materials.add(material),
+            transform,
+            ..default()
+        },
     })
-    .insert(star)
     .with_children(|c| {
         spawn_planet_c(
             c,

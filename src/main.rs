@@ -10,12 +10,13 @@ use solar_system::*;
 use star::*;
 use worm::*;
 
+mod astre;
 mod background;
 mod building;
 mod constants;
 mod dockable_on_astre;
-mod element;
 mod hud;
+mod items;
 mod planet;
 mod ship;
 mod solar_system;
@@ -30,7 +31,6 @@ fn main() {
             Material2dPlugin::<PlanetMaterial>::default(),
             Material2dPlugin::<BackgroundMaterial>::default(),
         ))
-        //.add_plugins(RonAssetPlugin::<Elements>::new(&["data/elements.ron"]))
         .add_systems(Startup, (spawn_solar_system, setup_hud))
         .add_systems(
             Update,
