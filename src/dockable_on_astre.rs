@@ -16,6 +16,10 @@ impl DockableOnAstre {
             ..default()
         }
     }
+
+    pub fn is_docked(&self) -> bool {
+        self.on_astre.is_some()
+    }
 }
 
 pub fn update_dockable_on_astre(

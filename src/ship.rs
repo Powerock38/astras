@@ -1,3 +1,5 @@
+use bevy::core_pipeline::bloom::BloomSettings;
+use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::{input::mouse::MouseWheel, prelude::*};
 
 use crate::background::*;
@@ -48,14 +50,22 @@ pub fn setup_ship(
         ));
 
         // Camera as a child of ship, so it follows the ship
-        c.spawn(Camera2dBundle {
-            transform: Transform::from_translation(Vec3::new(0., 0., SHIP_Z)),
-            projection: OrthographicProjection {
-                scale: 100.0,
+        c.spawn((
+            Camera2dBundle {
+                camera: Camera {
+                    hdr: true,
+                    ..default()
+                },
+                tonemapping: Tonemapping::BlenderFilmic,
+                transform: Transform::from_translation(Vec3::new(0., 0., SHIP_Z)),
+                projection: OrthographicProjection {
+                    scale: 100.0,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        });
+            BloomSettings::default(),
+        ));
 
         // same for background
         spawn_background(c, meshes, background_materials);
@@ -65,10 +75,10 @@ pub fn setup_ship(
 pub fn update_ship(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q_ship: Query<(&mut Ship, &mut Transform), Without<ShipSprite>>,
+    mut q_ship: Query<(&mut Ship, &mut Transform, &DockableOnAstre), Without<ShipSprite>>,
     mut q_ship_sprite: Query<&mut Transform, With<ShipSprite>>,
 ) {
-    for (mut ship, mut transform) in q_ship.iter_mut() {
+    for (mut ship, mut transform, dockable) in q_ship.iter_mut() {
         let mut movement = Vec2::new(0., 0.);
 
         if keyboard_input.pressed(KeyCode::Space) {
@@ -94,11 +104,19 @@ pub fn update_ship(
 
         ship.speed += (acceleration * time.delta_seconds()).clamp_length_max(max_speed);
 
+        if dockable.is_docked() {
+            ship.speed *= 0.99;
+        }
+
+        if ship.speed.length() < 0.001 {
+            ship.speed = Vec2::ZERO;
+        }
+
         transform.translation += (ship.speed * time.delta_seconds()).extend(0.);
 
-        for mut sprite_transform in q_ship_sprite.iter_mut() {
-            sprite_transform.rotation = Quat::from_rotation_z(-ship.speed.angle_between(Vec2::Y));
-        }
+        // Sprite rotation
+        let mut sprite_transform = q_ship_sprite.single_mut();
+        sprite_transform.rotation = Quat::from_rotation_z(-ship.speed.angle_between(Vec2::Y));
     }
 }
 

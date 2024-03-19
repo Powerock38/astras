@@ -42,16 +42,16 @@ fn fractalNoise(p: vec2<f32>) -> f32 {
     return x;
 }
 
-fn movingNoise(p: vec2<f32>, speed: f32) -> f32 {
-    let x = fractalNoise(p + globals.time * speed);
-    let y = fractalNoise(p - globals.time * speed);
+fn movingNoise(p: vec2<f32>, speed: f32, seed: f32) -> f32 {
+    let x = fractalNoise(p + globals.time * speed + seed);
+    let y = fractalNoise(p - globals.time * speed + seed);
     return fractalNoise(p + vec2<f32>(x, y));
 }
 
-fn nestedNoise(p: vec2<f32>, speed: f32) -> f32 {
-    let x = movingNoise(p, speed);
-    let y = movingNoise(p + vec2<f32>(100.0), speed);
-    return movingNoise(p + vec2<f32>(x, y), speed);
+fn nestedNoise(p: vec2<f32>, speed: f32, seed: f32) -> f32 {
+    let x = movingNoise(p, speed, seed);
+    let y = movingNoise(p + vec2<f32>(100.0), speed, seed);
+    return movingNoise(p + vec2<f32>(x, y), speed, seed);
 }
 
 fn hash23(p: vec2f) -> vec3f {

@@ -21,6 +21,7 @@ mod planet;
 mod ship;
 mod solar_system;
 mod star;
+mod utils;
 mod worm;
 
 fn main() {

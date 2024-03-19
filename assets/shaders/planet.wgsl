@@ -54,7 +54,7 @@ fn planet(
 // Atmosphere
 
 fn atmosphere(uv: vec2f) -> vec4f {
-    let n: f32 = nestedNoise(uv * ATMOSPHERE_NOISE_SCALE, material.atmosphere_speed);
+    let n: f32 = nestedNoise(uv * ATMOSPHERE_NOISE_SCALE, material.atmosphere_speed, material.seed);
 
     let d = length(uv - vec2f(0.5)) / 0.5;
 

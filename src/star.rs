@@ -8,7 +8,9 @@ use rand::Rng;
 use crate::{
     astre::Astre,
     items::{ElementOnAstre, ElementState},
-    spawn_planet_c, PlanetMaterial,
+    spawn_planet_c,
+    utils::circle_mesh,
+    PlanetMaterial,
 };
 
 #[derive(Bundle)]
@@ -22,6 +24,8 @@ pub struct StarBundle {
 pub struct StarMaterial {
     #[uniform(0)]
     pub color: Color,
+    #[uniform(0)]
+    pub seed: f32,
 }
 
 impl Material2d for StarMaterial {
@@ -46,7 +50,7 @@ pub fn spawn_star(
 ) {
     let mut rng = rand::thread_rng();
 
-    let mesh = Circle::new(radius);
+    let mesh = circle_mesh(radius);
 
     let transform = Transform::from_translation(position.extend(0.));
 
@@ -54,12 +58,20 @@ pub fn spawn_star(
 
     let temperature = rng.gen_range(1_000..=1_000_000_000);
 
-    let composition =
-        ElementOnAstre::random_elements(3, 100, &[ElementState::Gas, ElementState::Plasma]);
+    let number_of_elements = rng.gen_range(1..=3);
+
+    let composition = ElementOnAstre::random_elements(
+        number_of_elements,
+        rng.gen_range(100_000..=100_000_000),
+        &[ElementState::Gas, ElementState::Plasma],
+    );
 
     let color = ElementOnAstre::get_color(&composition);
 
-    let material = StarMaterial { color };
+    let material = StarMaterial {
+        color,
+        seed: rng.gen::<f32>() * 1000.,
+    };
 
     c.spawn(StarBundle {
         star: Star { radius },

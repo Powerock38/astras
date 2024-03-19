@@ -22,6 +22,10 @@ pub static ITEMS: phf::Map<&'static str, Item> = phf_map! {
         name: "Photonite",
         description: "The base element for energy",
     },
+    "gravitonite" => Item {
+        name: "Gravitonite",
+        description: "The base element for interstellar travel",
+    },
     "aer" => Item {
         name: "Aer",
         description: "Mundane atmosphere",

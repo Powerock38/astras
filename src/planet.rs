@@ -10,6 +10,7 @@ use std::f32::consts::PI;
 use crate::{
     astre::Astre,
     items::{ElementOnAstre, ElementState, ELEMENTS},
+    utils::circle_mesh,
 };
 
 #[derive(Bundle)]
@@ -65,7 +66,7 @@ pub fn spawn_planet(
 
     let mut rng = rand::thread_rng();
 
-    let mesh = Circle::new(total_radius);
+    let mesh = circle_mesh(total_radius);
 
     let transform = Transform::from_translation(position.extend(z_value as f32));
 
@@ -149,7 +150,7 @@ pub fn spawn_planet_c(
             continue;
         }
 
-        let c_atmosphere_radius = rng.gen_range((c_surface_radius * 0.5)..(c_surface_radius * 0.9));
+        let c_atmosphere_radius = rng.gen_range(0.0..(c_surface_radius * 0.5));
 
         let c_nb_children = rng.gen_range(0..=(0.1 * nb_children as f32) as u32);
 

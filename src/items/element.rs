@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use phf::phf_map;
 use rand::{seq::IteratorRandom, Rng};
 
+use super::{Item, ITEMS};
+
 pub struct Element {
     pub color: Color,
     pub state: ElementState,
@@ -72,6 +74,10 @@ impl ElementOnAstre {
     pub fn element(&self) -> &Element {
         &ELEMENTS[self.id]
     }
+
+    pub fn item(&self) -> Option<&Item> {
+        ITEMS.get(self.id)
+    }
 }
 
 pub static ELEMENTS: phf::Map<&'static str, Element> = phf_map! {
@@ -83,4 +89,5 @@ pub static ELEMENTS: phf::Map<&'static str, Element> = phf_map! {
     "quark_crystal" => Element::new(Color::TURQUOISE, ElementState::Solid),
     "photonite" => Element::new(Color::YELLOW, ElementState::Plasma),
     "neutronite" => Element::new(Color::ALICE_BLUE, ElementState::Plasma),
+    "gravitonite" => Element::new(Color::RED, ElementState::Plasma),
 };
