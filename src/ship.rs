@@ -116,7 +116,11 @@ pub fn update_ship(
 
         // Sprite rotation
         let mut sprite_transform = q_ship_sprite.single_mut();
-        sprite_transform.rotation = Quat::from_rotation_z(-ship.speed.angle_between(Vec2::Y));
+        if ship.speed == Vec2::ZERO {
+            sprite_transform.rotation = Quat::from_rotation_z(0.);
+        } else {
+            sprite_transform.rotation = Quat::from_rotation_z(-ship.speed.angle_between(Vec2::Y));
+        }
     }
 }
 

@@ -1,6 +1,6 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
-use crate::DockableOnAstre;
+use crate::{DockableOnAstre, ElementExtractor};
 
 pub const BUILDINGS: &[BuildingData] = &[
     BuildingData {
@@ -8,12 +8,16 @@ pub const BUILDINGS: &[BuildingData] = &[
         sprite_name: "quarry",
         location: PlacingLocation::Surface,
         build_time_seconds: 3.,
+        on_build: |c| {
+            c.insert(ElementExtractor::new_solid());
+        },
     },
     BuildingData {
         name: "Cargo Stop",
         sprite_name: "cargo-stop",
-        location: PlacingLocation::SurfaceOrbit,
+        location: PlacingLocation::Orbit,
         build_time_seconds: 2.,
+        on_build: |_| {},
     },
 ];
 
@@ -26,6 +30,7 @@ pub struct BuildingData {
     pub sprite_name: &'static str,
     pub location: PlacingLocation,
     pub build_time_seconds: f32,
+    pub on_build: fn(&mut EntityCommands),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -51,7 +56,7 @@ pub struct ConstructingBuilding {
 pub struct BuildingPreview;
 
 #[derive(Component)]
-pub struct Building(BuildingData);
+pub struct Building;
 
 pub fn place_building(
     mut commands: Commands,
@@ -143,10 +148,12 @@ pub fn constructing_building(
         constructing_building.build_timer.tick(time.delta());
         if constructing_building.build_timer.finished() {
             // Spawn building: recycle the ConstructingBuilding entity to keep parent, position and sprite texture
-            commands
-                .entity(entity)
-                .retain::<(Parent, SpriteBundle)>()
-                .insert((Sprite::default(), Building(constructing_building.building)));
+            let mut ec = commands.entity(entity);
+
+            ec.retain::<(Parent, SpriteBundle)>()
+                .insert((Sprite::default(), Building));
+
+            (constructing_building.building.on_build)(&mut ec);
         }
     }
 }

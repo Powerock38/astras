@@ -9,7 +9,7 @@ use std::f32::consts::PI;
 
 use crate::{
     astre::Astre,
-    items::{ElementOnAstre, ElementState, ELEMENTS},
+    items::{ElementOnAstre, ElementState, Inventory, ELEMENTS},
     utils::circle_mesh,
 };
 
@@ -109,7 +109,7 @@ pub fn spawn_planet(
             orbit_speed,
         },
         astre: Astre {
-            composition,
+            inventory: Inventory::from(composition),
             temperature,
         },
         mesh: MaterialMesh2dBundle {

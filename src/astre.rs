@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 
-use crate::items::ElementOnAstre;
+use crate::items::Inventory;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Astre {
-    pub composition: Vec<ElementOnAstre>,
+    pub inventory: Inventory,
     pub temperature: u32, // in Kelvin  // TODO: why
 }

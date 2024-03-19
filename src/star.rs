@@ -7,7 +7,7 @@ use rand::Rng;
 
 use crate::{
     astre::Astre,
-    items::{ElementOnAstre, ElementState},
+    items::{ElementOnAstre, ElementState, Inventory},
     spawn_planet_c,
     utils::circle_mesh,
     PlanetMaterial,
@@ -76,7 +76,7 @@ pub fn spawn_star(
     c.spawn(StarBundle {
         star: Star { radius },
         astre: Astre {
-            composition,
+            inventory: Inventory::from(composition),
             temperature,
         },
         mesh: MaterialMesh2dBundle {
