@@ -1,8 +1,9 @@
+use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 use super::ElementOnAstre;
 
-#[derive(Debug)]
+#[derive(Component)]
 pub struct Inventory {
     items: HashMap<&'static str, u32>, // Item ID -> Quantity
 }

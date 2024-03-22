@@ -17,6 +17,7 @@ use crate::{
 pub struct StarBundle {
     pub star: Star,
     pub astre: Astre,
+    pub inventory: Inventory,
     pub mesh: MaterialMesh2dBundle<StarMaterial>,
 }
 
@@ -75,10 +76,8 @@ pub fn spawn_star(
 
     c.spawn(StarBundle {
         star: Star { radius },
-        astre: Astre {
-            inventory: Inventory::from(composition),
-            temperature,
-        },
+        astre: Astre { temperature },
+        inventory: Inventory::from(composition),
         mesh: MaterialMesh2dBundle {
             mesh: meshes.add(mesh).into(),
             material: materials.add(material),

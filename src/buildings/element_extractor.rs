@@ -28,16 +28,15 @@ impl ElementExtractor {
 pub fn update_element_extractors(
     time: Res<Time>,
     mut q_extractor: Query<(&mut ElementExtractor, &Parent)>,
-    mut q_astres: Query<&mut Astre>,
+    mut q_astre_inventories: Query<&mut Inventory, With<Astre>>,
 ) {
     for (mut extractor, parent) in q_extractor.iter_mut() {
         extractor.cooldown.tick(time.delta());
         if extractor.cooldown.finished() {
-            let mut astre = q_astres.get_mut(parent.get()).unwrap();
+            let mut astre_inventory = q_astre_inventories.get_mut(parent.get()).unwrap();
 
             let mut rng = rand::thread_rng();
-            let random_item = astre
-                .inventory
+            let random_item = astre_inventory
                 .all_ids()
                 .iter()
                 .filter(|id| {
@@ -46,19 +45,16 @@ pub fn update_element_extractors(
                         .map_or(false, |element| element.state == extractor.element_state)
                 })
                 .collect::<Vec<_>>() // TODO: optimize by caching the list of ids
-                .choose_weighted(&mut rng, |id| astre.inventory.quantity(**id))
+                .choose_weighted(&mut rng, |id| astre_inventory.quantity(**id))
                 .ok()
                 .map(|id| **id);
 
             if let Some(item) = random_item {
-                let quantity = astre
-                    .inventory
+                let quantity = astre_inventory
                     .quantity(item)
                     .min(extractor.amount_per_tick);
 
-                astre
-                    .inventory
-                    .transfer_to(&mut extractor.inventory, item, quantity);
+                astre_inventory.transfer_to(&mut extractor.inventory, item, quantity);
 
                 println!("Mined {} {}", quantity, item);
             }

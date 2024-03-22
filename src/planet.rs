@@ -17,6 +17,7 @@ use crate::{
 pub struct PlanetBundle {
     pub planet: Planet,
     pub astre: Astre,
+    pub inventory: Inventory,
     pub mesh: MaterialMesh2dBundle<PlanetMaterial>,
 }
 
@@ -108,10 +109,8 @@ pub fn spawn_planet(
             surface_radius,
             orbit_speed,
         },
-        astre: Astre {
-            inventory: Inventory::from(composition),
-            temperature,
-        },
+        astre: Astre { temperature },
+        inventory: Inventory::from(composition),
         mesh: MaterialMesh2dBundle {
             mesh: meshes.add(mesh).into(),
             material: materials.add(material),
