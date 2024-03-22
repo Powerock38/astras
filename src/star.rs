@@ -36,9 +36,7 @@ impl Material2d for StarMaterial {
 }
 
 #[derive(Component)]
-pub struct Star {
-    pub radius: f32,
-}
+pub struct Star;
 
 pub fn spawn_star(
     c: &mut ChildBuilder,
@@ -75,8 +73,12 @@ pub fn spawn_star(
     };
 
     c.spawn(StarBundle {
-        star: Star { radius },
-        astre: Astre { temperature },
+        star: Star,
+        astre: Astre {
+            temperature,
+            surface_radius: radius,
+            atmosphere_radius: 0.,
+        },
         inventory: Inventory::from(composition),
         mesh: MaterialMesh2dBundle {
             mesh: meshes.add(mesh).into(),

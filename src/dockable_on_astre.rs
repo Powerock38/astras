@@ -1,4 +1,4 @@
-use crate::{planet::Planet, PlacingLocation, SolarSystem};
+use crate::{astre::Astre, PlacingLocation, SolarSystem};
 use bevy::prelude::*;
 
 #[derive(Component, Default)]
@@ -30,7 +30,7 @@ pub fn update_dockable_on_astre(
         &mut Transform,
         &GlobalTransform,
     )>,
-    q_astre: Query<(Entity, &Planet, &Transform, &GlobalTransform), Without<DockableOnAstre>>,
+    q_astre: Query<(Entity, &Astre, &Transform, &GlobalTransform), Without<DockableOnAstre>>,
     q_solar_system: Query<(Entity, &GlobalTransform), With<SolarSystem>>,
 ) {
     for (mut dockable, entity_dockable, mut transform, global_transform) in q_dockable.iter_mut() {
@@ -45,7 +45,7 @@ pub fn update_dockable_on_astre(
                 PlacingLocation::Surface => distance < astre.surface_radius,
                 PlacingLocation::Orbit => {
                     distance < astre.surface_radius + astre.atmosphere_radius
-                        && distance > astre.surface_radius //FIXME
+                        && distance > astre.surface_radius
                 }
                 PlacingLocation::SurfaceOrbit => {
                     distance < astre.surface_radius + astre.atmosphere_radius
