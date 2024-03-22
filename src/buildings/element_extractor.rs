@@ -6,9 +6,14 @@ use crate::{
     items::{ElementState, Inventory, ELEMENTS},
 };
 
+#[derive(Bundle)]
+pub struct ElementExtractorBundle {
+    pub element_extractor: ElementExtractor,
+    pub inventory: Inventory,
+}
+
 #[derive(Component)]
 pub struct ElementExtractor {
-    inventory: Inventory,
     cooldown: Timer,
     amount_per_tick: u32,
     element_state: ElementState,
@@ -18,7 +23,6 @@ impl ElementExtractor {
     pub fn new_solid() -> Self {
         Self {
             element_state: ElementState::Solid,
-            inventory: Inventory::new(),
             cooldown: Timer::from_seconds(1., TimerMode::Repeating),
             amount_per_tick: 10,
         }
@@ -27,16 +31,17 @@ impl ElementExtractor {
 
 pub fn update_element_extractors(
     time: Res<Time>,
-    mut q_extractor: Query<(&mut ElementExtractor, &Parent)>,
+    mut q_extractor: Query<(&mut ElementExtractor, &mut Inventory, &Parent), Without<Astre>>,
     mut q_astre_inventories: Query<&mut Inventory, With<Astre>>,
 ) {
-    for (mut extractor, parent) in q_extractor.iter_mut() {
+    for (mut extractor, mut extractor_inventory, parent) in q_extractor.iter_mut() {
         extractor.cooldown.tick(time.delta());
-        if extractor.cooldown.finished() {
+
+        if extractor.cooldown.finished() && extractor_inventory.remaining_size() > 0 {
             let mut astre_inventory = q_astre_inventories.get_mut(parent.get()).unwrap();
 
             let mut rng = rand::thread_rng();
-            let random_item = astre_inventory
+            let random_item_id = astre_inventory
                 .all_ids()
                 .iter()
                 .filter(|id| {
@@ -49,14 +54,20 @@ pub fn update_element_extractors(
                 .ok()
                 .map(|id| **id);
 
-            if let Some(item) = random_item {
+            if let Some(item_id) = random_item_id {
                 let quantity = astre_inventory
-                    .quantity(item)
+                    .quantity(item_id)
                     .min(extractor.amount_per_tick);
 
-                astre_inventory.transfer_to(&mut extractor.inventory, item, quantity);
+                let q = astre_inventory.transfer_to(&mut extractor_inventory, item_id, quantity);
 
-                println!("Mined {} {}", quantity, item);
+                println!(
+                    "Mined {} {} - from {} to {}",
+                    q,
+                    item_id,
+                    astre_inventory.remaining_size(),
+                    extractor_inventory.remaining_size()
+                );
             }
         }
     }

@@ -1,6 +1,6 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
-use crate::{DockableOnAstre, ElementExtractor};
+use crate::{items::Inventory, DockableOnAstre, ElementExtractor, ElementExtractorBundle};
 
 pub const BUILDINGS: &[BuildingData] = &[
     BuildingData {
@@ -9,7 +9,10 @@ pub const BUILDINGS: &[BuildingData] = &[
         location: PlacingLocation::Surface,
         build_time_seconds: 3.,
         on_build: |c| {
-            c.insert(ElementExtractor::new_solid());
+            c.insert(ElementExtractorBundle {
+                element_extractor: ElementExtractor::new_solid(),
+                inventory: Inventory::new(100),
+            });
         },
     },
     BuildingData {
