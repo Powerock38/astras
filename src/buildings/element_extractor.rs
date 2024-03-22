@@ -19,12 +19,48 @@ pub struct ElementExtractor {
     element_state: ElementState,
 }
 
-impl ElementExtractor {
+impl ElementExtractorBundle {
     pub fn new_solid() -> Self {
         Self {
-            element_state: ElementState::Solid,
-            cooldown: Timer::from_seconds(1., TimerMode::Repeating),
-            amount_per_tick: 10,
+            element_extractor: ElementExtractor {
+                element_state: ElementState::Solid,
+                cooldown: Timer::from_seconds(1., TimerMode::Repeating),
+                amount_per_tick: 100,
+            },
+            inventory: Inventory::new(1000),
+        }
+    }
+
+    pub fn new_liquid() -> Self {
+        Self {
+            element_extractor: ElementExtractor {
+                element_state: ElementState::Liquid,
+                cooldown: Timer::from_seconds(1., TimerMode::Repeating),
+                amount_per_tick: 1000,
+            },
+            inventory: Inventory::new(5000),
+        }
+    }
+
+    pub fn new_gas() -> Self {
+        Self {
+            element_extractor: ElementExtractor {
+                element_state: ElementState::Gas,
+                cooldown: Timer::from_seconds(1., TimerMode::Repeating),
+                amount_per_tick: 500,
+            },
+            inventory: Inventory::new(10_000),
+        }
+    }
+
+    pub fn new_plasma() -> Self {
+        Self {
+            element_extractor: ElementExtractor {
+                element_state: ElementState::Plasma,
+                cooldown: Timer::from_seconds(1., TimerMode::Repeating),
+                amount_per_tick: 10,
+            },
+            inventory: Inventory::new(100),
         }
     }
 }

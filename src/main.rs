@@ -1,5 +1,4 @@
 use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use background::*;
 use buildings::*;
@@ -28,7 +27,7 @@ mod worm;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(WorldInspectorPlugin::new())
+        // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
         .add_plugins((
             Material2dPlugin::<StarMaterial>::default(),
             Material2dPlugin::<PlanetMaterial>::default(),

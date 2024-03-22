@@ -1,6 +1,6 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
-use crate::{items::Inventory, DockableOnAstre, ElementExtractor, ElementExtractorBundle};
+use crate::{DockableOnAstre, ElementExtractorBundle};
 
 pub const BUILDINGS: &[BuildingData] = &[
     BuildingData {
@@ -9,16 +9,40 @@ pub const BUILDINGS: &[BuildingData] = &[
         location: PlacingLocation::Surface,
         build_time_seconds: 3.,
         on_build: |c| {
-            c.insert(ElementExtractorBundle {
-                element_extractor: ElementExtractor::new_solid(),
-                inventory: Inventory::new(100),
-            });
+            c.insert(ElementExtractorBundle::new_solid());
+        },
+    },
+    BuildingData {
+        name: "Liquid Extractor",
+        sprite_name: "quarry",
+        location: PlacingLocation::Surface,
+        build_time_seconds: 3.,
+        on_build: |c| {
+            c.insert(ElementExtractorBundle::new_liquid());
+        },
+    },
+    BuildingData {
+        name: "Atmosphere Harvester",
+        sprite_name: "quarry",
+        location: PlacingLocation::Atmosphere,
+        build_time_seconds: 3.,
+        on_build: |c| {
+            c.insert(ElementExtractorBundle::new_gas());
+        },
+    },
+    BuildingData {
+        name: "Plasma Catalyser",
+        sprite_name: "quarry",
+        location: PlacingLocation::SurfaceOrAtmosphere,
+        build_time_seconds: 3.,
+        on_build: |c| {
+            c.insert(ElementExtractorBundle::new_plasma());
         },
     },
     BuildingData {
         name: "Cargo Stop",
         sprite_name: "cargo-stop",
-        location: PlacingLocation::Orbit,
+        location: PlacingLocation::Atmosphere,
         build_time_seconds: 2.,
         on_build: |_| {},
     },
@@ -39,13 +63,13 @@ pub struct BuildingData {
 #[derive(Clone, Copy, Debug)]
 pub enum PlacingLocation {
     Surface,
-    Orbit,
-    SurfaceOrbit,
+    Atmosphere,
+    SurfaceOrAtmosphere,
 }
 
 impl Default for PlacingLocation {
     fn default() -> Self {
-        Self::SurfaceOrbit
+        Self::SurfaceOrAtmosphere
     }
 }
 
