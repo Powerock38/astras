@@ -73,7 +73,7 @@ pub fn update_element_extractors(
     for (mut extractor, mut extractor_inventory, parent) in q_extractor.iter_mut() {
         extractor.cooldown.tick(time.delta());
 
-        if extractor.cooldown.finished() && extractor_inventory.remaining_size() > 0 {
+        if extractor.cooldown.finished() && extractor_inventory.remaining_space() > 0 {
             let mut astre_inventory = q_astre_inventories.get_mut(parent.get()).unwrap();
 
             let mut rng = rand::thread_rng();
@@ -101,8 +101,8 @@ pub fn update_element_extractors(
                     "Mined {} {} - from {} to {}",
                     q,
                     item_id,
-                    astre_inventory.remaining_size(),
-                    extractor_inventory.remaining_size()
+                    astre_inventory.remaining_space(),
+                    extractor_inventory.remaining_space()
                 );
             }
         }

@@ -1,9 +1,11 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
-use crate::{DockableOnAstre, ElementExtractorBundle};
+use crate::{
+    CrafterBundle, DockableOnAstre, ElementExtractorBundle, FreighterBundle, WarehouseBundle,
+};
 
-pub const BUILDINGS: &[BuildingData] = &[
-    BuildingData {
+pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
+    "quarry" => BuildingData {
         name: "Quarry",
         sprite_name: "quarry",
         location: PlacingLocation::Surface,
@@ -12,7 +14,7 @@ pub const BUILDINGS: &[BuildingData] = &[
             c.insert(ElementExtractorBundle::new_solid());
         },
     },
-    BuildingData {
+    "liquid_extractor" => BuildingData {
         name: "Liquid Extractor",
         sprite_name: "quarry",
         location: PlacingLocation::Surface,
@@ -21,7 +23,7 @@ pub const BUILDINGS: &[BuildingData] = &[
             c.insert(ElementExtractorBundle::new_liquid());
         },
     },
-    BuildingData {
+    "atmosphere_harvester" => BuildingData {
         name: "Atmosphere Harvester",
         sprite_name: "quarry",
         location: PlacingLocation::Atmosphere,
@@ -30,7 +32,7 @@ pub const BUILDINGS: &[BuildingData] = &[
             c.insert(ElementExtractorBundle::new_gas());
         },
     },
-    BuildingData {
+    "plasma_catalyser" => BuildingData {
         name: "Plasma Catalyser",
         sprite_name: "quarry",
         location: PlacingLocation::SurfaceOrAtmosphere,
@@ -39,14 +41,36 @@ pub const BUILDINGS: &[BuildingData] = &[
             c.insert(ElementExtractorBundle::new_plasma());
         },
     },
-    BuildingData {
-        name: "Cargo Stop",
-        sprite_name: "cargo-stop",
-        location: PlacingLocation::Atmosphere,
+    "warehouse" => BuildingData {
+        name: "Warehouse",
+        sprite_name: "warehouse",
+        location: PlacingLocation::Surface,
         build_time_seconds: 2.,
-        on_build: |_| {},
+        on_build: |c| {
+            c.insert(WarehouseBundle::default());
+        },
     },
-];
+    "freighter" => BuildingData {
+        name: "Freighter",
+        sprite_name: "ship",
+        location: PlacingLocation::SurfaceOrAtmosphere,
+        build_time_seconds: 1.,
+        on_build: |c| {
+            c.insert(FreighterBundle::default());
+        },
+    },
+    "smelter" => BuildingData {
+        name: "Smelter",
+        sprite_name: "smelter",
+        location: PlacingLocation::Surface,
+        build_time_seconds: 3.,
+        on_build: |c| {
+            c.insert(CrafterBundle::new(&[
+                "smelt_electronite_ore"
+            ]));
+        },
+    },
+};
 
 #[derive(Resource, Debug)]
 pub struct PlacingBuilding(pub BuildingData);

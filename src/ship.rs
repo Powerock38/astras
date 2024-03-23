@@ -44,7 +44,7 @@ pub fn setup_ship(
         c.spawn((
             ShipSprite,
             SpriteBundle {
-                texture: asset_server.load("sprites/ship-simple-downscale.png"),
+                texture: asset_server.load("sprites/ship.png"),
                 ..default()
             },
         ));

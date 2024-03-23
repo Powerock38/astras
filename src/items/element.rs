@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use phf::phf_map;
 use rand::{seq::IteratorRandom, Rng};
 
 use super::{Item, ITEMS};
@@ -80,7 +79,7 @@ impl ElementOnAstre {
     }
 }
 
-pub static ELEMENTS: phf::Map<&'static str, Element> = phf_map! {
+pub static ELEMENTS: phf::Map<&'static str, Element> = phf::phf_map! {
     "aer" => Element::new(Color::rgba(1.0, 1.0, 1.0, 0.5), ElementState::Gas),
     "aqua" => Element::new(Color::BLUE, ElementState::Liquid),
     "terra" => Element::new(Color::MAROON, ElementState::Solid),

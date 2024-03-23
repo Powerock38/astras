@@ -1,59 +1,104 @@
 use bevy::prelude::*;
+use bevy_mod_picking::picking_core::Pickable;
 
-use crate::{PlacingBuilding, BUILDINGS};
+use crate::{items::Recipe, Crafter, PlacingBuilding, BUILDINGS};
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
-const HUD_BUTTONS: &[HudButtonData] = &[
-    HudButtonData {
-        action: |commands| commands.insert_resource(PlacingBuilding(BUILDINGS[0])),
-        text: "Spawn Quarry",
-    },
-    HudButtonData {
-        action: |commands| commands.insert_resource(PlacingBuilding(BUILDINGS[1])),
-        text: "Spawn Cargo Stop",
-    },
-];
+#[derive(Component)]
+pub enum HudButtonAction {
+    SetPlacingBuilding(&'static str),
+    SetCrafterRecipe(Entity, Recipe),
+}
 
-#[derive(Clone, Copy)]
-struct HudButtonData {
-    pub action: fn(&mut Commands),
-    pub text: &'static str,
+#[derive(Bundle)]
+pub struct HudButtonBundle {
+    button: ButtonBundle,
+    action: HudButtonAction,
+}
+
+impl HudButtonBundle {
+    pub fn new(action: HudButtonAction) -> Self {
+        Self {
+            button: ButtonBundle {
+                style: Style {
+                    width: Val::Px(100.0),
+                    height: Val::Px(30.0),
+                    border: UiRect::all(Val::Px(2.0)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                border_color: BorderColor(Color::BLACK),
+                background_color: NORMAL_BUTTON.into(),
+                ..default()
+            },
+            action,
+        }
+    }
 }
 
 #[derive(Component)]
-pub struct HudButton(HudButtonData);
+pub struct UIWindowParent;
+
+#[derive(Bundle)]
+pub struct UIWindow {
+    node: NodeBundle,
+}
+
+impl Default for UIWindow {
+    fn default() -> Self {
+        Self {
+            node: NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.),
+                    height: Val::Percent(100.),
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+                background_color: Color::rgb(0.10, 0.10, 0.10).into(),
+                ..default()
+            },
+        }
+    }
+}
 
 pub fn update_hud(
     mut commands: Commands,
     mut interaction_query: Query<
         (
-            &HudButton,
+            &HudButtonAction,
             &Interaction,
             &mut BackgroundColor,
             &mut BorderColor,
-            &Children,
         ),
         (Changed<Interaction>, With<Button>),
     >,
-    mut text_query: Query<&mut Text>,
+    // Queries for HudButtonAction
+    mut q_crafter: Query<&mut Crafter>,
 ) {
-    for (hud_button, interaction, mut color, mut border_color, children) in &mut interaction_query {
-        let mut text = text_query.get_mut(children[0]).unwrap();
+    for (action, interaction, mut color, mut border_color) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
                 *color = PRESSED_BUTTON.into();
                 border_color.0 = Color::RED;
-                (hud_button.0.action)(&mut commands);
+                match action {
+                    HudButtonAction::SetPlacingBuilding(building_name) => {
+                        commands.insert_resource(PlacingBuilding(BUILDINGS[building_name]));
+                    }
+                    HudButtonAction::SetCrafterRecipe(crafter_entity, recipe) => {
+                        let mut crafter = q_crafter.get_mut(*crafter_entity).unwrap();
+                        crafter.set_recipe(*recipe);
+                    }
+                }
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
                 border_color.0 = Color::WHITE;
             }
             Interaction::None => {
-                text.sections[0].value = hud_button.0.text.to_string();
                 *color = NORMAL_BUTTON.into();
                 border_color.0 = Color::BLACK;
             }
@@ -63,47 +108,78 @@ pub fn update_hud(
 
 pub fn setup_hud(mut commands: Commands) {
     commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::Center,
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Start,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Percent(5.0),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
-        .with_children(|parent| {
-            // Buttons
-
-            for hud_button_data in HUD_BUTTONS {
-                parent
-                    .spawn(ButtonBundle {
-                        style: Style {
-                            width: Val::Px(100.0),
-                            height: Val::Px(30.0),
-                            border: UiRect::all(Val::Px(2.0)),
-                            // horizontally center child text
-                            justify_content: JustifyContent::Center,
-                            // vertically center child text
-                            align_items: AlignItems::Center,
-                            ..default()
-                        },
-                        border_color: BorderColor(Color::BLACK),
-                        background_color: NORMAL_BUTTON.into(),
+            Pickable::IGNORE,
+        ))
+        .with_children(|c| {
+            // Toolbar
+            c.spawn((
+                NodeBundle {
+                    style: Style {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(5.0),
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
                         ..default()
-                    })
-                    .insert(HudButton(*hud_button_data))
-                    .with_children(|parent| {
-                        parent.spawn(TextBundle::from_section(
-                            "",
+                    },
+                    ..default()
+                },
+                Pickable::IGNORE,
+            ))
+            .with_children(|c| {
+                for (building_id, building) in BUILDINGS.entries() {
+                    c.spawn(HudButtonBundle::new(HudButtonAction::SetPlacingBuilding(
+                        building_id,
+                    )))
+                    .with_children(|c| {
+                        c.spawn(TextBundle::from_section(
+                            building.name,
                             TextStyle {
-                                font_size: 20.0,
                                 color: Color::rgb(0.9, 0.9, 0.9),
                                 ..default()
                             },
                         ));
                     });
-            }
+                }
+            });
+
+            // Windows
+            c.spawn((
+                NodeBundle {
+                    style: Style {
+                        width: Val::Percent(80.0),
+                        height: Val::Percent(80.0),
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        ..default()
+                    },
+                    ..default()
+                },
+                UIWindowParent,
+                Pickable::IGNORE,
+            ));
         });
+}
+
+pub fn remove_windows_on_escape(
+    mut commands: Commands,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    query: Query<Entity, With<UIWindowParent>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        let parent = query.single();
+        commands.entity(parent).despawn_descendants();
+    }
 }

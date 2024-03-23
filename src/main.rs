@@ -1,4 +1,5 @@
 use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
+use bevy_mod_picking::prelude::*;
 
 use background::*;
 use buildings::*;
@@ -33,6 +34,8 @@ fn main() {
             Material2dPlugin::<PlanetMaterial>::default(),
             Material2dPlugin::<BackgroundMaterial>::default(),
         ))
+        .add_plugins(DefaultPickingPlugins)
+        .insert_resource(DebugPickingMode::Normal)
         .add_systems(Startup, (spawn_solar_system, setup_hud))
         .add_systems(
             Update,
@@ -45,6 +48,8 @@ fn main() {
                 place_building,
                 constructing_building,
                 update_element_extractors,
+                update_freighters,
+                remove_windows_on_escape,
             ),
         )
         .add_systems(

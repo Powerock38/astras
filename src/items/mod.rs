@@ -6,3 +6,6 @@ pub use item::*;
 
 mod inventory;
 pub use inventory::*;
+
+mod recipe;
+pub use recipe::*;
