@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    background::BackgroundMaterial, planet::PlanetMaterial, ship::setup_ship, spawn_star,
+    astres::PlanetMaterial, background::BackgroundMaterial, ship::setup_ship, spawn_star,
     worm::spawn_worm, StarMaterial,
 };
 

@@ -8,9 +8,9 @@ use rand::Rng;
 use std::f32::consts::PI;
 
 use crate::{
-    astre::Astre,
+    astres::Astre,
+    circle_mesh,
     items::{ElementOnAstre, ElementState, Inventory, ELEMENTS},
-    utils::circle_mesh,
 };
 
 #[derive(Bundle)]

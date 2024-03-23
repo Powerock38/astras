@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 
 use crate::{
-    astre::Astre,
+    astres::Astre,
     items::{ElementState, Inventory, ELEMENTS},
 };
 

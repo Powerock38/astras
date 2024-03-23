@@ -6,11 +6,10 @@ use bevy::{
 use rand::Rng;
 
 use crate::{
-    astre::Astre,
+    astres::Astre,
+    circle_mesh,
     items::{ElementOnAstre, ElementState, Inventory},
-    spawn_planet_c,
-    utils::circle_mesh,
-    PlanetMaterial,
+    spawn_planet_c, PlanetMaterial,
 };
 
 #[derive(Bundle)]

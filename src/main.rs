@@ -1,28 +1,24 @@
 use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
 use bevy_mod_picking::prelude::*;
 
+use astres::*;
 use background::*;
 use buildings::*;
 use dockable_on_astre::*;
 use hud::*;
-use planet::*;
 use ship::*;
 use solar_system::*;
-use star::*;
 use worm::*;
 
-mod astre;
+mod astres;
 mod background;
 mod buildings;
 mod constants;
 mod dockable_on_astre;
 mod hud;
 mod items;
-mod planet;
 mod ship;
 mod solar_system;
-mod star;
-mod utils;
 mod worm;
 
 fn main() {

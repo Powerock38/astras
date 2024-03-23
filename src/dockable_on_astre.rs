@@ -1,4 +1,4 @@
-use crate::{astre::Astre, PlacingLocation, SolarSystem};
+use crate::{astres::Astre, PlacingLocation, SolarSystem};
 use bevy::prelude::*;
 
 #[derive(Component, Default)]
