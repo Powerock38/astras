@@ -1,5 +1,5 @@
 #import bevy_pbr::forward_io::VertexOutput
-#import "shaders/noise.wgsl"::nestedNoise
+#import "shaders/noise.wgsl"::nestedMovingNoise
 
 const NOISE_SPEED: f32 = 0.04;
 
@@ -18,7 +18,7 @@ const GLOW_MULTIPLIER: f32 = 20.0;
 fn fragment(
     in: VertexOutput,
 ) -> @location(0) vec4<f32> {
-    var color = material.color.xyz * nestedNoise(in.uv * NOISE_SCALE, NOISE_SPEED, material.seed);
+    var color = material.color.xyz * nestedMovingNoise(in.uv * NOISE_SCALE, NOISE_SPEED, material.seed);
 
     let glowFactor = max(0.0, (max(color.x, max(color.y, color.z)) - GLOW_THRESHOLD) / (1.0 - GLOW_THRESHOLD));
     let glowColor = material.color.xyz * GLOW_MULTIPLIER;

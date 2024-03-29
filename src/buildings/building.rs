@@ -1,7 +1,7 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
 use crate::{
-    CrafterBundle, DockableOnAstre, ElementExtractorBundle, FreighterBundle, WarehouseBundle,
+    CrafterBundle, DockableOnAstre, ElementExtractorBundle, FreighterBundle, WarehouseBundle, SHIP_Z,
 };
 
 pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
@@ -72,6 +72,8 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
     },
 };
 
+const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
+
 #[derive(Resource, Debug)]
 pub struct PlacingBuilding(pub BuildingData);
 
@@ -128,7 +130,7 @@ pub fn place_building(
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
             .map(|ray| ray.origin.truncate())
         {
-            let world_position = world_position.extend(1.);
+            let world_position = world_position.extend(BUILDING_PREVIEW_Z);
 
             // Building Preview
             if let Some((building_preview_entity, mut building_preview_transform)) =
@@ -156,8 +158,6 @@ pub fn place_building(
                             },
                             DockableOnAstre::instant_location(placing_building.0.location),
                         ));
-
-                    *building_preview_transform = Transform::from_translation(world_position);
 
                     commands.remove_resource::<PlacingBuilding>();
                 }

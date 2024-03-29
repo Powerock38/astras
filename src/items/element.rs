@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::{seq::IteratorRandom, Rng};
 
-use super::{Item, ITEMS};
+use crate::NB_COLORS;
 
 pub struct Element {
     pub color: Color,
@@ -22,6 +22,7 @@ pub enum ElementState {
     Plasma,
 }
 
+#[derive(Clone, Copy)]
 pub struct ElementOnAstre {
     pub id: &'static str,
     pub quantity: u32,
@@ -70,12 +71,21 @@ impl ElementOnAstre {
             .fold(Color::BLACK, |acc, c| acc + c)
     }
 
-    pub fn element(&self) -> &Element {
-        &ELEMENTS[self.id]
-    }
+    pub fn get_colors(elements: &[ElementOnAstre]) -> [Color; NB_COLORS] {
+        let mut elements = elements.to_vec();
+        elements.sort_by_key(|e| e.quantity);
 
-    pub fn item(&self) -> Option<&Item> {
-        ITEMS.get(self.id)
+        let mut color = elements.get(0).map(|e| ELEMENTS[e.id].color).unwrap();
+        let mut colors = vec![color; NB_COLORS];
+        for i in 1..NB_COLORS {
+            color = elements
+                .get(i)
+                .map(|e| ELEMENTS[e.id].color)
+                .unwrap_or(color);
+            colors[i] = color;
+        }
+
+        colors.try_into().unwrap()
     }
 }
 

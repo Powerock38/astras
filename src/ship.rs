@@ -35,7 +35,7 @@ pub fn setup_ship(
         },
         DockableOnAstre::default(),
         SpatialBundle {
-            transform: Transform::from_translation(position.extend(1.)),
+            transform: Transform::from_translation(position.extend(SHIP_Z)),
             ..default()
         },
     ))
@@ -56,12 +56,11 @@ pub fn setup_ship(
                     hdr: true,
                     ..default()
                 },
-                tonemapping: Tonemapping::BlenderFilmic,
-                transform: Transform::from_translation(Vec3::new(0., 0., SHIP_Z)),
                 projection: OrthographicProjection {
                     scale: 100.0,
                     ..default()
                 },
+                tonemapping: Tonemapping::BlenderFilmic,
                 ..default()
             },
             BloomSettings::default(),
@@ -112,7 +111,8 @@ pub fn update_ship(
             ship.speed = Vec2::ZERO;
         }
 
-        transform.translation += (ship.speed * time.delta_seconds()).extend(0.);
+        transform.translation.x += ship.speed.x * time.delta_seconds();
+        transform.translation.y += ship.speed.y * time.delta_seconds();
 
         // Sprite rotation
         let mut sprite_transform = q_ship_sprite.single_mut();

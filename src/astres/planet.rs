@@ -13,6 +13,8 @@ use crate::{
     items::{ElementOnAstre, ElementState, Inventory, ELEMENTS},
 };
 
+pub const NB_COLORS: usize = 3;
+
 #[derive(Bundle)]
 pub struct PlanetBundle {
     pub planet: Planet,
@@ -29,7 +31,7 @@ pub struct Planet {
 #[derive(Asset, AsBindGroup, TypePath, Debug, Clone)]
 pub struct PlanetMaterial {
     #[uniform(0)]
-    pub color: Color,
+    pub colors: [Color; NB_COLORS],
     #[uniform(0)]
     pub seed: f32,
     #[uniform(0)]
@@ -79,26 +81,44 @@ pub fn spawn_planet(
         &[ElementState::Solid, ElementState::Liquid],
     );
 
-    let atmoshpere_composition = ElementOnAstre::random_elements(
-        rng.gen_range(1..=5),
-        rng.gen_range(1_000..=100_000),
-        &[ElementState::Gas],
-    );
+    let no_atmosphere = atmosphere_radius == 0.0;
 
-    let planet_color = ElementOnAstre::get_color(&composition);
+    let atmoshpere_composition = if no_atmosphere {
+        vec![]
+    } else {
+        ElementOnAstre::random_elements(
+            rng.gen_range(1..=5),
+            rng.gen_range(1_000..=100_000),
+            &[ElementState::Gas],
+        )
+    };
+
+    let atmosphere_density = if no_atmosphere {
+        0.0
+    } else {
+        rng.gen_range(0.01..0.5)
+    };
+
+    let atmosphere_speed = if no_atmosphere {
+        0.0
+    } else {
+        rng.gen_range(0.01..1.0)
+    };
+
+    let colors = ElementOnAstre::get_colors(&composition);
 
     let atmosphere_color = ElementOnAstre::get_color(&atmoshpere_composition);
 
     composition.extend(atmoshpere_composition);
 
     let material = PlanetMaterial {
-        color: planet_color,
+        colors,
         seed: rng.gen::<f32>() * 1000.,
         noise_scale: rng.gen_range(1.0..10.0),
         planet_radius_normalized: surface_radius / total_radius,
-        atmosphere_density: rng.gen_range(0.01..0.5),
+        atmosphere_density,
         atmosphere_color,
-        atmosphere_speed: rng.gen_range(0.01..1.0),
+        atmosphere_speed,
     };
 
     c.spawn(PlanetBundle {
@@ -147,7 +167,13 @@ pub fn spawn_planet_c(
             continue;
         }
 
-        let c_atmosphere_radius = rng.gen_range(0.0..(c_surface_radius * 0.5));
+        let c_no_atmosphere = rng.gen_bool(0.3);
+
+        let c_atmosphere_radius = if c_no_atmosphere {
+            0.0
+        } else {
+            rng.gen_range(0.0..(c_surface_radius * 0.5))
+        };
 
         let c_nb_children = rng.gen_range(0..=(0.1 * nb_children as f32) as u32);
 
@@ -187,7 +213,7 @@ pub fn update_planets(time: Res<Time>, mut q_planets: Query<(&Planet, &mut Trans
 
         let orbit_angle = angle + planet.orbit_speed * time.delta_seconds();
 
-        transform.translation =
-            Vec2::new(orbit * orbit_angle.cos(), orbit * orbit_angle.sin()).extend(0.);
+        transform.translation.x = orbit * orbit_angle.cos();
+        transform.translation.y = orbit * orbit_angle.sin();
     }
 }

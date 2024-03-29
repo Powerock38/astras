@@ -1,7 +1,9 @@
 #import bevy_sprite::mesh2d_view_bindings::globals
 
+// Moving fractal noise
+
 fn random(x: f32) -> f32 {
-    return fract(sin(x) * 10000.0);
+    return fract(sin(x) * 43758.5453123);
 }
 
 fn noise(p: vec2<f32>) -> f32 {
@@ -25,7 +27,7 @@ fn ne(p: vec2<f32>) -> vec2<f32> {
 }
 
 fn smoothNoise(p: vec2<f32>) -> f32 {
-    let interp = vec2<f32>(smoothstep(0.0, 1.0, fract(p.x)),smoothstep(0.0, 1.0, fract(p.y)));
+    let interp = vec2<f32>(smoothstep(0.0, 1.0, fract(p.x)), smoothstep(0.0, 1.0, fract(p.y)));
     let s = mix(noise(sw(p)), noise(se(p)), interp.x);
     let n = mix(noise(nw(p)), noise(ne(p)), interp.x);
     return mix(s, n, interp.y);
@@ -48,35 +50,20 @@ fn movingNoise(p: vec2<f32>, speed: f32, seed: f32) -> f32 {
     return fractalNoise(p + vec2<f32>(x, y));
 }
 
-fn nestedNoise(p: vec2<f32>, speed: f32, seed: f32) -> f32 {
+fn nestedMovingNoise(p: vec2<f32>, speed: f32, seed: f32) -> f32 {
     let x = movingNoise(p, speed, seed);
-    let y = movingNoise(p + vec2<f32>(100.0), speed, seed);
+    let y = movingNoise(p, speed, 2.0 * seed);
     return movingNoise(p + vec2<f32>(x, y), speed, seed);
 }
 
-fn hash23(p: vec2f) -> vec3f {
-    let q = vec3f(dot(p, vec2f(127.1, 311.7)),
-        dot(p, vec2f(269.5, 183.3)),
-        dot(p, vec2f(419.2, 371.9)));
-    return fract(sin(q) * 43758.5453);
+fn notMovingNoise(p: vec2<f32>, seed: f32) -> f32 {
+    let x = fractalNoise(p + seed);
+    let y = fractalNoise(p - seed);
+    return fractalNoise(p + vec2<f32>(x, y));
 }
 
-fn voroNoise2(x: vec2f, u: f32, v: f32) -> f32 {
-    let p = floor(x);
-    let f = fract(x);
-    let k = 1. + 63. * pow(1. - v, 4.);
-    var va: f32 = 0.;
-    var wt: f32 = 0.;
-    for(var j: i32 = -2; j <= 2; j = j + 1) {
-        for(var i: i32 = -2; i <= 2; i = i + 1) {
-            let g = vec2f(f32(i), f32(j));
-            let o = hash23(p + g) * vec3f(u, u, 1.);
-            let r = g - f + o.xy;
-            let d = dot(r, r);
-            let ww = pow(1. - smoothstep(0., 1.414, sqrt(d)), k);
-            va = va + o.z * ww;
-            wt = wt + ww;
-        }
-    }
-    return va / wt;
+fn nestedNoise(p: vec2<f32>, seed: f32) -> f32 {
+    let x = notMovingNoise(p, seed);
+    let y = notMovingNoise(p, 2.0 * seed);
+    return notMovingNoise(p + vec2<f32>(x, y), seed);
 }
