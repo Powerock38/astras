@@ -30,10 +30,6 @@ pub fn spawn_background(
         Background,
         MaterialMesh2dBundle {
             mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
-            transform: Transform {
-                translation: Vec3::new(0.0, 0.0, -100.0),
-                ..default()
-            },
             material: materials.add(BackgroundMaterial {
                 seed: rand::thread_rng().gen::<f32>() * 1000.,
             }),

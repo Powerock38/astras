@@ -5,9 +5,9 @@ use astres::*;
 use background::*;
 use buildings::*;
 use dockable_on_astre::*;
-use hud::*;
 use ship::*;
 use solar_system::*;
+use ui::*;
 use worm::*;
 
 mod astres;
@@ -15,10 +15,10 @@ mod background;
 mod buildings;
 mod constants;
 mod dockable_on_astre;
-mod hud;
 mod items;
 mod ship;
 mod solar_system;
+mod ui;
 mod worm;
 
 fn main() {
@@ -46,6 +46,7 @@ fn main() {
                 update_element_extractors,
                 update_freighters,
                 remove_windows_on_escape,
+                update_crafters,
             ),
         )
         .add_systems(

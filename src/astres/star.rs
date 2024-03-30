@@ -26,6 +26,8 @@ pub struct StarMaterial {
     pub color: Color,
     #[uniform(0)]
     pub seed: f32,
+    #[uniform(0)]
+    pub rotation: Vec2,
 }
 
 impl Material2d for StarMaterial {
@@ -66,9 +68,15 @@ pub fn spawn_star(
 
     let color = ElementOnAstre::get_color(&composition);
 
+    let rotation_direction =
+        Vec2::new(rng.gen_range(-1.0..=1.0), rng.gen_range(-1.0..=1.0)).normalize();
+
+    let rotation_speed = rng.gen_range(0.001..=0.01);
+
     let material = StarMaterial {
         color,
         seed: rng.gen::<f32>() * 1000.,
+        rotation: rotation_direction * rotation_speed,
     };
 
     c.spawn(StarBundle {

@@ -1,7 +1,5 @@
 use crate::items::ITEMS;
 
-use super::Inventory;
-
 #[derive(Clone, Copy)]
 pub struct Recipe {
     inputs: &'static [(&'static str, u32)],
@@ -10,15 +8,19 @@ pub struct Recipe {
 }
 
 impl Recipe {
-    pub fn can_craft(&self, inventory: &Inventory) -> bool {
-        self.inputs
-            .iter()
-            .all(|(id, quantity)| inventory.quantity(id) >= *quantity)
-    }
-
     #[inline]
     pub fn time(&self) -> f32 {
         self.time
+    }
+
+    #[inline]
+    pub fn inputs(&self) -> &'static [(&'static str, u32)] {
+        self.inputs
+    }
+
+    #[inline]
+    pub fn outputs(&self) -> &'static [(&'static str, u32)] {
+        self.outputs
     }
 
     fn slice_to_string(slice: &[(&'static str, u32)]) -> String {

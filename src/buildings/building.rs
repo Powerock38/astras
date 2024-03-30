@@ -1,7 +1,8 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
 use crate::{
-    CrafterBundle, DockableOnAstre, ElementExtractorBundle, FreighterBundle, WarehouseBundle, SHIP_Z,
+    CrafterBundle, DockableOnAstre, ElementExtractorBundle, FreighterBundle, WarehouseBundle,
+    SHIP_Z,
 };
 
 pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {

@@ -91,6 +91,7 @@ pub fn update_hud(
                     HudButtonAction::SetCrafterRecipe(crafter_entity, recipe) => {
                         let mut crafter = q_crafter.get_mut(*crafter_entity).unwrap();
                         crafter.set_recipe(*recipe);
+                        border_color.0 = Color::WHITE;
                     }
                 }
             }

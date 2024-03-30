@@ -1,18 +1,17 @@
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 
-use super::ElementOnAstre;
+use super::{ElementOnAstre, ItemMap, Recipe};
 
 #[derive(Component, Debug)]
 pub struct Inventory {
-    items: HashMap<&'static str, u32>, // Item ID -> Quantity
-    size: u32,                         // 0 = infinite
+    items: ItemMap,
+    size: u32, // 0 = infinite
 }
 
 impl Inventory {
     pub fn new(size: u32) -> Self {
         Self {
-            items: HashMap::default(),
+            items: ItemMap::default(),
             size,
         }
     }
@@ -34,18 +33,13 @@ impl Inventory {
         }
     }
 
-    fn quantity_all(&self) -> u32 {
-        self.items
-            .iter()
-            .fold(0, |quantity, entry| quantity + entry.1)
-    }
-
+    #[inline]
     pub fn remaining_space(&self) -> u32 {
-        self.size.saturating_sub(self.quantity_all())
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.items.is_empty()
+        self.size.saturating_sub(
+            self.items
+                .iter()
+                .fold(0, |quantity, entry| quantity + entry.1),
+        )
     }
 
     pub fn least_quantity_item_id(&self) -> Option<&'static str> {
@@ -55,20 +49,26 @@ impl Inventory {
             .map(|entry| *entry.0)
     }
 
-    pub fn transfer_to(&mut self, other: &mut Inventory, id: &'static str, quantity: u32) -> u32 {
+    // Best-effort item transfer
+    pub fn transfer_to(
+        &mut self,
+        other: &mut Inventory,
+        id: &'static str,
+        max_quantity: u32,
+    ) -> u32 {
         if let Some(item_quantity) = self.items.get_mut(id) {
             // Adjust quantity if self doesn't have enough quantity
-            let mut real_quantity = (*item_quantity).min(quantity);
+            let mut real_quantity = (*item_quantity).min(max_quantity);
 
             // If other's size is not infinite
             if other.size != 0 {
                 // Adjust quantity if other doesn't have enough space
-                real_quantity = (other.remaining_space().min(quantity)).min(real_quantity);
+                real_quantity = other.remaining_space().min(real_quantity);
             }
 
             if real_quantity > 0 {
                 self.remove(id, real_quantity);
-                other.add(id, quantity);
+                other.add(id, real_quantity);
 
                 return real_quantity;
             }
@@ -77,23 +77,90 @@ impl Inventory {
         0
     }
 
+    pub fn can_craft(&self, recipe: &Recipe) -> CanCraftResult {
+        let has_space_for_outputs = self.size == 0
+            || recipe
+                .outputs()
+                .iter()
+                .fold(0, |quantity, entry| quantity + entry.1)
+                <= self.remaining_space();
+
+        if !has_space_for_outputs {
+            return CanCraftResult::NotEnoughSpace;
+        }
+
+        let has_inputs = recipe
+            .inputs()
+            .iter()
+            .all(|(id, quantity)| self.quantity(id) >= *quantity);
+
+        if !has_inputs {
+            return CanCraftResult::MissingInputs(
+                recipe
+                    .inputs()
+                    .iter()
+                    .filter_map(|(id, quantity)| {
+                        if self.quantity(id) < *quantity {
+                            Some((*id, quantity - self.quantity(id)))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+            );
+        }
+
+        CanCraftResult::Yes
+    }
+
+    pub fn craft(&mut self, recipe: &Recipe) {
+        if self.can_craft(recipe).yes() {
+            for (id, quantity) in recipe.inputs() {
+                self.remove(id, *quantity);
+            }
+
+            for (id, quantity) in recipe.outputs() {
+                self.add(id, *quantity);
+            }
+        }
+    }
+
+    #[inline]
     pub fn quantity(&self, id: &'static str) -> u32 {
         *self.items.get(id).unwrap_or(&0)
     }
 
+    #[inline]
     pub fn all_ids(&self) -> Vec<&'static str> {
         self.items.keys().copied().collect()
+    }
+
+    #[inline]
+    pub fn items(&self) -> &ItemMap {
+        &self.items
     }
 }
 
 impl From<Vec<ElementOnAstre>> for Inventory {
     fn from(elements: Vec<ElementOnAstre>) -> Self {
-        let mut items = HashMap::default();
+        let mut items = ItemMap::default();
 
         for element in elements {
             items.insert(element.id, element.quantity);
         }
 
         Self { items, size: 0 }
+    }
+}
+
+pub enum CanCraftResult {
+    Yes,
+    NotEnoughSpace,
+    MissingInputs(ItemMap),
+}
+
+impl CanCraftResult {
+    pub fn yes(&self) -> bool {
+        matches!(self, Self::Yes)
     }
 }

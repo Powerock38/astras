@@ -9,3 +9,6 @@ pub use inventory::*;
 
 mod recipe;
 pub use recipe::*;
+
+mod logistic;
+pub use logistic::*;

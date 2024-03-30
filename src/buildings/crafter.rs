@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    items::{Inventory, Recipe, RECIPES},
-    HudButtonAction, HudButtonBundle, UIWindow, UIWindowParent,
+    items::{CanCraftResult, Inventory, LogisticRequest, Recipe, RECIPES},
+    spawn_inventory_ui, HudButtonAction, HudButtonBundle, UIWindow, UIWindowParent,
 };
 
 #[derive(Bundle)]
@@ -29,6 +29,7 @@ impl CrafterBundle {
 pub struct Crafter {
     recipe: Option<CrafterRecipe>,
     possible_recipes: &'static [&'static str],
+    cooldown: Timer,
 }
 
 impl Crafter {
@@ -36,6 +37,7 @@ impl Crafter {
         Self {
             recipe: None,
             possible_recipes,
+            cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
         }
     }
 
@@ -46,13 +48,13 @@ impl Crafter {
 
 pub struct CrafterRecipe {
     recipe: Recipe,
-    cooldown: Timer,
+    progress: Timer,
 }
 
 impl CrafterRecipe {
     pub fn new(recipe: Recipe) -> Self {
         Self {
-            cooldown: Timer::from_seconds(recipe.time(), TimerMode::Once),
+            progress: Timer::from_seconds(recipe.time(), TimerMode::Once),
             recipe,
         }
     }
@@ -62,12 +64,12 @@ fn spawn_window(
     mut commands: Commands,
     listener: Listener<Pointer<Click>>,
     q_ui_window_parent: Query<Entity, With<UIWindowParent>>,
-    q_crafter: Query<&Crafter>,
+    q_crafter: Query<(&Crafter, &Inventory)>,
 ) {
     let parent = q_ui_window_parent.single();
 
     let entity = listener.listener();
-    let crafter = q_crafter.get(entity).unwrap();
+    let (crafter, inventory) = q_crafter.get(entity).unwrap();
 
     commands
         .entity(parent)
@@ -91,6 +93,45 @@ fn spawn_window(
                         ));
                     });
                 }
+
+                // Inventory
+                spawn_inventory_ui(c, inventory);
             });
         });
+}
+
+pub fn update_crafters(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut q_crafter: Query<(Entity, &mut Crafter, &mut Inventory)>,
+) {
+    for (entity, mut crafter, mut inventory) in q_crafter.iter_mut() {
+        if crafter.cooldown.tick(time.delta()).finished() {
+            // If a recipe is selected
+            if let Some(recipe_crafter) = &mut crafter.recipe {
+                // Try crafting
+                match inventory.can_craft(&recipe_crafter.recipe) {
+                    // Craft
+                    CanCraftResult::Yes => {
+                        // FIXME: progress is ticked every crafter.cooldown
+                        if recipe_crafter.progress.tick(time.delta()).just_finished() {
+                            inventory.craft(&recipe_crafter.recipe);
+                            recipe_crafter.progress.reset();
+                        }
+                    }
+
+                    // Request missing inputs
+                    CanCraftResult::MissingInputs(missing_inputs) => {
+                        println!("Missing inputs: {:?}", missing_inputs);
+                        commands
+                            .entity(entity)
+                            .insert(LogisticRequest::new(missing_inputs));
+                    }
+
+                    // TODO
+                    CanCraftResult::NotEnoughSpace => {}
+                }
+            }
+        }
+    }
 }

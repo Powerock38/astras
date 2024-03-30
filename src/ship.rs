@@ -137,7 +137,7 @@ pub fn update_camera(
     let mut projection = query.single_mut();
 
     for scroll in scroll_evr.read() {
-        projection.scale *= 1. + 2. * scroll.y * time.delta_seconds();
+        projection.scale *= 1. - 2. * scroll.y * time.delta_seconds();
     }
 
     for mut transform in background_query.iter_mut() {

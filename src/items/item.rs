@@ -1,9 +1,12 @@
+use bevy::utils::HashMap;
 use phf::phf_map;
 
 pub struct Item {
     pub name: &'static str,
     pub description: &'static str,
 }
+
+pub type ItemMap = HashMap<&'static str, u32>; // Item ID -> Quantity
 
 pub static ITEMS: phf::Map<&'static str, Item> = phf_map! {
     "electronite_ore" => Item {

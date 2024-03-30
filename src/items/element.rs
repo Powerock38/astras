@@ -92,10 +92,10 @@ impl ElementOnAstre {
 pub static ELEMENTS: phf::Map<&'static str, Element> = phf::phf_map! {
     "aer" => Element::new(Color::rgba(1.0, 1.0, 1.0, 0.5), ElementState::Gas),
     "aqua" => Element::new(Color::BLUE, ElementState::Liquid),
-    "terra" => Element::new(Color::MAROON, ElementState::Solid),
-    "rock" => Element::new(Color::GRAY, ElementState::Solid),
+    //"terra" => Element::new(Color::MAROON, ElementState::Solid),
+    //"rock" => Element::new(Color::GRAY, ElementState::Solid),
     "electronite_ore" => Element::new(Color::ORANGE_RED, ElementState::Solid),
-    "quark_crystal" => Element::new(Color::TURQUOISE, ElementState::Solid),
+    //"quark_crystal" => Element::new(Color::TURQUOISE, ElementState::Solid),
     "photonite" => Element::new(Color::YELLOW, ElementState::Plasma),
     "neutronite" => Element::new(Color::ALICE_BLUE, ElementState::Plasma),
     "gravitonite" => Element::new(Color::RED, ElementState::Plasma),
