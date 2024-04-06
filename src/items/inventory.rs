@@ -38,15 +38,8 @@ impl Inventory {
         self.size.saturating_sub(
             self.items
                 .iter()
-                .fold(0, |quantity, entry| quantity + entry.1),
+                .fold(0, |total, (_, quantity)| total + quantity),
         )
-    }
-
-    pub fn least_quantity_item_id(&self) -> Option<&'static str> {
-        self.items
-            .iter()
-            .min_by_key(|entry| entry.1)
-            .map(|entry| *entry.0)
     }
 
     // Best-effort item transfer
@@ -82,7 +75,7 @@ impl Inventory {
             || recipe
                 .outputs()
                 .iter()
-                .fold(0, |quantity, entry| quantity + entry.1)
+                .fold(0, |total, (_, quantity)| total + quantity)
                 <= self.remaining_space();
 
         if !has_space_for_outputs {

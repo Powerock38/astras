@@ -29,7 +29,7 @@ impl ElementExtractorBundle {
                 amount_per_tick: 100,
             },
             inventory: Inventory::new(1000),
-            logistic_provider: LogisticProvider,
+            logistic_provider: LogisticProvider::default(),
         }
     }
 
@@ -41,7 +41,7 @@ impl ElementExtractorBundle {
                 amount_per_tick: 1000,
             },
             inventory: Inventory::new(5000),
-            logistic_provider: LogisticProvider,
+            logistic_provider: LogisticProvider::default(),
         }
     }
 
@@ -53,7 +53,7 @@ impl ElementExtractorBundle {
                 amount_per_tick: 500,
             },
             inventory: Inventory::new(10_000),
-            logistic_provider: LogisticProvider,
+            logistic_provider: LogisticProvider::default(),
         }
     }
 
@@ -65,7 +65,7 @@ impl ElementExtractorBundle {
                 amount_per_tick: 10,
             },
             inventory: Inventory::new(100),
-            logistic_provider: LogisticProvider,
+            logistic_provider: LogisticProvider::default(),
         }
     }
 }

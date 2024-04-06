@@ -11,13 +11,6 @@ pub struct FreighterBundle {
     pub inventory: Inventory,
 }
 
-#[derive(Component, Default)]
-pub struct Freighter {
-    cooldown: Timer,
-    max_amount_per_transfer: u32,
-    journey: Option<(LogisticJourney, Option<Vec3>)>, // (journey, move_target)
-}
-
 impl Default for FreighterBundle {
     fn default() -> Self {
         Self {
@@ -29,6 +22,13 @@ impl Default for FreighterBundle {
             inventory: Inventory::new(10_000),
         }
     }
+}
+
+#[derive(Component, Default)]
+pub struct Freighter {
+    cooldown: Timer,
+    max_amount_per_transfer: u32,
+    journey: Option<(LogisticJourney, Option<Vec3>)>, // (journey, move_target)
 }
 
 /*
@@ -48,11 +48,17 @@ journey
 
 pub fn update_freighters(
     time: Res<Time>,
-    mut q_freighters: Query<(&mut Freighter, &Parent, &mut Transform, &mut Inventory)>,
+    mut q_freighters: Query<(
+        Entity,
+        &mut Freighter,
+        &Parent,
+        &mut Transform,
+        &mut Inventory,
+    )>,
     mut q_requesters: Query<
         (
             Entity,
-            &LogisticRequest,
+            &mut LogisticRequest,
             &Parent,
             &Transform,
             &mut Inventory,
@@ -60,71 +66,81 @@ pub fn update_freighters(
         Without<Freighter>,
     >,
     mut q_providers: Query<
-        (Entity, &Parent, &Transform, &mut Inventory),
         (
-            With<LogisticProvider>,
-            Without<LogisticRequest>,
-            Without<Freighter>,
+            Entity,
+            &mut LogisticProvider,
+            &Parent,
+            &Transform,
+            &mut Inventory,
         ),
+        (Without<LogisticRequest>, Without<Freighter>),
     >,
 ) {
-    for (mut freighter, parent, mut transform, mut inventory) in q_freighters.iter_mut() {
+    for (freighter_entity, mut freighter, parent, mut transform, mut inventory) in
+        q_freighters.iter_mut()
+    {
         if freighter.cooldown.tick(time.delta()).finished() {
             if let Some((journey, move_target)) = &mut freighter.journey {
-                if let Ok((_, request, _, requester_transform, mut requester_inventory)) =
+                if let Ok((_, logistic_request, _, requester_transform, mut requester_inventory)) =
                     q_requesters.get_mut(journey.requester())
                 {
-                    println!("{:?} {:?}", journey, request);
+                    if logistic_request.id() == journey.request_id() {
+                        println!("{:?} {:?}", journey, logistic_request);
 
-                    if request.can_be_partially_fullfilled_by(&inventory) {
-                        // If freighter inventory can (partially) fullfill requester's request, go to requester
-                        let target = requester_transform.translation;
-                        *move_target = Some(target);
-
-                        if is_target_reached(&transform, target) {
-                            // transfer request's items to requester
-                            *move_target = None;
-
-                            //TODO: do not transfer all items at once
-                            for (item_id, &quantity) in request.items() {
-                                let q = inventory.transfer_to(
-                                    &mut requester_inventory,
-                                    item_id,
-                                    quantity.min(freighter.max_amount_per_transfer),
-                                );
-
-                                println!("Transferred {} {}", q, item_id);
-                            }
-                            //TODO: if q = 0, requester is full: go to provider OR go to new requester?
-                        }
-                    } else {
-                        // If freighter inventory can't fullfill requester's request, go to provider
-                        if let Ok((_, _, provider_transform, mut provider_inventory)) =
-                            q_providers.get_mut(journey.provider())
-                        {
-                            let target = provider_transform.translation;
+                        if logistic_request.compute_fulfillment_percentage(&inventory) > 0 {
+                            // If freighter inventory can (partially) fullfill requester's request, go to requester
+                            let target = requester_transform.translation;
                             *move_target = Some(target);
 
                             if is_target_reached(&transform, target) {
-                                // transfer request's items from provider
+                                // transfer request's items to requester
                                 *move_target = None;
 
                                 //TODO: do not transfer all items at once
-                                for (item_id, &quantity) in request.items() {
-                                    let q = provider_inventory.transfer_to(
-                                        &mut inventory,
+                                for (item_id, &quantity) in logistic_request.items() {
+                                    let q = inventory.transfer_to(
+                                        &mut requester_inventory,
                                         item_id,
                                         quantity.min(freighter.max_amount_per_transfer),
                                     );
 
                                     println!("Transferred {} {}", q, item_id);
                                 }
+                                //TODO: if q = 0, requester is full: go to provider OR go to new requester?
                             }
                         } else {
-                            // Provider doesn't exist anymore
-                            println!("Provider {:?} doesn't exist anymore", journey.provider());
-                            freighter.journey = None;
+                            // If freighter inventory can't fullfill requester's request, go to provider
+                            if let Ok((_, _, _, provider_transform, mut provider_inventory)) =
+                                q_providers.get_mut(journey.provider())
+                            {
+                                let target = provider_transform.translation;
+                                *move_target = Some(target);
+
+                                if is_target_reached(&transform, target) {
+                                    // transfer request's items from provider
+                                    *move_target = None;
+
+                                    //TODO: do not transfer all items at once
+                                    for (item_id, &quantity) in logistic_request.items() {
+                                        let q = provider_inventory.transfer_to(
+                                            &mut inventory,
+                                            item_id,
+                                            quantity.min(freighter.max_amount_per_transfer),
+                                        );
+
+                                        println!("Transferred {} {}", q, item_id);
+                                    }
+                                }
+                            } else {
+                                // Provider doesn't exist anymore
+                                println!("Provider {:?} doesn't exist anymore", journey.provider());
+                                freighter.journey = None;
+                            }
                         }
+                    } else {
+                        // Request changed
+                        println!("Request changed");
+                        freighter.journey = None;
                     }
                 } else {
                     // Journey requester doesn't exist anymore
@@ -132,43 +148,71 @@ pub fn update_freighters(
                     freighter.journey = None;
                 }
             } else {
-                // Search for a requester on the same planet
+                // Search for a requester on the same planet, with the minimum number of freighters
 
-                // TODO: round robin
                 let mut requester = None;
-                for (requester_entity, request, requester_parent, _, _) in q_requesters.iter() {
+                let mut best_request_nb_freighters = usize::MAX;
+                for (requester_entity, logistic_request, requester_parent, _, _) in
+                    q_requesters.iter_mut()
+                {
                     if requester_parent.get() == parent.get() {
-                        requester = Some((requester_entity, request));
-                        break;
+                        if logistic_request.freighters.len() < best_request_nb_freighters {
+                            best_request_nb_freighters = logistic_request.freighters.len();
+                            requester = Some((requester_entity, logistic_request));
+                        }
                     }
                 }
 
                 println!("Requester: {:?}", requester);
 
                 // If we found a requester...
-                if let Some((requester_entity, request)) = requester {
-                    // ...search for a compatible provider
+                if let Some((requester_entity, mut logistic_request)) = requester {
+                    // ...search for a compatible provider on the same planet,
+                    // with the minimum number of freighters
+                    // and the best fulfillment score of the request
 
-                    // TODO: round robin
                     let mut provider = None;
-                    for (provider_entity, provider_parent, _, provider_inventory) in
-                        q_providers.iter()
+                    let mut best_provider_fulfillment_score = 0;
+                    let mut best_provider_nb_freighters = usize::MAX;
+                    for (
+                        provider_entity,
+                        logistic_provider,
+                        provider_parent,
+                        _,
+                        provider_inventory,
+                    ) in q_providers.iter_mut()
                     {
                         // if provider is on same planet and can fulfill the request
-                        if provider_parent.get() == parent.get()
-                            && request.can_be_partially_fullfilled_by(provider_inventory)
-                        {
-                            provider = Some(provider_entity);
-                            break;
+                        if provider_parent.get() == parent.get() {
+                            let fulfillment_score = logistic_request
+                                .compute_fulfillment_percentage(&provider_inventory);
+
+                            if fulfillment_score > best_provider_fulfillment_score {
+                                best_provider_fulfillment_score = fulfillment_score;
+                                best_provider_nb_freighters = logistic_provider.freighters.len();
+                                provider = Some((provider_entity, logistic_provider));
+                            } else if fulfillment_score == best_provider_fulfillment_score
+                                && logistic_provider.freighters.len() < best_provider_nb_freighters
+                            {
+                                best_provider_nb_freighters = logistic_provider.freighters.len();
+                                provider = Some((provider_entity, logistic_provider));
+                            }
                         }
                     }
 
                     println!("Provider: {:?}", provider);
 
-                    // If we found a provider, set the journey
-                    if let Some(provider_entity) = provider {
+                    // If we found a provider, set the journey and register freighter in LogisticRequest and LogisticProvider
+                    if let Some((provider_entity, mut logistic_provider)) = provider {
+                        logistic_request.freighters.push(freighter_entity);
+                        logistic_provider.freighters.push(freighter_entity);
+
                         freighter.journey = Some((
-                            LogisticJourney::new(provider_entity, requester_entity),
+                            LogisticJourney::new(
+                                logistic_request.id(),
+                                provider_entity,
+                                requester_entity,
+                            ),
                             None,
                         ));
                     }

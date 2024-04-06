@@ -14,7 +14,7 @@ impl Default for WarehouseBundle {
         Self {
             warehouse: Warehouse,
             inventory: Inventory::new(100_000),
-            logistic_provider: LogisticProvider,
+            logistic_provider: LogisticProvider::default(),
         }
     }
 }

@@ -103,9 +103,14 @@ fn spawn_window(
 pub fn update_crafters(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_crafter: Query<(Entity, &mut Crafter, &mut Inventory)>,
+    mut q_crafter: Query<(
+        Entity,
+        &mut Crafter,
+        &mut Inventory,
+        Option<&mut LogisticRequest>,
+    )>,
 ) {
-    for (entity, mut crafter, mut inventory) in q_crafter.iter_mut() {
+    for (entity, mut crafter, mut inventory, logistic_request) in q_crafter.iter_mut() {
         // If a recipe is selected
         if let Some(recipe_crafter) = &mut crafter.recipe {
             // Try crafting
@@ -121,10 +126,17 @@ pub fn update_crafters(
                 // Request missing inputs
                 CanCraftResult::MissingInputs(missing_inputs) => {
                     if crafter.cooldown.tick(time.delta()).finished() {
-                        println!("Missing inputs: {:?}", missing_inputs);
-                        commands
-                            .entity(entity)
-                            .insert(LogisticRequest::new(missing_inputs));
+                        if let Some(mut logistic_request) = logistic_request {
+                            if logistic_request.items() != &missing_inputs {
+                                println!("Changed missing inputs: {:?}", missing_inputs);
+                                logistic_request.set_items(missing_inputs);
+                            }
+                        } else {
+                            println!("New missing inputs: {:?}", missing_inputs);
+                            commands
+                                .entity(entity)
+                                .insert(LogisticRequest::new(missing_inputs));
+                        }
                     }
                 }
 
