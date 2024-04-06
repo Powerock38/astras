@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::items::{Inventory, LogisticJourney, LogisticProvider, LogisticRequest};
 
 const RANGE: f32 = 10.0;
-const SPEED: f32 = 10000.0;
+const SPEED: f32 = 1000.0;
 
 #[derive(Bundle)]
 pub struct FreighterBundle {
@@ -15,7 +15,7 @@ pub struct FreighterBundle {
 pub struct Freighter {
     cooldown: Timer,
     max_amount_per_transfer: u32,
-    journey: Option<LogisticJourney>,
+    journey: Option<(LogisticJourney, Option<Vec3>)>, // (journey, move_target)
 }
 
 impl Default for FreighterBundle {
@@ -33,17 +33,17 @@ impl Default for FreighterBundle {
 
 /*
 tick:
+
 set journey
     => search for a requester on the same planet
     => search for a compatible provider
+
 journey
     => if freighter inventory CAN'T fullfill requester's request, go to provider
     => get items
 
     => if freighter inventory CAN partially fullfill requester's request, go to requester
     => give items
-
-    => maybe "ping" requester?
 */
 
 pub fn update_freighters(
@@ -70,30 +70,22 @@ pub fn update_freighters(
 ) {
     for (mut freighter, parent, mut transform, mut inventory) in q_freighters.iter_mut() {
         if freighter.cooldown.tick(time.delta()).finished() {
-            if let Some(journey) = &freighter.journey {
-                println!("Journey: {:?}", journey);
-
+            if let Some((journey, move_target)) = &mut freighter.journey {
                 if let Ok((_, request, _, requester_transform, mut requester_inventory)) =
                     q_requesters.get_mut(journey.requester())
                 {
-                    println!("with request: {:?}", request);
+                    println!("{:?} {:?}", journey, request);
 
                     if request.can_be_partially_fullfilled_by(&inventory) {
                         // If freighter inventory can (partially) fullfill requester's request, go to requester
+                        let target = requester_transform.translation;
+                        *move_target = Some(target);
 
-                        println!("Can be partially fullfilled");
-
-                        //FIXME: moves only every freighter.cooldown
-                        if move_towards(
-                            &mut transform,
-                            requester_transform.translation,
-                            SPEED,
-                            &time,
-                        ) {
+                        if is_target_reached(&transform, target) {
                             // transfer request's items to requester
+                            *move_target = None;
 
-                            println!("in range of requester");
-
+                            //TODO: do not transfer all items at once
                             for (item_id, &quantity) in request.items() {
                                 let q = inventory.transfer_to(
                                     &mut requester_inventory,
@@ -103,28 +95,21 @@ pub fn update_freighters(
 
                                 println!("Transferred {} {}", q, item_id);
                             }
-                        } else {
-                            println!("Still moving towards requester");
+                            //TODO: if q = 0, requester is full: go to provider OR go to new requester?
                         }
                     } else {
                         // If freighter inventory can't fullfill requester's request, go to provider
-
                         if let Ok((_, _, provider_transform, mut provider_inventory)) =
                             q_providers.get_mut(journey.provider())
                         {
-                            println!("Can't be fullfilled, moving towards provider");
+                            let target = provider_transform.translation;
+                            *move_target = Some(target);
 
-                            //FIXME: moves only every freighter.cooldown
-                            if move_towards(
-                                &mut transform,
-                                provider_transform.translation,
-                                SPEED,
-                                &time,
-                            ) {
+                            if is_target_reached(&transform, target) {
                                 // transfer request's items from provider
+                                *move_target = None;
 
-                                println!("in range of provider");
-
+                                //TODO: do not transfer all items at once
                                 for (item_id, &quantity) in request.items() {
                                     let q = provider_inventory.transfer_to(
                                         &mut inventory,
@@ -134,8 +119,6 @@ pub fn update_freighters(
 
                                     println!("Transferred {} {}", q, item_id);
                                 }
-                            } else {
-                                println!("Still moving towards provider");
                             }
                         } else {
                             // Provider doesn't exist anymore
@@ -151,6 +134,7 @@ pub fn update_freighters(
             } else {
                 // Search for a requester on the same planet
 
+                // TODO: round robin
                 let mut requester = None;
                 for (requester_entity, request, requester_parent, _, _) in q_requesters.iter() {
                     if requester_parent.get() == parent.get() {
@@ -164,8 +148,9 @@ pub fn update_freighters(
                 // If we found a requester...
                 if let Some((requester_entity, request)) = requester {
                     // ...search for a compatible provider
-                    let mut provider = None;
 
+                    // TODO: round robin
+                    let mut provider = None;
                     for (provider_entity, provider_parent, _, provider_inventory) in
                         q_providers.iter()
                     {
@@ -182,19 +167,31 @@ pub fn update_freighters(
 
                     // If we found a provider, set the journey
                     if let Some(provider_entity) = provider {
-                        freighter.journey =
-                            Some(LogisticJourney::new(provider_entity, requester_entity));
+                        freighter.journey = Some((
+                            LogisticJourney::new(provider_entity, requester_entity),
+                            None,
+                        ));
                     }
                 } else {
                     continue;
                 }
             }
         }
+
+        // Move towards target
+        if let Some((_, move_target)) = &freighter.journey {
+            if let Some(target) = move_target {
+                move_towards(&mut transform, *target, SPEED, &time);
+            }
+        }
     }
 }
 
-// Returns true if the target is reached
-fn move_towards(transform: &mut Transform, target: Vec3, speed: f32, time: &Time) -> bool {
+fn is_target_reached(transform: &Transform, target: Vec3) -> bool {
+    (transform.translation - target).length() < RANGE
+}
+
+fn move_towards(transform: &mut Transform, target: Vec3, speed: f32, time: &Time) {
     let direction = target - transform.translation;
     let distance = direction.length();
 
@@ -203,19 +200,15 @@ fn move_towards(transform: &mut Transform, target: Vec3, speed: f32, time: &Time
         let velocity = direction * speed;
         let distance_per_tick = velocity * time.delta_seconds();
 
-        println!(
-            "distance: {} velocity: {:?} distance_per_tick: {:?}",
-            distance, velocity, distance_per_tick
-        );
-
         if distance_per_tick.length() < distance {
             transform.translation += distance_per_tick;
         } else {
             transform.translation = target;
         }
 
-        false
-    } else {
-        true
+        transform.rotation = Quat::from_rotation_z(
+            (transform.translation.y - target.y).atan2(transform.translation.x - target.x)
+                + std::f32::consts::FRAC_PI_2,
+        );
     }
 }

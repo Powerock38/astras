@@ -28,18 +28,17 @@ fn fragment(
 ) -> @location(0) vec4<f32> {
     let len = length(in.uv - vec2f(0.5));
 
-    var atmo: vec4f;
-
+    var atmo = vec3f(0.0);
     if material.atmosphere_density != 0.0 {
         atmo = atmosphere(in.uv);
-    } else {
-        atmo = vec4f(0.0);
     }
 
     if len > material.planet_radius_normalized / 2.0 {
-        return atmo;
+        let d = length(in.uv - vec2f(0.5)) * 2.0;
+        let atmo_alpha = material.atmosphere_density * (1.0 - d);
+        return vec4f(atmo, atmo_alpha);
     } else {
-        return planet(in.uv) + atmo * ATMOSPHERE_PLANET_MIX;
+        return vec4f(planet(in.uv) * (1.0 - ATMOSPHERE_PLANET_MIX) + atmo * ATMOSPHERE_PLANET_MIX, 1.0);
     }
 }
 
@@ -47,7 +46,7 @@ fn fragment(
 
 fn planet(
     uv: vec2<f32>,
-) -> vec4<f32> {
+) -> vec3<f32> {
 
     var noise = 0.0;
     var max_i: u32;
@@ -76,15 +75,12 @@ fn planet(
     let glowColor = color * random(material.seed) * PLANET_GLOW_MULTIPLIER;
     color += glowColor * glowFactor;
 
-    return vec4f(color, 1.0);
+    return color;
 }
 
 // Atmosphere
 
-fn atmosphere(uv: vec2f) -> vec4f {
-    let n: f32 = nestedMovingNoise(uv * ATMOSPHERE_NOISE_SCALE, material.atmosphere_speed, material.seed);
-
-    let d = length(uv - vec2f(0.5)) * 2.0;
-
-    return vec4<f32>(material.atmosphere_color.xyz * n, material.atmosphere_density * (1.0 - d));
+fn atmosphere(uv: vec2f) -> vec3f {
+    let noise = nestedMovingNoise(uv * ATMOSPHERE_NOISE_SCALE, material.atmosphere_speed, material.seed);
+    return material.atmosphere_color.xyz * noise;
 }

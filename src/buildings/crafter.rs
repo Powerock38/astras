@@ -9,7 +9,7 @@ use crate::{
 #[derive(Bundle)]
 pub struct CrafterBundle {
     crafter: Crafter,
-    inventory: Inventory,
+    inventory: Inventory, //FIXME: crafting can be blocked if inventory is full of requested items. Solution: input inventory + output inventory ?
     pointer_event: On<Pointer<Click>>,
     pickable: PickableBundle,
 }
@@ -106,31 +106,30 @@ pub fn update_crafters(
     mut q_crafter: Query<(Entity, &mut Crafter, &mut Inventory)>,
 ) {
     for (entity, mut crafter, mut inventory) in q_crafter.iter_mut() {
-        if crafter.cooldown.tick(time.delta()).finished() {
-            // If a recipe is selected
-            if let Some(recipe_crafter) = &mut crafter.recipe {
-                // Try crafting
-                match inventory.can_craft(&recipe_crafter.recipe) {
-                    // Craft
-                    CanCraftResult::Yes => {
-                        // FIXME: progress is ticked every crafter.cooldown
-                        if recipe_crafter.progress.tick(time.delta()).just_finished() {
-                            inventory.craft(&recipe_crafter.recipe);
-                            recipe_crafter.progress.reset();
-                        }
+        // If a recipe is selected
+        if let Some(recipe_crafter) = &mut crafter.recipe {
+            // Try crafting
+            match inventory.can_craft(&recipe_crafter.recipe) {
+                // Craft
+                CanCraftResult::Yes => {
+                    if recipe_crafter.progress.tick(time.delta()).just_finished() {
+                        inventory.craft(&recipe_crafter.recipe);
+                        recipe_crafter.progress.reset();
                     }
+                }
 
-                    // Request missing inputs
-                    CanCraftResult::MissingInputs(missing_inputs) => {
+                // Request missing inputs
+                CanCraftResult::MissingInputs(missing_inputs) => {
+                    if crafter.cooldown.tick(time.delta()).finished() {
                         println!("Missing inputs: {:?}", missing_inputs);
                         commands
                             .entity(entity)
                             .insert(LogisticRequest::new(missing_inputs));
                     }
-
-                    // TODO
-                    CanCraftResult::NotEnoughSpace => {}
                 }
+
+                //TODO
+                CanCraftResult::NotEnoughSpace => {}
             }
         }
     }

@@ -1,3 +1,3 @@
 # Astras
 
-Rewrite of [Planets](https://github.com/powerock38/planets) in Rust using Bevy.
+Astras is an interstellar factory building game featuring procedurally generated solar systems, resource management, automation, combat and exploration.
