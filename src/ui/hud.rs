@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use bevy_mod_picking::picking_core::Pickable;
 
-use crate::{items::Recipe, Crafter, PlacingBuilding, BUILDINGS};
+use crate::{
+    buildings::{Crafter, PlacingBuilding, BUILDINGS},
+    items::Recipe,
+};
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);

@@ -1,5 +1,6 @@
-use crate::{astres::Astre, PlacingLocation, SolarSystem};
 use bevy::prelude::*;
+
+use crate::{astres::Astre, buildings::PlacingLocation, SolarSystem};
 
 #[derive(Component, Default)]
 pub struct DockableOnAstre {

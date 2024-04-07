@@ -8,8 +8,7 @@ use rand::Rng;
 use std::f32::consts::PI;
 
 use crate::{
-    astres::Astre,
-    circle_mesh,
+    astres::{circle_mesh, Astre},
     items::{ElementOnAstre, ElementState, Inventory, ELEMENTS},
 };
 

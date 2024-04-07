@@ -1,13 +1,13 @@
 use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
 use bevy_mod_picking::prelude::*;
 
-use astres::*;
-use background::*;
-use buildings::*;
+use astres::AstresPlugin;
+use background::BackgroundMaterial;
+use buildings::BuildingsPlugin;
 use dockable_on_astre::*;
 use ship::*;
 use solar_system::*;
-use ui::*;
+use ui::UIPlugin;
 use worm::*;
 
 mod astres;
@@ -25,30 +25,12 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
-        .add_plugins((
-            Material2dPlugin::<StarMaterial>::default(),
-            Material2dPlugin::<PlanetMaterial>::default(),
-            Material2dPlugin::<BackgroundMaterial>::default(),
-        ))
         .add_plugins(DefaultPickingPlugins)
         .insert_resource(DebugPickingMode::Normal)
-        .add_systems(Startup, (spawn_solar_system, setup_hud))
-        .add_systems(
-            Update,
-            (
-                update_planets,
-                update_worms,
-                update_ship,
-                update_camera,
-                update_hud,
-                place_building,
-                constructing_building,
-                update_element_extractors,
-                update_freighters,
-                remove_windows_on_escape,
-                update_crafters,
-            ),
-        )
+        .add_plugins((BuildingsPlugin, AstresPlugin, UIPlugin))
+        .add_plugins(Material2dPlugin::<BackgroundMaterial>::default())
+        .add_systems(Startup, spawn_solar_system)
+        .add_systems(Update, (update_worms, update_ship, update_camera))
         .add_systems(
             PostUpdate,
             update_dockable_on_astre.after(TransformSystem::TransformPropagate),

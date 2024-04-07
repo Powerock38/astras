@@ -2,8 +2,10 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    astres::PlanetMaterial, background::BackgroundMaterial, ship::setup_ship, spawn_star,
-    worm::spawn_worm, StarMaterial,
+    astres::{spawn_star, PlanetMaterial, StarMaterial},
+    background::BackgroundMaterial,
+    ship::setup_ship,
+    worm::spawn_worm,
 };
 
 #[derive(Component)]

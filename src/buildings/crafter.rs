@@ -3,7 +3,7 @@ use bevy_mod_picking::prelude::*;
 
 use crate::{
     items::{CanCraftResult, Inventory, LogisticRequest, Recipe, RECIPES},
-    spawn_inventory_ui, HudButtonAction, HudButtonBundle, UIWindow, UIWindowParent,
+    ui::{spawn_inventory_ui, HudButtonAction, HudButtonBundle, UIWindow, UIWindowParent},
 };
 
 #[derive(Bundle)]
