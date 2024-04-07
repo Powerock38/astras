@@ -13,7 +13,6 @@ use worm::*;
 mod astres;
 mod background;
 mod buildings;
-mod constants;
 mod dockable_on_astre;
 mod items;
 mod ship;

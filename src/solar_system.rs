@@ -14,7 +14,6 @@ pub struct SolarSystem;
 pub fn spawn_solar_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut color_materials: ResMut<Assets<ColorMaterial>>,
     mut star_materials: ResMut<Assets<StarMaterial>>,
     mut planet_materials: ResMut<Assets<PlanetMaterial>>,
     background_materials: ResMut<Assets<BackgroundMaterial>>,
@@ -43,7 +42,7 @@ pub fn spawn_solar_system(
         })
         .with_children(|c| {
             let radius = 10000.;
-            let nb_worms = 0;
+            let nb_worms = 20;
 
             for _ in 0..nb_worms {
                 let position = Vec2::new(
@@ -51,22 +50,7 @@ pub fn spawn_solar_system(
                     rand::thread_rng().gen_range(-radius..radius),
                 );
 
-                let size = rand::thread_rng().gen_range(10. ..=100.);
-                let speed = rand::thread_rng().gen_range(100. ..=1000.);
-                let length = rand::thread_rng().gen_range(1..=10);
-
-                let change_direction_every = rand::thread_rng().gen_range(0.1..=3.);
-
-                spawn_worm(
-                    c,
-                    &mut meshes,
-                    &mut color_materials,
-                    position,
-                    size,
-                    speed,
-                    length,
-                    change_direction_every,
-                );
+                spawn_worm(c, &asset_server, position);
             }
         })
         .with_children(|c| {
