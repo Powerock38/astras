@@ -8,7 +8,6 @@ const WORM_Z: f32 = SHIP_Z - 2.0;
 const WORM_Z_DELTA: f32 = 0.001;
 const SEGMENT_WIDTH: f32 = 80.;
 const HEAD_WIDTH: f32 = 160.;
-const WIGGLE_AMPLITUDE: f32 = 5.;
 
 #[derive(Component, Debug)]
 pub struct Worm {
@@ -16,17 +15,20 @@ pub struct Worm {
     speed: f32,
     direction: Vec2,
     change_direction_cooldown: Timer,
+    seed: f32,
+    wiggle_amplitude: f32,
 }
 
 #[derive(Component)]
 pub struct WormSegment;
 
 pub fn spawn_worm(c: &mut ChildBuilder, asset_server: &Res<AssetServer>, position: Vec2) {
-    let size = rand::thread_rng().gen_range(1. ..=5.);
-    let length = (rand::thread_rng().gen_range(2.0..=30.0) * size) as u32;
+    let size = rand::thread_rng().gen_range(1. ..=10.);
+    let length = rand::thread_rng().gen_range(5..=50);
     let speed = rand::thread_rng().gen_range(100. ..=1000.);
-
+    let wiggle_amplitude = rand::thread_rng().gen_range(5. ..=15.);
     let change_direction_every = rand::thread_rng().gen_range(0.1..=3.);
+
     let transform =
         Transform::from_translation(position.extend(WORM_Z - (length as f32) * WORM_Z_DELTA))
             .with_scale(Vec3::splat(size));
@@ -42,6 +44,8 @@ pub fn spawn_worm(c: &mut ChildBuilder, asset_server: &Res<AssetServer>, positio
             speed,
             direction: Vec2::new(0., 0.),
             change_direction_cooldown: Timer::from_seconds(change_direction_every, TimerMode::Once),
+            seed: rand::thread_rng().gen(),
+            wiggle_amplitude,
         },
     ))
     .with_children(|c| {
@@ -89,14 +93,20 @@ pub fn update_worms(
         transform.translation += worm.direction.extend(0.) * speed * time.delta_seconds();
 
         // Wiggle
+        let mut last_y = 0.0;
         for (i, segment) in segments.iter().enumerate() {
             let mut segment_transform = q_segments.get_mut(*segment).unwrap();
 
-            let x = (i as f32) / (worm.length as f32) * 2.0 * PI + time.elapsed_seconds();
+            let x = (i as f32) / (worm.length as f32) * 2.0 * PI
+                + time.elapsed_seconds()
+                + worm.seed * 100.0;
 
-            segment_transform.translation.y = x.sin() * i as f32 * WIGGLE_AMPLITUDE;
+            segment_transform.translation.y = x.sin() * i as f32 * worm.wiggle_amplitude;
 
-            //TODO Set segment rotation to match normal of the curve
+            // Set segment rotation to match normal of the curve
+            let angle = -(segment_transform.translation.y - last_y).atan2(SEGMENT_WIDTH);
+            segment_transform.rotation = Quat::from_rotation_z(angle);
+            last_y = segment_transform.translation.y;
         }
     }
 }

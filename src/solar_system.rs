@@ -41,8 +41,8 @@ pub fn spawn_solar_system(
             );
         })
         .with_children(|c| {
-            let radius = 10000.;
-            let nb_worms = 20;
+            let radius = 50000.;
+            let nb_worms = 3;
 
             for _ in 0..nb_worms {
                 let position = Vec2::new(
