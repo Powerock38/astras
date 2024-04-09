@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::items::{Inventory, LogisticProvider};
+use crate::items::{Inventory, LogisticProvider, LogisticScope};
 
 #[derive(Bundle)]
 pub struct WarehouseBundle {
@@ -14,7 +14,7 @@ impl Default for WarehouseBundle {
         Self {
             warehouse: Warehouse,
             inventory: Inventory::new(100_000),
-            logistic_provider: LogisticProvider::default(),
+            logistic_provider: LogisticProvider::new(LogisticScope::Planet),
         }
     }
 }

@@ -28,7 +28,7 @@ fn main() {
         .insert_resource(DebugPickingMode::Normal)
         .add_plugins((BuildingsPlugin, AstresPlugin, UIPlugin))
         .add_plugins(Material2dPlugin::<BackgroundMaterial>::default())
-        .add_systems(Startup, spawn_solar_system)
+        .add_systems(PreStartup, spawn_solar_system)
         .add_systems(Update, (update_worms, update_ship, update_camera))
         .add_systems(
             PostUpdate,

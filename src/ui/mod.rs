@@ -6,6 +6,15 @@ pub use hud::*;
 mod inventory_ui;
 pub use inventory_ui::*;
 
+mod cargo_shuttle_ui;
+pub use cargo_shuttle_ui::*;
+
+mod crafter_ui;
+pub use crafter_ui::*;
+
+mod interplanetary_freighter_ui;
+pub use interplanetary_freighter_ui::*;
+
 pub struct UIPlugin;
 
 impl Plugin for UIPlugin {

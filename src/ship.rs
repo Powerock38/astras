@@ -4,6 +4,7 @@ use bevy::{input::mouse::MouseWheel, prelude::*};
 
 use crate::background::*;
 use crate::dockable_on_astre::DockableOnAstre;
+use crate::ui::MainCamera;
 
 const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
 pub const SHIP_Z: f32 = 100.;
@@ -51,6 +52,7 @@ pub fn setup_ship(
 
         // Camera as a child of ship, so it follows the ship
         c.spawn((
+            MainCamera,
             Camera2dBundle {
                 camera: Camera {
                     hdr: true,
@@ -127,7 +129,7 @@ pub fn update_ship(
 pub fn update_camera(
     time: Res<Time>,
     mut scroll_evr: EventReader<MouseWheel>,
-    mut query: Query<&mut OrthographicProjection, With<Camera>>,
+    mut query: Query<&mut OrthographicProjection, With<MainCamera>>,
     mut background_query: Query<&mut Transform, With<Background>>,
     ship_query: Query<&Ship>,
     window: Query<&Window>,

@@ -11,6 +11,9 @@ const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 #[derive(Component)]
+pub struct MainCamera;
+
+#[derive(Component)]
 pub enum HudButtonAction {
     SetPlacingBuilding(&'static str),
     SetCrafterRecipe(Entity, Recipe),
@@ -45,6 +48,9 @@ impl HudButtonBundle {
 
 #[derive(Component)]
 pub struct UIWindowParent;
+
+#[derive(Component)]
+pub struct UIWindowDependent;
 
 #[derive(Bundle)]
 pub struct UIWindow {
@@ -110,7 +116,7 @@ pub fn update_hud(
     }
 }
 
-pub fn setup_hud(mut commands: Commands) {
+pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, With<MainCamera>>) {
     commands
         .spawn((
             NodeBundle {
@@ -126,6 +132,7 @@ pub fn setup_hud(mut commands: Commands) {
                 ..default()
             },
             Pickable::IGNORE,
+            TargetCamera(q_camera.single()),
         ))
         .with_children(|c| {
             // Toolbar
@@ -180,10 +187,15 @@ pub fn setup_hud(mut commands: Commands) {
 pub fn remove_windows_on_escape(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    query: Query<Entity, With<UIWindowParent>>,
+    q_ui_window_parent: Query<Entity, With<UIWindowParent>>,
+    q_ui_window_dependent: Query<Entity, With<UIWindowDependent>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        let parent = query.single();
+        for entity in q_ui_window_dependent.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
+
+        let parent = q_ui_window_parent.single();
         commands.entity(parent).despawn_descendants();
     }
 }

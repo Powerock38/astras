@@ -1,7 +1,10 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
 use crate::{
-    buildings::{CrafterBundle, ElementExtractorBundle, FreighterBundle, WarehouseBundle},
+    buildings::{
+        CrafterBundle, ElementExtractorBundle, LogisticFreightBundle, SpaceportBundle,
+        WarehouseBundle,
+    },
     DockableOnAstre, SHIP_Z,
 };
 
@@ -51,13 +54,31 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
             c.insert(WarehouseBundle::default());
         },
     },
-    "freighter" => BuildingData {
-        name: "Freighter",
+    "cargo_shuttle" => BuildingData {
+        name: "Cargo Shuttle",
         sprite_name: "ship",
         location: PlacingLocation::SurfaceOrAtmosphere,
         build_time_seconds: 1.,
         on_build: |c| {
-            c.insert(FreighterBundle::default());
+            c.insert(LogisticFreightBundle::new_planet());
+        },
+    },
+    "spaceport" => BuildingData {
+        name: "Spaceport",
+        sprite_name: "warehouse",
+        location: PlacingLocation::Atmosphere,
+        build_time_seconds: 1.,
+        on_build: |c| {
+            c.insert(SpaceportBundle::default());
+        },
+    },
+    "interplanetary_freighter" => BuildingData {
+        name: "Interplanetary Freighter",
+        sprite_name: "ship",
+        location: PlacingLocation::Atmosphere,
+        build_time_seconds: 1.,
+        on_build: |c| {
+            c.insert(LogisticFreightBundle::new_solar_system());
         },
     },
     "smelter" => BuildingData {

@@ -1,10 +1,11 @@
+use bevy::prelude::*;
 use bevy::reflect::TypePath;
 use bevy::render::render_resource::AsBindGroup;
 use bevy::render::render_resource::ShaderRef;
 use bevy::sprite::{Material2d, MaterialMesh2dBundle};
 use rand::Rng;
 
-use bevy::prelude::*;
+const BACKGROUND_Z: f32 = -999.;
 
 #[derive(Component)]
 pub struct Background;
@@ -33,6 +34,7 @@ pub fn spawn_background(
             material: materials.add(BackgroundMaterial {
                 seed: rand::thread_rng().gen::<f32>() * 1000.,
             }),
+            transform: Transform::from_translation(Vec3::new(0., 0., BACKGROUND_Z)),
             ..default()
         },
     ));

@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    items::{CanCraftResult, Inventory, LogisticRequest, Recipe, RECIPES},
-    ui::{spawn_inventory_ui, HudButtonAction, HudButtonBundle, UIWindow, UIWindowParent},
+    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, Recipe, RECIPES},
+    ui::spawn_crafter_ui,
 };
 
 #[derive(Bundle)]
@@ -19,7 +19,7 @@ impl CrafterBundle {
         Self {
             crafter: Crafter::new(possible_recipes),
             inventory: Inventory::new(100),
-            pointer_event: On::<Pointer<Click>>::run(spawn_window),
+            pointer_event: On::<Pointer<Click>>::run(spawn_crafter_ui),
             pickable: PickableBundle::default(),
         }
     }
@@ -35,7 +35,11 @@ pub struct Crafter {
 impl Crafter {
     pub fn new(possible_recipes: &'static [&'static str]) -> Self {
         Self {
-            recipe: None,
+            recipe: if possible_recipes.len() == 1 {
+                Some(CrafterRecipe::new(RECIPES[possible_recipes[0]]))
+            } else {
+                None
+            },
             possible_recipes,
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
         }
@@ -43,6 +47,10 @@ impl Crafter {
 
     pub fn set_recipe(&mut self, recipe: Recipe) {
         self.recipe = Some(CrafterRecipe::new(recipe));
+    }
+
+    pub fn possible_recipes(&self) -> &'static [&'static str] {
+        self.possible_recipes
     }
 }
 
@@ -58,46 +66,6 @@ impl CrafterRecipe {
             recipe,
         }
     }
-}
-
-fn spawn_window(
-    mut commands: Commands,
-    listener: Listener<Pointer<Click>>,
-    q_ui_window_parent: Query<Entity, With<UIWindowParent>>,
-    q_crafter: Query<(&Crafter, &Inventory)>,
-) {
-    let parent = q_ui_window_parent.single();
-
-    let entity = listener.listener();
-    let (crafter, inventory) = q_crafter.get(entity).unwrap();
-
-    commands
-        .entity(parent)
-        .despawn_descendants()
-        .with_children(|c| {
-            c.spawn(UIWindow::default()).with_children(|c| {
-                // List recipes
-                for recipe in crafter.possible_recipes {
-                    let recipe = RECIPES.get(recipe).unwrap();
-
-                    c.spawn(HudButtonBundle::new(HudButtonAction::SetCrafterRecipe(
-                        entity, *recipe,
-                    )))
-                    .with_children(|c| {
-                        c.spawn(TextBundle::from_section(
-                            recipe.text(),
-                            TextStyle {
-                                color: Color::rgb(0.9, 0.9, 0.9),
-                                ..default()
-                            },
-                        ));
-                    });
-                }
-
-                // Inventory
-                spawn_inventory_ui(c, inventory);
-            });
-        });
 }
 
 pub fn update_crafters(
@@ -117,6 +85,8 @@ pub fn update_crafters(
             match inventory.can_craft(&recipe_crafter.recipe) {
                 // Craft
                 CanCraftResult::Yes => {
+                    commands.entity(entity).remove::<LogisticRequest>();
+
                     if recipe_crafter.progress.tick(time.delta()).just_finished() {
                         inventory.craft(&recipe_crafter.recipe);
                         recipe_crafter.progress.reset();
@@ -133,15 +103,18 @@ pub fn update_crafters(
                             }
                         } else {
                             println!("New missing inputs: {:?}", missing_inputs);
-                            commands
-                                .entity(entity)
-                                .insert(LogisticRequest::new(missing_inputs));
+                            commands.entity(entity).insert(LogisticRequest::new(
+                                missing_inputs,
+                                LogisticScope::Planet,
+                            ));
                         }
                     }
                 }
 
                 //TODO
-                CanCraftResult::NotEnoughSpace => {}
+                CanCraftResult::NotEnoughSpace => {
+                    commands.entity(entity).remove::<LogisticRequest>();
+                }
             }
         }
     }

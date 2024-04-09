@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{ElementOnAstre, ItemMap, Recipe};
+use crate::items::{ElementOnAstre, ItemMap, Recipe};
 
 #[derive(Component, Debug)]
 pub struct Inventory {
