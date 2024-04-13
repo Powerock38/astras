@@ -8,7 +8,8 @@ use crate::{
     worm::spawn_worm,
 };
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct SolarSystem;
 
 pub fn spawn_solar_system(

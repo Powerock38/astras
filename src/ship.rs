@@ -9,7 +9,8 @@ use crate::ui::MainCamera;
 const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
 pub const SHIP_Z: f32 = 100.;
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Ship {
     speed: Vec2,
     max_speed: f32,

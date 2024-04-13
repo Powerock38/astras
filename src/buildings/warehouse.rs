@@ -19,5 +19,6 @@ impl Default for WarehouseBundle {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Warehouse;

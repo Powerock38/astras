@@ -17,5 +17,6 @@ impl Default for SpaceportBundle {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Spaceport;

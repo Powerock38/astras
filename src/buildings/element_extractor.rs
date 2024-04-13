@@ -13,7 +13,8 @@ pub struct ElementExtractorBundle {
     pub logistic_provider: LogisticProvider,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct ElementExtractor {
     cooldown: Timer,
     amount_per_tick: u32,

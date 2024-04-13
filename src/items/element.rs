@@ -14,8 +14,9 @@ impl Element {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Reflect, Default)]
 pub enum ElementState {
+    #[default]
     Solid,
     Liquid,
     Gas,

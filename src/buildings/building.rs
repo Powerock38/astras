@@ -97,7 +97,7 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
 
 #[derive(Resource, Debug)]
-pub struct PlacingBuilding(pub BuildingData);
+pub struct PlacingBuilding(pub &'static str);
 
 #[derive(Clone, Copy, Debug)]
 pub struct BuildingData {
@@ -108,29 +108,26 @@ pub struct BuildingData {
     pub on_build: fn(&mut EntityCommands),
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Reflect, Default, Debug)]
 pub enum PlacingLocation {
     Surface,
     Atmosphere,
+    #[default]
     SurfaceOrAtmosphere,
 }
 
-impl Default for PlacingLocation {
-    fn default() -> Self {
-        Self::SurfaceOrAtmosphere
-    }
-}
-
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct ConstructingBuilding {
-    pub building: BuildingData,
+    pub building: &'static str,
     pub build_timer: Timer,
 }
 
 #[derive(Component)]
 pub struct BuildingPreview;
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Building;
 
 pub fn place_building(
@@ -174,11 +171,13 @@ pub fn place_building(
                             ConstructingBuilding {
                                 building: placing_building.0,
                                 build_timer: Timer::from_seconds(
-                                    placing_building.0.build_time_seconds,
+                                    BUILDINGS[placing_building.0].build_time_seconds,
                                     TimerMode::Once,
                                 ),
                             },
-                            DockableOnAstre::instant_location(placing_building.0.location),
+                            DockableOnAstre::instant_location(
+                                BUILDINGS[placing_building.0].location,
+                            ),
                         ));
 
                     commands.remove_resource::<PlacingBuilding>();
@@ -191,8 +190,10 @@ pub fn place_building(
                 }
             } else {
                 // there is no building preview, spawn it
-                let texture =
-                    asset_server.load(format!("sprites/{}.png", placing_building.0.sprite_name));
+                let texture = asset_server.load(format!(
+                    "sprites/{}.png",
+                    BUILDINGS[placing_building.0].sprite_name
+                ));
                 let transform = Transform::from_translation(world_position);
 
                 commands
@@ -226,7 +227,7 @@ pub fn constructing_building(
             ec.retain::<(Parent, SpriteBundle)>()
                 .insert((Sprite::default(), Building));
 
-            (constructing_building.building.on_build)(&mut ec);
+            (BUILDINGS[constructing_building.building].on_build)(&mut ec);
         }
     }
 }

@@ -1,21 +1,32 @@
-use bevy::{prelude::*, utils::Uuid};
+use bevy::{ecs::entity::MapEntities, prelude::*, utils::Uuid};
 
 use crate::items::{Inventory, ItemMap};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq, Reflect, Default, Debug)]
 pub enum LogisticScope {
+    #[default]
     Planet,
     SolarSystem,
     Interstellar, // TODO
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Reflect, Default, Debug)]
+#[reflect(Component)]
 pub struct LogisticRequest {
     id: Uuid,
     items: ItemMap,
     scope: LogisticScope,
     pub freights: Vec<Entity>, //FIXME: freights are never removed?
 }
+
+// TODO: impl MapEntities ?
+// impl MapEntities for LogisticRequest {
+//     fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
+//         for entity in &mut self.freights {
+//             *entity = entity_mapper.map_entity(*entity);
+//         }
+//     }
+// }
 
 impl LogisticRequest {
     pub fn new(items: ItemMap, scope: LogisticScope) -> Self {
@@ -61,11 +72,21 @@ impl LogisticRequest {
 }
 
 // If a building has a LogisticProvider component, its Inventory component will be used to fulfill LogisticRequests
-#[derive(Component, Debug)]
+#[derive(Component, Reflect, Default, Debug)]
+#[reflect(Component)]
 pub struct LogisticProvider {
     scope: LogisticScope,
-    pub freights: Vec<Entity>,
+    pub freights: Vec<Entity>, //FIXME: freights are never removed?
 }
+
+// TODO: impl MapEntities ?
+// impl MapEntities for LogisticProvider {
+//     fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
+//         for entity in &mut self.freights {
+//             *entity = entity_mapper.map_entity(*entity);
+//         }
+//     }
+// }
 
 impl LogisticProvider {
     pub fn new(scope: LogisticScope) -> Self {
@@ -81,12 +102,20 @@ impl LogisticProvider {
     }
 }
 
-#[derive(Debug)]
+#[derive(Reflect, Debug)]
 pub struct LogisticJourney {
     request_id: Uuid,
     provider: Entity,
     requester: Entity,
 }
+
+// TODO: impl MapEntities ?
+// impl MapEntities for LogisticJourney {
+//     fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
+//         self.provider = entity_mapper.map_entity(self.provider);
+//         self.requester = entity_mapper.map_entity(self.requester);
+//     }
+// }
 
 impl LogisticJourney {
     pub fn new(request_id: Uuid, provider: Entity, requester: Entity) -> Self {

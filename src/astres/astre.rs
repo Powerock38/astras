@@ -1,12 +1,46 @@
 use bevy::prelude::*;
 use bevy::render::mesh::CircleMeshBuilder;
+use bevy::utils::Uuid;
 use std::f32::consts::PI;
 
-#[derive(Component, Debug)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Astre {
-    pub temperature: u32, // in Kelvin  // TODO: why
-    pub surface_radius: f32,
-    pub atmosphere_radius: f32,
+    uuid: Uuid,
+    temperature: u32, // in Kelvin  // TODO: why
+    surface_radius: f32,
+    atmosphere_radius: f32,
+}
+
+impl Astre {
+    pub fn new(temperature: u32, surface_radius: f32, atmosphere_radius: f32) -> Self {
+        Self {
+            uuid: Uuid::new_v4(),
+            temperature,
+            surface_radius,
+            atmosphere_radius,
+        }
+    }
+
+    #[inline]
+    pub fn uuid(&self) -> Uuid {
+        self.uuid
+    }
+
+    #[inline]
+    pub fn temperature(&self) -> u32 {
+        self.temperature
+    }
+
+    #[inline]
+    pub fn surface_radius(&self) -> f32 {
+        self.surface_radius
+    }
+
+    #[inline]
+    pub fn atmosphere_radius(&self) -> f32 {
+        self.atmosphere_radius
+    }
 }
 
 pub fn circle_mesh(radius: f32) -> Mesh {

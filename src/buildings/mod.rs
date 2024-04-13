@@ -31,6 +31,13 @@ impl Plugin for BuildingsPlugin {
                 update_crafters.before(update_logistic_freights),
                 update_logistic_freights,
             ),
-        );
+        )
+        .register_type::<ConstructingBuilding>()
+        .register_type::<Building>()
+        .register_type::<LogisticFreight>()
+        .register_type::<Spaceport>()
+        .register_type::<Warehouse>()
+        .register_type::<ElementExtractor>()
+        .register_type::<Crafter>();
     }
 }

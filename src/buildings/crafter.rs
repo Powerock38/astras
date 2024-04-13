@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, Recipe, RECIPES},
+    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, RECIPES},
     ui::spawn_crafter_ui,
 };
 
@@ -25,10 +25,11 @@ impl CrafterBundle {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Crafter {
     recipe: Option<CrafterRecipe>,
-    possible_recipes: &'static [&'static str],
+    possible_recipes: Vec<&'static str>,
     cooldown: Timer,
 }
 
@@ -36,33 +37,34 @@ impl Crafter {
     pub fn new(possible_recipes: &'static [&'static str]) -> Self {
         Self {
             recipe: if possible_recipes.len() == 1 {
-                Some(CrafterRecipe::new(RECIPES[possible_recipes[0]]))
+                Some(CrafterRecipe::new(possible_recipes[0]))
             } else {
                 None
             },
-            possible_recipes,
+            possible_recipes: possible_recipes.to_vec(),
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
         }
     }
 
-    pub fn set_recipe(&mut self, recipe: Recipe) {
+    pub fn set_recipe(&mut self, recipe: &'static str) {
         self.recipe = Some(CrafterRecipe::new(recipe));
     }
 
-    pub fn possible_recipes(&self) -> &'static [&'static str] {
-        self.possible_recipes
+    pub fn possible_recipes(&self) -> &Vec<&'static str> {
+        &self.possible_recipes
     }
 }
 
+#[derive(Reflect, Default)]
 pub struct CrafterRecipe {
-    recipe: Recipe,
+    recipe: &'static str,
     progress: Timer,
 }
 
 impl CrafterRecipe {
-    pub fn new(recipe: Recipe) -> Self {
+    pub fn new(recipe: &'static str) -> Self {
         Self {
-            progress: Timer::from_seconds(recipe.time(), TimerMode::Once),
+            progress: Timer::from_seconds(RECIPES[recipe].time(), TimerMode::Once),
             recipe,
         }
     }
@@ -82,7 +84,7 @@ pub fn update_crafters(
         // If a recipe is selected
         if let Some(recipe_crafter) = &mut crafter.recipe {
             // Try crafting
-            match inventory.can_craft(&recipe_crafter.recipe) {
+            match inventory.can_craft(recipe_crafter.recipe) {
                 // Craft
                 CanCraftResult::Yes => {
                     commands.entity(entity).remove::<LogisticRequest>();

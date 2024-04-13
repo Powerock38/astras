@@ -22,7 +22,8 @@ pub struct PlanetBundle {
     pub mesh: MaterialMesh2dBundle<PlanetMaterial>,
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Planet {
     pub orbit_speed: f32,
 }
@@ -122,11 +123,7 @@ pub fn spawn_planet(
 
     c.spawn(PlanetBundle {
         planet: Planet { orbit_speed },
-        astre: Astre {
-            temperature,
-            atmosphere_radius,
-            surface_radius,
-        },
+        astre: Astre::new(temperature, surface_radius, atmosphere_radius),
         inventory: Inventory::from(composition),
         mesh: MaterialMesh2dBundle {
             mesh: meshes.add(mesh).into(),

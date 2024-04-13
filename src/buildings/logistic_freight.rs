@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::Uuid};
 use bevy_mod_picking::prelude::*;
 
 use crate::{
@@ -20,6 +20,7 @@ impl LogisticFreightBundle {
     pub fn new_planet() -> Self {
         Self {
             logistic_freight: LogisticFreight {
+                uuid: Uuid::new_v4(),
                 cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
                 max_amount_per_transfer: 100,
                 journey: None,
@@ -33,6 +34,7 @@ impl LogisticFreightBundle {
     pub fn new_solar_system() -> Self {
         Self {
             logistic_freight: LogisticFreight {
+                uuid: Uuid::new_v4(),
                 cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
                 max_amount_per_transfer: 100,
                 journey: None,
@@ -44,8 +46,10 @@ impl LogisticFreightBundle {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct LogisticFreight {
+    uuid: Uuid,
     cooldown: Timer,
     max_amount_per_transfer: u32,
     journey: Option<(LogisticJourney, Option<Vec3>)>, // (journey, move_target)

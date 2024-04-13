@@ -17,6 +17,9 @@ impl Plugin for AstresPlugin {
             Material2dPlugin::<StarMaterial>::default(),
             Material2dPlugin::<PlanetMaterial>::default(),
         ))
+        .register_type::<Astre>()
+        .register_type::<Planet>()
+        .register_type::<Star>()
         .add_systems(Update, (update_planets,));
     }
 }

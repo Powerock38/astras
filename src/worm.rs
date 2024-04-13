@@ -9,7 +9,8 @@ const WORM_Z_DELTA: f32 = 0.001;
 const SEGMENT_WIDTH: f32 = 80.;
 const HEAD_WIDTH: f32 = 160.;
 
-#[derive(Component, Debug)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Worm {
     length: u32,
     speed: f32,
@@ -19,7 +20,8 @@ pub struct Worm {
     wiggle_amplitude: f32,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct WormSegment;
 
 pub fn spawn_worm(c: &mut ChildBuilder, asset_server: &Res<AssetServer>, position: Vec2) {

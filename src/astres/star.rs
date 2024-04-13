@@ -34,7 +34,8 @@ impl Material2d for StarMaterial {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct Star;
 
 pub fn spawn_star(
@@ -79,11 +80,7 @@ pub fn spawn_star(
 
     c.spawn(StarBundle {
         star: Star,
-        astre: Astre {
-            temperature,
-            surface_radius: radius,
-            atmosphere_radius: 0.,
-        },
+        astre: Astre::new(temperature, radius, 0.),
         inventory: Inventory::from(composition),
         mesh: MaterialMesh2dBundle {
             mesh: meshes.add(mesh).into(),

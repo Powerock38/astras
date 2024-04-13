@@ -25,14 +25,12 @@ pub fn spawn_crafter_ui(
             c.spawn(UIWindow::default()).with_children(|c| {
                 // List recipes
                 for recipe in crafter.possible_recipes() {
-                    let recipe = RECIPES.get(recipe).unwrap();
-
                     c.spawn(HudButtonBundle::new(HudButtonAction::SetCrafterRecipe(
-                        entity, *recipe,
+                        entity, recipe,
                     )))
                     .with_children(|c| {
                         c.spawn(TextBundle::from_section(
-                            recipe.text(),
+                            RECIPES[recipe].text(),
                             TextStyle {
                                 color: Color::rgb(0.9, 0.9, 0.9),
                                 ..default()

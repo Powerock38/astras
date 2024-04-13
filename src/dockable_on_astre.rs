@@ -1,10 +1,11 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::Uuid};
 
 use crate::{astres::Astre, buildings::PlacingLocation, SolarSystem};
 
-#[derive(Component, Default)]
+#[derive(Component, Reflect, Default)]
+#[reflect(Component)]
 pub struct DockableOnAstre {
-    on_astre: Option<Entity>,
+    on_astre: Option<Uuid>,
     instant_or_despawn: bool,
     location: PlacingLocation,
     adjust_z: bool,
@@ -37,7 +38,7 @@ pub fn update_dockable_on_astre(
     q_solar_system: Query<(Entity, &GlobalTransform), With<SolarSystem>>,
 ) {
     for (mut dockable, entity_dockable, mut transform, global_transform) in q_dockable.iter_mut() {
-        let mut on_astre_option: Option<(Entity, &GlobalTransform, f32)> = None;
+        let mut on_astre_option: Option<(Entity, Uuid, &GlobalTransform, f32)> = None;
 
         for (entity_astre, astre, astre_global_transform) in q_astre.iter() {
             let distance = global_transform.translation().truncate()
@@ -45,34 +46,39 @@ pub fn update_dockable_on_astre(
             let distance = distance.length();
 
             let can_dock = match dockable.location {
-                PlacingLocation::Surface => distance < astre.surface_radius,
+                PlacingLocation::Surface => distance < astre.surface_radius(),
                 PlacingLocation::Atmosphere => {
-                    distance < astre.surface_radius + astre.atmosphere_radius
-                        && distance > astre.surface_radius
+                    distance < astre.surface_radius() + astre.atmosphere_radius()
+                        && distance > astre.surface_radius()
                 }
                 PlacingLocation::SurfaceOrAtmosphere => {
-                    distance < astre.surface_radius + astre.atmosphere_radius
+                    distance < astre.surface_radius() + astre.atmosphere_radius()
                 }
             };
 
             if can_dock {
                 let astre_global_z = astre_global_transform.translation().z;
 
-                if let Some((_, _, z)) = on_astre_option {
+                if let Some((_, _, _, z)) = on_astre_option {
                     if z >= astre_global_z {
                         continue; // Already on a closer astre (on the z plane)
                     }
                 }
 
-                on_astre_option = Some((entity_astre, astre_global_transform, astre_global_z));
+                on_astre_option = Some((
+                    entity_astre,
+                    astre.uuid(),
+                    astre_global_transform,
+                    astre_global_z,
+                ));
             }
         }
 
         // Found an astre to dock on
-        if let Some((entity_astre, astre_global_transform, _)) = on_astre_option {
+        if let Some((entity_astre, astre_uuid, astre_global_transform, _)) = on_astre_option {
             // If already docked on this astre, skip
             if let Some(entity_on_astre) = dockable.on_astre {
-                if entity_on_astre == entity_astre {
+                if entity_on_astre == astre_uuid {
                     continue;
                 }
             }
@@ -85,7 +91,7 @@ pub fn update_dockable_on_astre(
             commands.entity(entity_dockable).set_parent(entity_astre);
 
             // Dock
-            dockable.on_astre = Some(entity_astre.clone());
+            dockable.on_astre = Some(astre_uuid);
 
             // If dockable is instant_or_despawn and we found an astre, remove the component
             if dockable.instant_or_despawn {

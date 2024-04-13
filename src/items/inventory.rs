@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
-use crate::items::{ElementOnAstre, ItemMap, Recipe};
+use crate::items::{ElementOnAstre, ItemMap, RECIPES};
 
-#[derive(Component, Debug)]
+#[derive(Component, Reflect, Default, Debug)]
+#[reflect(Component)]
 pub struct Inventory {
     items: ItemMap,
     size: u32, // 0 = infinite
@@ -70,7 +71,9 @@ impl Inventory {
         0
     }
 
-    pub fn can_craft(&self, recipe: &Recipe) -> CanCraftResult {
+    pub fn can_craft(&self, recipe: &'static str) -> CanCraftResult {
+        let recipe = RECIPES[recipe];
+
         let has_space_for_outputs = self.size == 0
             || recipe
                 .outputs()
@@ -106,8 +109,10 @@ impl Inventory {
         CanCraftResult::Yes
     }
 
-    pub fn craft(&mut self, recipe: &Recipe) {
+    pub fn craft(&mut self, recipe: &'static str) {
         if self.can_craft(recipe).yes() {
+            let recipe = RECIPES[recipe];
+
             for (id, quantity) in recipe.inputs() {
                 self.remove(id, *quantity);
             }

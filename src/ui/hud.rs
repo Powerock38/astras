@@ -3,7 +3,7 @@ use bevy_mod_picking::picking_core::Pickable;
 
 use crate::{
     buildings::{Crafter, PlacingBuilding, BUILDINGS},
-    items::Recipe,
+    LoadGame,
 };
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
@@ -15,8 +15,9 @@ pub struct MainCamera;
 
 #[derive(Component)]
 pub enum HudButtonAction {
+    LoadGame(String),
     SetPlacingBuilding(&'static str),
-    SetCrafterRecipe(Entity, Recipe),
+    SetCrafterRecipe(Entity, &'static str),
 }
 
 #[derive(Bundle)]
@@ -94,13 +95,16 @@ pub fn update_hud(
                 *color = PRESSED_BUTTON.into();
                 border_color.0 = Color::RED;
                 match action {
-                    HudButtonAction::SetPlacingBuilding(building_name) => {
-                        commands.insert_resource(PlacingBuilding(BUILDINGS[building_name]));
+                    HudButtonAction::SetPlacingBuilding(building) => {
+                        commands.insert_resource(PlacingBuilding(building));
                     }
                     HudButtonAction::SetCrafterRecipe(crafter_entity, recipe) => {
                         let mut crafter = q_crafter.get_mut(*crafter_entity).unwrap();
                         crafter.set_recipe(*recipe);
                         border_color.0 = Color::WHITE;
+                    }
+                    HudButtonAction::LoadGame(file) => {
+                        commands.insert_resource(LoadGame(file.clone()));
                     }
                 }
             }

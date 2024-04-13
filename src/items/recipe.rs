@@ -1,9 +1,11 @@
 use crate::items::ITEMS;
 
+type RecipeItemQuantities = &'static [(&'static str, u32)];
+
 #[derive(Clone, Copy)]
 pub struct Recipe {
-    inputs: &'static [(&'static str, u32)],
-    outputs: &'static [(&'static str, u32)],
+    inputs: RecipeItemQuantities,
+    outputs: RecipeItemQuantities,
     time: f32,
 }
 
