@@ -26,7 +26,8 @@ pub fn spawn_crafter_ui(
                 // List recipes
                 for recipe in crafter.possible_recipes() {
                     c.spawn(HudButtonBundle::new(HudButtonAction::SetCrafterRecipe(
-                        entity, recipe,
+                        entity,
+                        recipe.to_string(),
                     )))
                     .with_children(|c| {
                         c.spawn(TextBundle::from_section(

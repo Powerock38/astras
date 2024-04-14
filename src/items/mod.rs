@@ -19,7 +19,11 @@ pub struct ItemsPlugin;
 
 impl Plugin for ItemsPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Inventory>()
+        app.register_type::<ItemMap>()
+            .register_type::<ElementState>()
+            .register_type::<Inventory>()
+            .register_type::<LogisticScope>()
+            .register_type::<LogisticJourney>()
             .register_type::<LogisticRequest>()
             .register_type::<LogisticProvider>();
     }

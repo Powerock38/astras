@@ -1,13 +1,14 @@
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, MaterialMesh2dBundle},
+    sprite::Material2d,
 };
 use rand::Rng;
 
 use crate::{
-    astres::{circle_mesh, spawn_planet_c, Astre, PlanetMaterial},
+    astres::{spawn_planet_c, Astre},
     items::{ElementOnAstre, ElementState, Inventory},
+    HandleLoaderBundle, MaterialLoader,
 };
 
 #[derive(Bundle)]
@@ -15,10 +16,10 @@ pub struct StarBundle {
     pub star: Star,
     pub astre: Astre,
     pub inventory: Inventory,
-    pub mesh: MaterialMesh2dBundle<StarMaterial>,
+    pub loader: HandleLoaderBundle<MaterialLoader<StarMaterial>>,
 }
 
-#[derive(Asset, AsBindGroup, TypePath, Debug, Clone)]
+#[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct StarMaterial {
     #[uniform(0)]
     pub color: Color,
@@ -38,18 +39,8 @@ impl Material2d for StarMaterial {
 #[reflect(Component)]
 pub struct Star;
 
-pub fn spawn_star(
-    c: &mut ChildBuilder,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StarMaterial>>,
-    planet_materials: &mut ResMut<Assets<PlanetMaterial>>,
-    radius: f32,
-    position: Vec2,
-    nb_children: u32,
-) {
+pub fn spawn_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children: u32) {
     let mut rng = rand::thread_rng();
-
-    let mesh = circle_mesh(radius);
 
     let transform = Transform::from_translation(position.extend(0.));
 
@@ -82,22 +73,13 @@ pub fn spawn_star(
         star: Star,
         astre: Astre::new(temperature, radius, 0.),
         inventory: Inventory::from(composition),
-        mesh: MaterialMesh2dBundle {
-            mesh: meshes.add(mesh).into(),
-            material: materials.add(material),
+        loader: HandleLoaderBundle {
+            loader: MaterialLoader { material, radius },
             transform,
             ..default()
         },
     })
     .with_children(|c| {
-        spawn_planet_c(
-            c,
-            meshes,
-            planet_materials,
-            radius,
-            orbit_distance,
-            nb_children,
-            0,
-        );
+        spawn_planet_c(c, radius, orbit_distance, nb_children, 0);
     });
 }

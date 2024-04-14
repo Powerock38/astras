@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::prelude::*;
 use std::f32::consts::PI;
 
-use crate::SHIP_Z;
+use crate::{HandleLoaderBundle, SpriteLoader, SHIP_Z};
 
 const WORM_Z: f32 = SHIP_Z - 2.0;
 const WORM_Z_DELTA: f32 = 0.001;
@@ -24,7 +24,7 @@ pub struct Worm {
 #[reflect(Component)]
 pub struct WormSegment;
 
-pub fn spawn_worm(c: &mut ChildBuilder, asset_server: &Res<AssetServer>, position: Vec2) {
+pub fn spawn_worm(c: &mut ChildBuilder, position: Vec2) {
     let size = rand::thread_rng().gen_range(1. ..=10.);
     let length = rand::thread_rng().gen_range(5..=50);
     let speed = rand::thread_rng().gen_range(100. ..=1000.);
@@ -36,8 +36,11 @@ pub fn spawn_worm(c: &mut ChildBuilder, asset_server: &Res<AssetServer>, positio
             .with_scale(Vec3::splat(size));
 
     c.spawn((
-        SpriteBundle {
-            texture: asset_server.load("sprites/worm_head.png"),
+        HandleLoaderBundle {
+            loader: SpriteLoader {
+                texture_path: "sprites/worm_head.png".to_string(),
+                ..default()
+            },
             transform,
             ..default()
         },
@@ -60,8 +63,11 @@ pub fn spawn_worm(c: &mut ChildBuilder, asset_server: &Res<AssetServer>, positio
 
             c.spawn((
                 WormSegment,
-                SpriteBundle {
-                    texture: asset_server.load("sprites/worm_segment.png"),
+                HandleLoaderBundle {
+                    loader: SpriteLoader {
+                        texture_path: "sprites/worm_segment.png".to_string(),
+                        ..default()
+                    },
                     transform,
                     ..default()
                 },

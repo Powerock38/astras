@@ -32,12 +32,17 @@ impl Plugin for BuildingsPlugin {
                 update_logistic_freights,
             ),
         )
+        .register_type::<PlacingLocation>()
         .register_type::<ConstructingBuilding>()
         .register_type::<Building>()
         .register_type::<LogisticFreight>()
+        .register_type::<LogisticJourneyWithTarget>()
+        .register_type::<Option<LogisticJourneyWithTarget>>()
         .register_type::<Spaceport>()
         .register_type::<Warehouse>()
         .register_type::<ElementExtractor>()
-        .register_type::<Crafter>();
+        .register_type::<Crafter>()
+        .register_type::<CrafterRecipe>()
+        .register_type::<Option<CrafterRecipe>>();
     }
 }

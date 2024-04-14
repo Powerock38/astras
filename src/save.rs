@@ -9,6 +9,7 @@ use std::{fs::File, io::Write, time::UNIX_EPOCH};
 use crate::{
     astres::{PlanetMaterial, StarMaterial},
     background::BackgroundMaterial,
+    ui::Hud,
     Ship, SolarSystem,
 };
 
@@ -17,8 +18,8 @@ pub const SAVE_DIR_ASSETS_RELATIVE: &str = "saves";
 pub const SAVE_FILE_EXTENSION: &str = "astras.ron";
 
 pub fn save_solar_system(
-    root: Query<Entity, With<SolarSystem>>,
-    children: Query<&Children, Without<Ship>>,
+    q_root: Query<Entity, With<SolarSystem>>,
+    q_children: Query<&Children, Without<Ship>>,
     world: &World,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
@@ -35,10 +36,9 @@ pub fn save_solar_system(
             .deny::<Handle<BackgroundMaterial>>()
             .deny::<Handle<Image>>()
             .deny::<Mesh2dHandle>()
-            .extract_entity(root.single())
-            .extract_entities(
-                children.iter_descendants(root.single()), // .filter(|entity| world.get::<MainCamera>(*entity).is_none()),
-            )
+            .deny::<Sprite>()
+            .extract_entity(q_root.single())
+            .extract_entities(q_children.iter_descendants(q_root.single()))
             .remove_empty_entities()
             .build();
 
@@ -64,14 +64,21 @@ pub fn save_solar_system(
 #[derive(Resource)]
 pub struct LoadGame(pub String);
 
+//FIXME: loading a non-new save is bugged (black screen)
 pub fn load_scene_system(
     mut commands: Commands,
     load_game: Option<Res<LoadGame>>,
     asset_server: Res<AssetServer>,
+    q_root: Query<Entity, With<SolarSystem>>,
+    q_hud: Query<Entity, With<Hud>>,
 ) {
     if let Some(load_game) = load_game {
         if load_game.is_added() {
             commands.remove_resource::<LoadGame>();
+
+            commands.entity(q_hud.single()).despawn_recursive();
+
+            commands.entity(q_root.single()).despawn_recursive();
 
             println!("Loading scene: {}", load_game.0);
 

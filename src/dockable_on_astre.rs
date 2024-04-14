@@ -37,6 +37,10 @@ pub fn update_dockable_on_astre(
     q_astre: Query<(Entity, &Astre, &GlobalTransform), Without<DockableOnAstre>>,
     q_solar_system: Query<(Entity, &GlobalTransform), With<SolarSystem>>,
 ) {
+    let Some(solar_system) = q_solar_system.iter().next() else {
+        return;
+    };
+
     for (mut dockable, entity_dockable, mut transform, global_transform) in q_dockable.iter_mut() {
         let mut on_astre_option: Option<(Entity, Uuid, &GlobalTransform, f32)> = None;
 
@@ -112,7 +116,7 @@ pub fn update_dockable_on_astre(
 
             if dockable.on_astre.is_some() {
                 // Entity left astre, goes in referential of solar system
-                let (entity_solar_system, solar_system_global_transform) = q_solar_system.single();
+                let (entity_solar_system, solar_system_global_transform) = solar_system;
 
                 *transform = global_transform.reparented_to(solar_system_global_transform);
                 if dockable.adjust_z {

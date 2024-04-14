@@ -6,7 +6,7 @@ pub struct Item {
     pub description: &'static str,
 }
 
-pub type ItemMap = HashMap<&'static str, u32>; // Item ID -> Quantity
+pub type ItemMap = HashMap<String, u32>; // Item ID -> Quantity
 
 pub static ITEMS: phf::Map<&'static str, Item> = phf_map! {
     "electronite_ore" => Item {

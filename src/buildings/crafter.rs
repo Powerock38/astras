@@ -29,7 +29,7 @@ impl CrafterBundle {
 #[reflect(Component)]
 pub struct Crafter {
     recipe: Option<CrafterRecipe>,
-    possible_recipes: Vec<&'static str>,
+    possible_recipes: Vec<String>,
     cooldown: Timer,
 }
 
@@ -37,34 +37,38 @@ impl Crafter {
     pub fn new(possible_recipes: &'static [&'static str]) -> Self {
         Self {
             recipe: if possible_recipes.len() == 1 {
-                Some(CrafterRecipe::new(possible_recipes[0]))
+                Some(CrafterRecipe::new(possible_recipes[0].to_string()))
             } else {
                 None
             },
-            possible_recipes: possible_recipes.to_vec(),
+            possible_recipes: possible_recipes
+                .to_vec()
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
         }
     }
 
-    pub fn set_recipe(&mut self, recipe: &'static str) {
+    pub fn set_recipe(&mut self, recipe: String) {
         self.recipe = Some(CrafterRecipe::new(recipe));
     }
 
-    pub fn possible_recipes(&self) -> &Vec<&'static str> {
+    pub fn possible_recipes(&self) -> &Vec<String> {
         &self.possible_recipes
     }
 }
 
 #[derive(Reflect, Default)]
 pub struct CrafterRecipe {
-    recipe: &'static str,
+    recipe: String,
     progress: Timer,
 }
 
 impl CrafterRecipe {
-    pub fn new(recipe: &'static str) -> Self {
+    pub fn new(recipe: String) -> Self {
         Self {
-            progress: Timer::from_seconds(RECIPES[recipe].time(), TimerMode::Once),
+            progress: Timer::from_seconds(RECIPES[&recipe].time(), TimerMode::Once),
             recipe,
         }
     }
@@ -84,7 +88,7 @@ pub fn update_crafters(
         // If a recipe is selected
         if let Some(recipe_crafter) = &mut crafter.recipe {
             // Try crafting
-            match inventory.can_craft(recipe_crafter.recipe) {
+            match inventory.can_craft(&recipe_crafter.recipe) {
                 // Craft
                 CanCraftResult::Yes => {
                     commands.entity(entity).remove::<LogisticRequest>();

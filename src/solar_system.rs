@@ -1,25 +1,14 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{
-    astres::{spawn_star, PlanetMaterial, StarMaterial},
-    background::BackgroundMaterial,
-    ship::setup_ship,
-    worm::spawn_worm,
-};
+use crate::{astres::spawn_star, ship::setup_ship, worm::spawn_worm};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct SolarSystem;
 
-pub fn spawn_solar_system(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut star_materials: ResMut<Assets<StarMaterial>>,
-    mut planet_materials: ResMut<Assets<PlanetMaterial>>,
-    background_materials: ResMut<Assets<BackgroundMaterial>>,
-    asset_server: Res<AssetServer>,
-) {
+// TODO: save and load on new game
+pub fn spawn_solar_system(mut commands: Commands) {
     let mut rng = rand::thread_rng();
 
     let radius = rng.gen_range((5000.)..10000.);
@@ -31,15 +20,7 @@ pub fn spawn_solar_system(
         .spawn(SpatialBundle::default())
         .insert(SolarSystem)
         .with_children(|mut c| {
-            spawn_star(
-                &mut c,
-                &mut meshes,
-                &mut star_materials,
-                &mut planet_materials,
-                radius,
-                position,
-                nb_children,
-            );
+            spawn_star(&mut c, radius, position, nb_children);
         })
         .with_children(|c| {
             let radius = 50000.;
@@ -51,10 +32,10 @@ pub fn spawn_solar_system(
                     rand::thread_rng().gen_range(-radius..radius),
                 );
 
-                spawn_worm(c, &asset_server, position);
+                spawn_worm(c, position);
             }
         })
         .with_children(|c| {
-            setup_ship(c, meshes, asset_server, background_materials);
+            setup_ship(c);
         });
 }

@@ -46,13 +46,15 @@ impl LogisticFreightBundle {
     }
 }
 
+pub type LogisticJourneyWithTarget = (LogisticJourney, Option<Vec3>); // (journey, move_target)
+
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct LogisticFreight {
     uuid: Uuid,
     cooldown: Timer,
     max_amount_per_transfer: u32,
-    journey: Option<(LogisticJourney, Option<Vec3>)>, // (journey, move_target)
+    journey: Option<LogisticJourneyWithTarget>,
     scope: LogisticScope,
 }
 
@@ -133,7 +135,7 @@ pub fn update_logistic_freights(
                                 for (item_id, &quantity) in logistic_request.items() {
                                     let q = inventory.transfer_to(
                                         &mut requester_inventory,
-                                        item_id,
+                                        item_id.to_string(),
                                         quantity.min(freight.max_amount_per_transfer),
                                     );
 
@@ -157,7 +159,7 @@ pub fn update_logistic_freights(
                                     for (item_id, &quantity) in logistic_request.items() {
                                         let q = provider_inventory.transfer_to(
                                             &mut inventory,
-                                            item_id,
+                                            item_id.to_string(),
                                             quantity.min(freight.max_amount_per_transfer),
                                         );
 

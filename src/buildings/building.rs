@@ -5,7 +5,7 @@ use crate::{
         CrafterBundle, ElementExtractorBundle, LogisticFreightBundle, SpaceportBundle,
         WarehouseBundle,
     },
-    DockableOnAstre, SHIP_Z,
+    DockableOnAstre, HandleLoaderBundle, SpriteLoader, SHIP_Z,
 };
 
 pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
@@ -97,7 +97,7 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
 
 #[derive(Resource, Debug)]
-pub struct PlacingBuilding(pub &'static str);
+pub struct PlacingBuilding(pub String);
 
 #[derive(Clone, Copy, Debug)]
 pub struct BuildingData {
@@ -119,7 +119,7 @@ pub enum PlacingLocation {
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct ConstructingBuilding {
-    pub building: &'static str,
+    pub building: String,
     pub build_timer: Timer,
 }
 
@@ -137,17 +137,18 @@ pub fn place_building(
     q_windows: Query<&Window, With<PrimaryWindow>>,
     placing_building: Option<ResMut<PlacingBuilding>>,
     mut q_building_preview: Query<(Entity, &mut Transform), With<BuildingPreview>>,
-    asset_server: Res<AssetServer>,
 ) {
     // Resource PlacingBuilding stores the building that is currently being placed
     if let Some(placing_building) = placing_building {
-        // Get cursor world position
-        let (camera, camera_transform) = q_camera.single();
-        let window = q_windows.single();
-        if let Some(world_position) = window
-            .cursor_position()
-            .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-            .map(|ray| ray.origin.truncate())
+        let Some((camera, camera_transform)) = q_camera.iter().next() else {
+            return;
+        };
+
+        let Some(cursor_position) = q_windows.single().cursor_position() else {
+            return;
+        };
+
+        if let Some(world_position) = camera.viewport_to_world_2d(camera_transform, cursor_position)
         {
             let world_position = world_position.extend(BUILDING_PREVIEW_Z);
 
@@ -166,17 +167,17 @@ pub fn place_building(
                     // recycle the building preview entity to keep sprite texture
                     commands
                         .entity(building_preview_entity)
-                        .retain::<SpriteBundle>()
+                        .retain::<(SpriteBundle, SpriteLoader)>()
                         .insert((
                             ConstructingBuilding {
-                                building: placing_building.0,
+                                building: placing_building.0.clone(),
                                 build_timer: Timer::from_seconds(
-                                    BUILDINGS[placing_building.0].build_time_seconds,
+                                    BUILDINGS[&placing_building.0].build_time_seconds,
                                     TimerMode::Once,
                                 ),
                             },
                             DockableOnAstre::instant_location(
-                                BUILDINGS[placing_building.0].location,
+                                BUILDINGS[&placing_building.0].location,
                             ),
                         ));
 
@@ -190,23 +191,22 @@ pub fn place_building(
                 }
             } else {
                 // there is no building preview, spawn it
-                let texture = asset_server.load(format!(
-                    "sprites/{}.png",
-                    BUILDINGS[placing_building.0].sprite_name
-                ));
                 let transform = Transform::from_translation(world_position);
 
-                commands
-                    .spawn(SpriteBundle {
-                        texture,
-                        transform,
-                        sprite: Sprite {
+                commands.spawn((
+                    HandleLoaderBundle {
+                        loader: SpriteLoader {
+                            texture_path: format!(
+                                "sprites/{}.png",
+                                BUILDINGS[&placing_building.0].sprite_name
+                            ),
                             color: Color::rgba(1., 1., 1., 0.5),
-                            ..default()
                         },
+                        transform,
                         ..default()
-                    })
-                    .insert(BuildingPreview);
+                    },
+                    BuildingPreview,
+                ));
             }
         }
     }
@@ -215,19 +215,22 @@ pub fn place_building(
 pub fn constructing_building(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_building: Query<(Entity, &mut ConstructingBuilding)>,
+    mut q_building: Query<(Entity, &mut ConstructingBuilding, &mut SpriteLoader)>,
 ) {
-    for (entity, mut constructing_building) in q_building.iter_mut() {
+    for (entity, mut constructing_building, mut sprite_loader) in q_building.iter_mut() {
         // Tick build timer
         constructing_building.build_timer.tick(time.delta());
         if constructing_building.build_timer.finished() {
             // Spawn building: recycle the ConstructingBuilding entity to keep parent, position and sprite texture
+
+            sprite_loader.color = Color::default();
+
             let mut ec = commands.entity(entity);
 
-            ec.retain::<(Parent, SpriteBundle)>()
+            ec.retain::<(Parent, SpriteBundle, SpriteLoader)>()
                 .insert((Sprite::default(), Building));
 
-            (BUILDINGS[constructing_building.building].on_build)(&mut ec);
+            (BUILDINGS[&constructing_building.building].on_build)(&mut ec);
         }
     }
 }

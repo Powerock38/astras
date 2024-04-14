@@ -9,6 +9,8 @@ pub use planet::*;
 mod star;
 pub use star::*;
 
+use crate::MaterialLoader;
+
 pub struct AstresPlugin;
 
 impl Plugin for AstresPlugin {
@@ -20,6 +22,11 @@ impl Plugin for AstresPlugin {
         .register_type::<Astre>()
         .register_type::<Planet>()
         .register_type::<Star>()
+        .register_type::<PlanetMaterial>()
+        .register_type::<PlanetColors>()
+        .register_type::<StarMaterial>()
+        .register_type::<MaterialLoader<PlanetMaterial>>()
+        .register_type::<MaterialLoader<StarMaterial>>()
         .add_systems(Update, (update_planets,));
     }
 }

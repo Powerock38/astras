@@ -17,15 +17,15 @@ impl Inventory {
         }
     }
 
-    fn add(&mut self, id: &'static str, quantity: u32) {
+    fn add(&mut self, id: &String, quantity: u32) {
         if let Some(item) = self.items.get_mut(id) {
             *item += quantity;
         } else {
-            self.items.insert(id, quantity);
+            self.items.insert(id.clone(), quantity);
         }
     }
 
-    fn remove(&mut self, id: &'static str, quantity: u32) {
+    fn remove(&mut self, id: &String, quantity: u32) {
         if let Some(item) = self.items.get_mut(id) {
             *item -= quantity;
             if *item == 0 {
@@ -44,13 +44,8 @@ impl Inventory {
     }
 
     // Best-effort item transfer
-    pub fn transfer_to(
-        &mut self,
-        other: &mut Inventory,
-        id: &'static str,
-        max_quantity: u32,
-    ) -> u32 {
-        if let Some(item_quantity) = self.items.get_mut(id) {
+    pub fn transfer_to(&mut self, other: &mut Inventory, id: String, max_quantity: u32) -> u32 {
+        if let Some(item_quantity) = self.items.get_mut(&id) {
             // Adjust quantity if self doesn't have enough quantity
             let mut real_quantity = (*item_quantity).min(max_quantity);
 
@@ -61,8 +56,8 @@ impl Inventory {
             }
 
             if real_quantity > 0 {
-                self.remove(id, real_quantity);
-                other.add(id, real_quantity);
+                self.remove(&id, real_quantity);
+                other.add(&id, real_quantity);
 
                 return real_quantity;
             }
@@ -71,8 +66,8 @@ impl Inventory {
         0
     }
 
-    pub fn can_craft(&self, recipe: &'static str) -> CanCraftResult {
-        let recipe = RECIPES[recipe];
+    pub fn can_craft(&self, recipe: &String) -> CanCraftResult {
+        let recipe = RECIPES[&recipe];
 
         let has_space_for_outputs = self.size == 0
             || recipe
@@ -88,7 +83,7 @@ impl Inventory {
         let has_inputs = recipe
             .inputs()
             .iter()
-            .all(|(id, quantity)| self.quantity(id) >= *quantity);
+            .all(|(id, quantity)| self.quantity(&id.to_string()) >= *quantity);
 
         if !has_inputs {
             return CanCraftResult::MissingInputs(
@@ -96,8 +91,8 @@ impl Inventory {
                     .inputs()
                     .iter()
                     .filter_map(|(id, quantity)| {
-                        if self.quantity(id) < *quantity {
-                            Some((*id, quantity - self.quantity(id)))
+                        if self.quantity(&id.to_string()) < *quantity {
+                            Some((id.to_string(), quantity - self.quantity(&id.to_string())))
                         } else {
                             None
                         }
@@ -109,28 +104,28 @@ impl Inventory {
         CanCraftResult::Yes
     }
 
-    pub fn craft(&mut self, recipe: &'static str) {
+    pub fn craft(&mut self, recipe: &String) {
         if self.can_craft(recipe).yes() {
-            let recipe = RECIPES[recipe];
+            let recipe = RECIPES[&recipe];
 
             for (id, quantity) in recipe.inputs() {
-                self.remove(id, *quantity);
+                self.remove(&id.to_string(), *quantity);
             }
 
             for (id, quantity) in recipe.outputs() {
-                self.add(id, *quantity);
+                self.add(&id.to_string(), *quantity);
             }
         }
     }
 
     #[inline]
-    pub fn quantity(&self, id: &'static str) -> u32 {
+    pub fn quantity(&self, id: &String) -> u32 {
         *self.items.get(id).unwrap_or(&0)
     }
 
     #[inline]
-    pub fn all_ids(&self) -> Vec<&'static str> {
-        self.items.keys().copied().collect()
+    pub fn all_ids(&self) -> Vec<&String> {
+        self.items.keys().collect()
     }
 
     #[inline]
@@ -144,7 +139,7 @@ impl From<Vec<ElementOnAstre>> for Inventory {
         let mut items = ItemMap::default();
 
         for element in elements {
-            items.insert(element.id, element.quantity);
+            items.insert(element.id.to_string(), element.quantity);
         }
 
         Self { items, size: 0 }

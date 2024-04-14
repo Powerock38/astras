@@ -1,25 +1,27 @@
 use bevy::{
     prelude::*,
-    reflect::TypePath,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, MaterialMesh2dBundle},
+    sprite::Material2d,
 };
 use rand::Rng;
 use std::f32::consts::PI;
 
 use crate::{
-    astres::{circle_mesh, Astre},
+    astres::Astre,
     items::{ElementOnAstre, ElementState, Inventory, ELEMENTS},
+    HandleLoaderBundle, MaterialLoader,
 };
 
 pub const NB_COLORS: usize = 3;
+
+pub type PlanetColors = [Color; NB_COLORS];
 
 #[derive(Bundle)]
 pub struct PlanetBundle {
     pub planet: Planet,
     pub astre: Astre,
     pub inventory: Inventory,
-    pub mesh: MaterialMesh2dBundle<PlanetMaterial>,
+    pub loader: HandleLoaderBundle<MaterialLoader<PlanetMaterial>>,
 }
 
 #[derive(Component, Reflect, Default)]
@@ -28,10 +30,10 @@ pub struct Planet {
     pub orbit_speed: f32,
 }
 
-#[derive(Asset, AsBindGroup, TypePath, Debug, Clone)]
+#[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct PlanetMaterial {
     #[uniform(0)]
-    pub colors: [Color; NB_COLORS],
+    pub colors: PlanetColors, //FIXME: breaks deserialization
     #[uniform(0)]
     pub seed: f32,
     #[uniform(0)]
@@ -54,8 +56,6 @@ impl Material2d for PlanetMaterial {
 
 pub fn spawn_planet(
     c: &mut ChildBuilder,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<PlanetMaterial>>,
     surface_radius: f32,
     atmosphere_radius: f32,
     position: Vec2,
@@ -66,8 +66,6 @@ pub fn spawn_planet(
     let total_radius = atmosphere_radius + surface_radius;
 
     let mut rng = rand::thread_rng();
-
-    let mesh = circle_mesh(total_radius);
 
     let transform = Transform::from_translation(position.extend(z_value as f32));
 
@@ -125,30 +123,22 @@ pub fn spawn_planet(
         planet: Planet { orbit_speed },
         astre: Astre::new(temperature, surface_radius, atmosphere_radius),
         inventory: Inventory::from(composition),
-        mesh: MaterialMesh2dBundle {
-            mesh: meshes.add(mesh).into(),
-            material: materials.add(material),
+        loader: HandleLoaderBundle {
+            loader: MaterialLoader {
+                material,
+                radius: total_radius,
+            },
             transform,
             ..default()
         },
     })
     .with_children(|c| {
-        spawn_planet_c(
-            c,
-            meshes,
-            materials,
-            surface_radius,
-            orbit_distance,
-            nb_children,
-            z_value,
-        );
+        spawn_planet_c(c, surface_radius, orbit_distance, nb_children, z_value);
     });
 }
 
 pub fn spawn_planet_c(
     c: &mut ChildBuilder,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<PlanetMaterial>>,
     surface_radius: f32,
     mut orbit_distance: f32,
     nb_children: u32,
@@ -188,8 +178,6 @@ pub fn spawn_planet_c(
 
         spawn_planet(
             c,
-            meshes,
-            materials,
             c_surface_radius,
             c_atmosphere_radius,
             position,

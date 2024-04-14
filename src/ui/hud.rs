@@ -3,7 +3,7 @@ use bevy_mod_picking::picking_core::Pickable;
 
 use crate::{
     buildings::{Crafter, PlacingBuilding, BUILDINGS},
-    LoadGame,
+    LoadGame, MainCamera,
 };
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
@@ -11,13 +11,13 @@ const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 #[derive(Component)]
-pub struct MainCamera;
+pub struct Hud;
 
 #[derive(Component)]
 pub enum HudButtonAction {
     LoadGame(String),
     SetPlacingBuilding(&'static str),
-    SetCrafterRecipe(Entity, &'static str),
+    SetCrafterRecipe(Entity, String),
 }
 
 #[derive(Bundle)]
@@ -96,11 +96,11 @@ pub fn update_hud(
                 border_color.0 = Color::RED;
                 match action {
                     HudButtonAction::SetPlacingBuilding(building) => {
-                        commands.insert_resource(PlacingBuilding(building));
+                        commands.insert_resource(PlacingBuilding(building.to_string()));
                     }
                     HudButtonAction::SetCrafterRecipe(crafter_entity, recipe) => {
                         let mut crafter = q_crafter.get_mut(*crafter_entity).unwrap();
-                        crafter.set_recipe(*recipe);
+                        crafter.set_recipe(recipe.to_string());
                         border_color.0 = Color::WHITE;
                     }
                     HudButtonAction::LoadGame(file) => {
@@ -120,9 +120,14 @@ pub fn update_hud(
     }
 }
 
-pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, With<MainCamera>>) {
+pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamera>>) {
+    let Some(camera) = q_camera.iter().next() else {
+        return;
+    };
+
     commands
         .spawn((
+            Hud,
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
@@ -136,7 +141,7 @@ pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, With<MainCamera
                 ..default()
             },
             Pickable::IGNORE,
-            TargetCamera(q_camera.single()),
+            TargetCamera(camera),
         ))
         .with_children(|c| {
             // Toolbar

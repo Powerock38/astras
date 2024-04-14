@@ -83,7 +83,7 @@ pub fn update_element_extractors(
             let mut astre_inventory = q_astre_inventories.get_mut(parent.get()).unwrap();
 
             let mut rng = rand::thread_rng();
-            let random_item_id = astre_inventory
+            let random_item_ids = astre_inventory
                 .all_ids()
                 .iter()
                 .filter(|id| {
@@ -91,17 +91,24 @@ pub fn update_element_extractors(
                         .get(*id)
                         .map_or(false, |element| element.state == extractor.element_state)
                 })
-                .collect::<Vec<_>>() // TODO: optimize by caching the list of ids
-                .choose_weighted(&mut rng, |id| astre_inventory.quantity(**id))
+                .map(|id| (*id).clone())
+                .collect::<Vec<_>>(); // TODO: optimize by caching the list of ids
+
+            let random_item_id = random_item_ids
+                .choose_weighted(&mut rng, |id| astre_inventory.quantity(id))
                 .ok()
-                .map(|id| **id);
+                .cloned();
 
             if let Some(item_id) = random_item_id {
                 let quantity = astre_inventory
-                    .quantity(item_id)
+                    .quantity(&item_id)
                     .min(extractor.amount_per_tick);
 
-                let q = astre_inventory.transfer_to(&mut extractor_inventory, item_id, quantity);
+                let q = astre_inventory.transfer_to(
+                    &mut extractor_inventory,
+                    item_id.clone(),
+                    quantity,
+                );
 
                 println!(
                     "Mined {} {} - from {} to {}",

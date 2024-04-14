@@ -1,4 +1,4 @@
-use bevy::{ecs::entity::MapEntities, prelude::*, utils::Uuid};
+use bevy::{prelude::*, utils::Uuid};
 
 use crate::items::{Inventory, ItemMap};
 
