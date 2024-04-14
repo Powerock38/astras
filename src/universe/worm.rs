@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::prelude::*;
 use std::f32::consts::PI;
 
-use crate::{HandleLoaderBundle, SpriteLoader, universe::SHIP_Z};
+use crate::{universe::SHIP_Z, HandleLoaderBundle, SpriteLoader};
 
 const WORM_Z: f32 = SHIP_Z - 2.0;
 const WORM_Z_DELTA: f32 = 0.001;

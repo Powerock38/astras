@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 
 use crate::{
-    universe::Astre,
     items::{ElementState, Inventory, LogisticProvider, LogisticScope, ELEMENTS},
+    universe::Astre,
 };
 
 #[derive(Bundle)]

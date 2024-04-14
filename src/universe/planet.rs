@@ -7,8 +7,8 @@ use rand::Rng;
 use std::f32::consts::PI;
 
 use crate::{
-    universe::Astre,
     items::{ElementOnAstre, ElementState, Inventory, ELEMENTS},
+    universe::Astre,
     HandleLoaderBundle, MaterialLoader,
 };
 

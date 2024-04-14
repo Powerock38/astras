@@ -5,8 +5,8 @@ use crate::{
         CrafterBundle, ElementExtractorBundle, LogisticFreightBundle, SpaceportBundle,
         WarehouseBundle,
     },
-    universe::DockableOnAstre,
-    HandleLoaderBundle, SpriteLoader, universe::SHIP_Z,
+    universe::{DockableOnAstre, SHIP_Z},
+    HandleLoaderBundle, SpriteLoader,
 };
 
 pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
