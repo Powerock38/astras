@@ -6,7 +6,7 @@ use bevy::{
 use rand::Rng;
 
 use crate::{
-    astres::{spawn_planet_c, Astre},
+    universe::{spawn_planet_c, Astre},
     items::{ElementOnAstre, ElementState, Inventory},
     HandleLoaderBundle, MaterialLoader,
 };

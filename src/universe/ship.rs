@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{dockable_on_astre::DockableOnAstre, HandleLoaderBundle, SpriteLoader};
+use crate::{universe::DockableOnAstre, HandleLoaderBundle, SpriteLoader};
 
 pub const SHIP_Z: f32 = 100.;
 

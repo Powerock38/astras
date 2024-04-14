@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::{astres::spawn_star, ship::setup_ship, worm::spawn_worm};
+use crate::universe::{setup_ship, spawn_star, spawn_worm};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]

@@ -3,7 +3,7 @@ use bevy::{
     sprite::{Material2d, Mesh2dHandle},
 };
 
-use crate::astres::circle_mesh;
+use crate::universe::circle_mesh;
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]

@@ -7,10 +7,8 @@ use bevy::{
 use std::{fs::File, io::Write, time::UNIX_EPOCH};
 
 use crate::{
-    astres::{PlanetMaterial, StarMaterial},
-    background::BackgroundMaterial,
     ui::Hud,
-    Ship, SolarSystem,
+    universe::{BackgroundMaterial, PlanetMaterial, Ship, SolarSystem, StarMaterial},
 };
 
 pub const SAVE_DIR: &str = "assets/saves";
@@ -65,7 +63,7 @@ pub fn save_solar_system(
 pub struct LoadGame(pub String);
 
 //FIXME: loading a non-new save is bugged (black screen)
-pub fn load_scene_system(
+pub fn load_solar_system(
     mut commands: Commands,
     load_game: Option<Res<LoadGame>>,
     asset_server: Res<AssetServer>,

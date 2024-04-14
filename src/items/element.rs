@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::{seq::IteratorRandom, Rng};
 
-use crate::astres::NB_COLORS;
+use crate::universe::NB_COLORS;
 
 pub struct Element {
     pub color: Color,

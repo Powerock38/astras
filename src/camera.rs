@@ -4,10 +4,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{
-    background::{spawn_background, Background, BackgroundMaterial},
-    Ship,
-};
+use crate::universe::{spawn_background, Background, BackgroundMaterial, Ship};
 
 const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
 
