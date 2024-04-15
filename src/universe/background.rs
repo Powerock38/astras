@@ -22,7 +22,7 @@ impl Material2d for BackgroundMaterial {
     }
 }
 
-pub fn spawn_background(
+pub fn build_background(
     c: &mut ChildBuilder,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<BackgroundMaterial>>,

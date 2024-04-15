@@ -1,26 +1,24 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::universe::{setup_ship, spawn_star, spawn_worm};
+use crate::universe::{build_ship, build_star, build_worm};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct SolarSystem;
 
-// TODO: save and load on new game
-pub fn spawn_solar_system(mut commands: Commands) {
+pub fn spawn_solar_system(commands: &mut Commands) {
     let mut rng = rand::thread_rng();
 
-    let radius = rng.gen_range((5000.)..10000.);
-    let nb_children = rng.gen_range(5..=15);
-
-    let position = Vec2::new(0., 0.);
+    let star_radius = rng.gen_range((5000.)..10000.);
+    let star_position = Vec2::new(0., 0.);
+    let nb_planets = rng.gen_range(5..=15);
 
     commands
         .spawn(SpatialBundle::default())
         .insert(SolarSystem)
         .with_children(|mut c| {
-            spawn_star(&mut c, radius, position, nb_children);
+            build_star(&mut c, star_radius, star_position, nb_planets);
         })
         .with_children(|c| {
             let radius = 50000.;
@@ -32,10 +30,10 @@ pub fn spawn_solar_system(mut commands: Commands) {
                     rand::thread_rng().gen_range(-radius..radius),
                 );
 
-                spawn_worm(c, position);
+                build_worm(c, position);
             }
         })
         .with_children(|c| {
-            setup_ship(c);
+            build_ship(c);
         });
 }

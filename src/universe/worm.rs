@@ -24,7 +24,7 @@ pub struct Worm {
 #[reflect(Component)]
 pub struct WormSegment;
 
-pub fn spawn_worm(c: &mut ChildBuilder, position: Vec2) {
+pub fn build_worm(c: &mut ChildBuilder, position: Vec2) {
     let size = rand::thread_rng().gen_range(1. ..=10.);
     let length = rand::thread_rng().gen_range(5..=50);
     let speed = rand::thread_rng().gen_range(100. ..=1000.);

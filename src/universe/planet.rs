@@ -54,7 +54,7 @@ impl Material2d for PlanetMaterial {
     }
 }
 
-pub fn spawn_planet(
+pub fn build_planet(
     c: &mut ChildBuilder,
     surface_radius: f32,
     atmosphere_radius: f32,
@@ -133,11 +133,11 @@ pub fn spawn_planet(
         },
     })
     .with_children(|c| {
-        spawn_planet_c(c, surface_radius, orbit_distance, nb_children, z_value);
+        build_planet_children(c, surface_radius, orbit_distance, nb_children, z_value);
     });
 }
 
-pub fn spawn_planet_c(
+pub fn build_planet_children(
     c: &mut ChildBuilder,
     surface_radius: f32,
     mut orbit_distance: f32,
@@ -176,7 +176,7 @@ pub fn spawn_planet_c(
             orbit_distance * c_angle.sin(),
         );
 
-        spawn_planet(
+        build_planet(
             c,
             c_surface_radius,
             c_atmosphere_radius,

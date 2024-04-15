@@ -7,7 +7,7 @@ use rand::Rng;
 
 use crate::{
     items::{ElementOnAstre, ElementState, Inventory},
-    universe::{spawn_planet_c, Astre},
+    universe::{build_planet_children, Astre},
     HandleLoaderBundle, MaterialLoader,
 };
 
@@ -39,7 +39,7 @@ impl Material2d for StarMaterial {
 #[reflect(Component)]
 pub struct Star;
 
-pub fn spawn_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children: u32) {
+pub fn build_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children: u32) {
     let mut rng = rand::thread_rng();
 
     let transform = Transform::from_translation(position.extend(0.));
@@ -80,6 +80,6 @@ pub fn spawn_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children
         },
     })
     .with_children(|c| {
-        spawn_planet_c(c, radius, orbit_distance, nb_children, 0);
+        build_planet_children(c, radius, orbit_distance, nb_children, 0);
     });
 }

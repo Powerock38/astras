@@ -131,7 +131,7 @@ pub struct BuildingPreview;
 #[reflect(Component)]
 pub struct Building;
 
-pub fn place_building(
+pub fn spawn_building(
     mut commands: Commands,
     mouse_input: Res<ButtonInput<MouseButton>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
@@ -213,7 +213,7 @@ pub fn place_building(
     }
 }
 
-pub fn constructing_building(
+pub fn update_constructing_building(
     mut commands: Commands,
     time: Res<Time>,
     mut q_building: Query<(Entity, &mut ConstructingBuilding, &mut SpriteLoader)>,

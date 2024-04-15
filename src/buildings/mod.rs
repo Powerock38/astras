@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::GameplaySet;
+
 mod building;
 pub use building::*;
 
@@ -25,12 +27,13 @@ impl Plugin for BuildingsPlugin {
         app.add_systems(
             Update,
             (
-                place_building,
-                constructing_building,
+                spawn_building,
+                update_constructing_building,
                 update_element_extractors,
-                update_crafters.before(update_logistic_freights),
                 update_logistic_freights,
-            ),
+                update_crafters,
+            )
+                .in_set(GameplaySet),
         )
         .register_type::<PlacingLocation>()
         .register_type::<ConstructingBuilding>()

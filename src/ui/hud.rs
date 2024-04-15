@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_mod_picking::picking_core::Pickable;
+use bevy_mod_picking::prelude::*;
 
 use crate::{
     buildings::{Crafter, PlacingBuilding, BUILDINGS},
@@ -48,17 +48,17 @@ impl HudButtonBundle {
 }
 
 #[derive(Component)]
-pub struct UIWindowParent;
+pub struct HudWindowParent;
 
 #[derive(Component)]
-pub struct UIWindowDependent;
+pub struct HudWindowDependent;
 
 #[derive(Bundle)]
-pub struct UIWindow {
+pub struct HudWindow {
     node: NodeBundle,
 }
 
-impl Default for UIWindow {
+impl Default for HudWindow {
     fn default() -> Self {
         Self {
             node: NodeBundle {
@@ -187,7 +187,7 @@ pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamer
                     },
                     ..default()
                 },
-                UIWindowParent,
+                HudWindowParent,
                 Pickable::IGNORE,
             ));
         });
@@ -196,15 +196,15 @@ pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamer
 pub fn remove_windows_on_escape(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    q_ui_window_parent: Query<Entity, With<UIWindowParent>>,
-    q_ui_window_dependent: Query<Entity, With<UIWindowDependent>>,
+    q_window_parent: Query<Entity, With<HudWindowParent>>,
+    q_window_dependent: Query<Entity, With<HudWindowDependent>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
-        for entity in q_ui_window_dependent.iter() {
+        for entity in q_window_dependent.iter() {
             commands.entity(entity).despawn_recursive();
         }
 
-        let parent = q_ui_window_parent.single();
+        let parent = q_window_parent.single();
         commands.entity(parent).despawn_descendants();
     }
 }

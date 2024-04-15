@@ -12,18 +12,18 @@ use bevy_mod_picking::prelude::*;
 use crate::{
     buildings::LogisticFreight,
     items::{Inventory, LogisticProvider},
-    ui::{spawn_inventory_ui, UIWindow, UIWindowDependent, UIWindowParent},
+    ui::{spawn_inventory_ui, HudWindow, HudWindowDependent, HudWindowParent},
 };
 
 pub fn spawn_interplanetary_freighter_ui(
     mut commands: Commands,
     listener: Listener<Pointer<Click>>,
     mut images: ResMut<Assets<Image>>,
-    q_ui_window_parent: Query<Entity, With<UIWindowParent>>,
+    q_window_parent: Query<Entity, With<HudWindowParent>>,
     q_interplanetary_freighters: Query<(&LogisticFreight, &Inventory)>,
     q_providers: Query<Entity, With<LogisticProvider>>,
 ) {
-    let parent = q_ui_window_parent.single();
+    let parent = q_window_parent.single();
     let (freight, inventory) = q_interplanetary_freighters
         .get(listener.listener())
         .unwrap();
@@ -58,7 +58,7 @@ pub fn spawn_interplanetary_freighter_ui(
 
         commands.entity(provider_entity).with_children(|c| {
             c.spawn((
-                UIWindowDependent,
+                HudWindowDependent,
                 Camera2dBundle {
                     camera: Camera {
                         viewport: Some(Viewport {
@@ -83,7 +83,7 @@ pub fn spawn_interplanetary_freighter_ui(
         .entity(parent)
         .despawn_descendants()
         .with_children(|c| {
-            c.spawn(UIWindow::default()).with_children(|c| {
+            c.spawn(HudWindow::default()).with_children(|c| {
                 // Provider minimap
 
                 if let Some(image_handle) = image_handle {

@@ -4,16 +4,16 @@ use bevy_mod_picking::prelude::*;
 use crate::{
     buildings::Crafter,
     items::{Inventory, RECIPES},
-    ui::{spawn_inventory_ui, HudButtonAction, HudButtonBundle, UIWindow, UIWindowParent},
+    ui::{spawn_inventory_ui, HudButtonAction, HudButtonBundle, HudWindow, HudWindowParent},
 };
 
 pub fn spawn_crafter_ui(
     mut commands: Commands,
     listener: Listener<Pointer<Click>>,
-    q_ui_window_parent: Query<Entity, With<UIWindowParent>>,
+    q_window_parent: Query<Entity, With<HudWindowParent>>,
     q_crafter: Query<(&Crafter, &Inventory)>,
 ) {
-    let parent = q_ui_window_parent.single();
+    let parent = q_window_parent.single();
 
     let entity = listener.listener();
     let (crafter, inventory) = q_crafter.get(entity).unwrap();
@@ -22,7 +22,7 @@ pub fn spawn_crafter_ui(
         .entity(parent)
         .despawn_descendants()
         .with_children(|c| {
-            c.spawn(UIWindow::default()).with_children(|c| {
+            c.spawn(HudWindow::default()).with_children(|c| {
                 // List recipes
                 for recipe in crafter.possible_recipes() {
                     c.spawn(HudButtonBundle::new(HudButtonAction::SetCrafterRecipe(

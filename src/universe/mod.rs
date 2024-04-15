@@ -1,6 +1,6 @@
 use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
 
-use crate::{scan_atres_material_loaders, MaterialLoader};
+use crate::{scan_atres_material_loaders, GameplaySet, MaterialLoader};
 
 mod solar_system;
 pub use solar_system::*;
@@ -48,7 +48,6 @@ impl Plugin for UniversePlugin {
         .register_type::<DockableOnAstre>()
         .register_type::<Worm>()
         .register_type::<WormSegment>()
-        .add_systems(PreStartup, spawn_solar_system)
         .add_systems(
             Update,
             (
@@ -58,11 +57,14 @@ impl Plugin for UniversePlugin {
                 update_ship,
                 update_planets,
                 update_worms,
-            ),
+            )
+                .in_set(GameplaySet),
         )
         .add_systems(
             PostUpdate,
-            update_dockable_on_astre.after(TransformSystem::TransformPropagate),
+            update_dockable_on_astre
+                .after(TransformSystem::TransformPropagate)
+                .in_set(GameplaySet),
         );
     }
 }

@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::GameplaySet;
+
 mod hud;
 pub use hud::*;
 
@@ -29,7 +31,8 @@ impl Plugin for UIPlugin {
                 update_hud,
                 remove_windows_on_escape,
                 spawn_save_ui,
-            ),
+            )
+                .in_set(GameplaySet),
         );
     }
 }

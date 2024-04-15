@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::universe::{spawn_background, Background, BackgroundMaterial, Ship};
+use crate::universe::{build_background, Background, BackgroundMaterial, Ship};
 
 const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
 
@@ -39,7 +39,7 @@ pub fn spawn_camera(
             BloomSettings::default(),
         ));
 
-        spawn_background(c, meshes, background_materials);
+        build_background(c, meshes, background_materials);
     });
 }
 

@@ -22,7 +22,7 @@ impl Ship {
 #[derive(Component)]
 pub struct ShipSprite;
 
-pub fn setup_ship(c: &mut ChildBuilder) {
+pub fn build_ship(c: &mut ChildBuilder) {
     let position = Vec2::new(0., 0.);
 
     // Ship is just a SpatialBundle
