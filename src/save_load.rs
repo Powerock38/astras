@@ -10,6 +10,7 @@ use std::{fs::File, io::Write, time::UNIX_EPOCH};
 use crate::{
     ui::Hud,
     universe::{BackgroundMaterial, PlanetMaterial, Ship, SolarSystem, StarMaterial},
+    GameState,
 };
 
 pub const SAVE_DIR: &str = "assets/saves";
@@ -58,8 +59,8 @@ pub fn save_solar_system(
 
             let scene = DynamicSceneBuilder::from_world(world)
                 .deny_all_resources()
-                .allow_resource::<SaveName>()
                 .allow_all()
+                .allow_resource::<SaveName>()
                 .deny::<CameraRenderGraph>()
                 .deny::<CameraMainTextureUsages>()
                 .deny::<Handle<PlanetMaterial>>()
@@ -68,6 +69,7 @@ pub fn save_solar_system(
                 .deny::<Handle<Image>>()
                 .deny::<Mesh2dHandle>()
                 .deny::<Sprite>()
+                .extract_resources()
                 .extract_entity(solar_system)
                 .extract_entities(q_children.iter_descendants(solar_system))
                 .remove_empty_entities()
@@ -105,11 +107,15 @@ pub fn load_solar_system(
             commands.remove_resource::<LoadGame>();
             println!("Loading scene: {}", load_game.0);
 
-            // Remove the current SolarSystem
-            commands.entity(q_solar_system.single()).despawn_recursive();
+            // Remove the current SolarSystem is there is one
+            if let Some(solar_system) = q_solar_system.iter().next() {
+                commands.entity(solar_system).despawn_recursive();
+            }
 
             // HUD will be recreated when Ship is Added<>
-            commands.entity(q_hud.single()).despawn_recursive();
+            if let Some(hud) = q_hud.iter().next() {
+                commands.entity(hud).despawn_recursive();
+            }
 
             commands.spawn((
                 DynamicSceneForLoading,
@@ -128,6 +134,7 @@ pub fn load_solar_system(
 // Called when DynamicSceneForLoading is fully loaded (= Added<SceneInstance>)
 pub fn finish_load_solar_system(
     mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
     q_solar_system: Query<Entity, (Added<SolarSystem>, With<Parent>)>,
     q_dynamic_scene: Query<Entity, (With<DynamicSceneForLoading>, Added<SceneInstance>)>,
 ) {
@@ -140,4 +147,6 @@ pub fn finish_load_solar_system(
     if let Some(dynamic_scene) = q_dynamic_scene.iter().next() {
         commands.entity(dynamic_scene).despawn_recursive();
     }
+
+    next_state.set(GameState::Game);
 }

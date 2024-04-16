@@ -4,7 +4,7 @@ use bevy_mod_picking::prelude::*;
 use crate::{
     buildings::Crafter,
     items::{Inventory, RECIPES},
-    ui::{spawn_inventory_ui, HudButtonAction, HudButtonBundle, HudWindow, HudWindowParent},
+    ui::{spawn_inventory_ui, HudWindow, HudWindowParent, UiButtonBundle},
 };
 
 pub fn spawn_crafter_ui(
@@ -25,10 +25,16 @@ pub fn spawn_crafter_ui(
             c.spawn(HudWindow::default()).with_children(|c| {
                 // List recipes
                 for recipe in crafter.possible_recipes() {
-                    c.spawn(HudButtonBundle::new(HudButtonAction::SetCrafterRecipe(
-                        entity,
-                        recipe.to_string(),
-                    )))
+                    let callback = {
+                        let recipe = recipe.clone();
+                        move |_event: &mut ListenerInput<Pointer<Click>>, crafter: &mut Crafter| {
+                            crafter.set_recipe(recipe.clone());
+                        }
+                    };
+
+                    c.spawn(UiButtonBundle::new(
+                        On::<Pointer<Click>>::target_component_mut::<Crafter>(callback),
+                    ))
                     .with_children(|c| {
                         c.spawn(TextBundle::from_section(
                             RECIPES[recipe].text(),

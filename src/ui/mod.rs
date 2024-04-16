@@ -2,11 +2,14 @@ use bevy::prelude::*;
 
 use crate::GameplaySet;
 
+mod buttons;
+pub use buttons::*;
+
 mod hud;
 pub use hud::*;
 
-mod save_ui;
-pub use save_ui::*;
+mod save_load_ui;
+pub use save_load_ui::*;
 
 mod inventory_ui;
 pub use inventory_ui::*;
@@ -27,12 +30,9 @@ impl Plugin for UIPlugin {
         app.add_systems(
             Update,
             (
-                setup_hud,
-                update_hud,
-                remove_windows_on_escape,
-                spawn_save_ui,
-            )
-                .in_set(GameplaySet),
+                update_ui_buttons,
+                (setup_hud, remove_windows_on_escape, spawn_save_ui).in_set(GameplaySet),
+            ),
         );
     }
 }

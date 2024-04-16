@@ -9,7 +9,7 @@ use universe::UniversePlugin;
 use camera::*;
 use handle_loader::*;
 use main_menu::*;
-use save::*;
+use save_load::*;
 use state::*;
 
 mod buildings;
@@ -17,7 +17,7 @@ mod camera;
 mod handle_loader;
 mod items;
 mod main_menu;
-mod save;
+mod save_load;
 mod state;
 mod ui;
 mod universe;
@@ -51,7 +51,6 @@ fn main() {
                 load_solar_system,
                 finish_load_solar_system.after(load_solar_system),
                 save_solar_system,
-                (update_main_menu).in_set(MainMenuSet),
                 (
                     save_key_shortcut,
                     scan_sprite_loaders,

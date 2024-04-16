@@ -1,51 +1,14 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    buildings::{Crafter, PlacingBuilding, BUILDINGS},
-    LoadGame, MainCamera,
+    buildings::{PlacingBuilding, BUILDINGS},
+    ui::UiButtonBundle,
+    MainCamera,
 };
-
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 #[derive(Component)]
 pub struct Hud;
-
-#[derive(Component)]
-pub enum HudButtonAction {
-    LoadGame(String),
-    SetPlacingBuilding(&'static str),
-    SetCrafterRecipe(Entity, String),
-}
-
-#[derive(Bundle)]
-pub struct HudButtonBundle {
-    button: ButtonBundle,
-    action: HudButtonAction,
-}
-
-impl HudButtonBundle {
-    pub fn new(action: HudButtonAction) -> Self {
-        Self {
-            button: ButtonBundle {
-                style: Style {
-                    width: Val::Px(100.0),
-                    height: Val::Px(30.0),
-                    border: UiRect::all(Val::Px(2.0)),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                border_color: BorderColor(Color::BLACK),
-                background_color: NORMAL_BUTTON.into(),
-                ..default()
-            },
-            action,
-        }
-    }
-}
 
 #[derive(Component)]
 pub struct HudWindowParent;
@@ -71,51 +34,6 @@ impl Default for HudWindow {
                 background_color: Color::rgb(0.10, 0.10, 0.10).into(),
                 ..default()
             },
-        }
-    }
-}
-
-pub fn update_hud(
-    mut commands: Commands,
-    mut interaction_query: Query<
-        (
-            &HudButtonAction,
-            &Interaction,
-            &mut BackgroundColor,
-            &mut BorderColor,
-        ),
-        (Changed<Interaction>, With<Button>),
-    >,
-    // Queries for HudButtonAction
-    mut q_crafter: Query<&mut Crafter>,
-) {
-    for (action, interaction, mut color, mut border_color) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                *color = PRESSED_BUTTON.into();
-                border_color.0 = Color::RED;
-                match action {
-                    HudButtonAction::SetPlacingBuilding(building) => {
-                        commands.insert_resource(PlacingBuilding(building.to_string()));
-                    }
-                    HudButtonAction::SetCrafterRecipe(crafter_entity, recipe) => {
-                        let mut crafter = q_crafter.get_mut(*crafter_entity).unwrap();
-                        crafter.set_recipe(recipe.to_string());
-                        border_color.0 = Color::WHITE;
-                    }
-                    HudButtonAction::LoadGame(file) => {
-                        commands.insert_resource(LoadGame(file.clone()));
-                    }
-                }
-            }
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
-            }
-            Interaction::None => {
-                *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
-            }
         }
     }
 }
@@ -160,9 +78,18 @@ pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamer
             ))
             .with_children(|c| {
                 for (building_id, building) in BUILDINGS.entries() {
-                    c.spawn(HudButtonBundle::new(HudButtonAction::SetPlacingBuilding(
-                        building_id,
-                    )))
+                    let callback = {
+                        move |_event: &mut ListenerInput<Pointer<Click>>,
+                              target_commands: &mut EntityCommands| {
+                            target_commands
+                                .commands()
+                                .insert_resource(PlacingBuilding(building_id.to_string()));
+                        }
+                    };
+
+                    c.spawn(UiButtonBundle::new(
+                        On::<Pointer<Click>>::target_commands_mut(callback),
+                    ))
                     .with_children(|c| {
                         c.spawn(TextBundle::from_section(
                             building.name,
