@@ -33,7 +33,7 @@ pub struct Planet {
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct PlanetMaterial {
     #[uniform(0)]
-    pub colors: PlanetColors, //FIXME: breaks deserialization
+    pub colors: PlanetColors,
     #[uniform(0)]
     pub seed: f32,
     #[uniform(0)]
@@ -46,6 +46,8 @@ pub struct PlanetMaterial {
     pub atmosphere_color: Color,
     #[uniform(0)]
     pub atmosphere_speed: f32,
+    #[uniform(0)]
+    atmosphere_holes_threshold: f32,
 }
 
 impl Material2d for PlanetMaterial {
@@ -97,11 +99,9 @@ pub fn build_planet(
         rng.gen_range(0.01..0.5)
     };
 
-    let atmosphere_speed = if no_atmosphere {
-        0.0
-    } else {
-        rng.gen_range(0.01..1.0)
-    };
+    let atmosphere_speed = rng.gen_range(0.01..1.0);
+
+    let atmosphere_holes_threshold = rng.gen_range(0..5) as f32 * 0.1;
 
     let colors = ElementOnAstre::get_colors(&composition);
 
@@ -117,6 +117,7 @@ pub fn build_planet(
         atmosphere_density,
         atmosphere_color,
         atmosphere_speed,
+        atmosphere_holes_threshold,
     };
 
     c.spawn(PlanetBundle {

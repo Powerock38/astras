@@ -79,15 +79,6 @@ pub struct LogisticProvider {
     pub freights: Vec<Entity>, //FIXME: freights are never removed?
 }
 
-// TODO: impl MapEntities ?
-// impl MapEntities for LogisticProvider {
-//     fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
-//         for entity in &mut self.freights {
-//             *entity = entity_mapper.map_entity(*entity);
-//         }
-//     }
-// }
-
 impl LogisticProvider {
     pub fn new(scope: LogisticScope) -> Self {
         Self {
@@ -108,14 +99,6 @@ pub struct LogisticJourney {
     provider: Entity,
     requester: Entity,
 }
-
-// TODO: impl MapEntities ?
-// impl MapEntities for LogisticJourney {
-//     fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
-//         self.provider = entity_mapper.map_entity(self.provider);
-//         self.requester = entity_mapper.map_entity(self.requester);
-//     }
-// }
 
 impl LogisticJourney {
     pub fn new(request_id: Uuid, provider: Entity, requester: Entity) -> Self {

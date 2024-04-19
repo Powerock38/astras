@@ -5,7 +5,7 @@ use rand::{distributions::Alphanumeric, Rng};
 use crate::{
     ui::{build_load_ui, UiButtonBundle},
     universe::spawn_solar_system,
-    GameState, SaveGame, SaveName,
+    GameState, SaveName,
 };
 
 #[derive(Component)]
@@ -56,13 +56,12 @@ pub fn spawn_new_game(mut commands: Commands, mut next_state: ResMut<NextState<G
         .map(char::from)
         .collect();
 
-    commands.insert_resource(SaveName(rand_string.clone()));
+    commands.insert_resource(SaveName(rand_string));
 
     spawn_solar_system(&mut commands);
 
-    let filename = format!("{rand_string}-0");
-
-    commands.insert_resource(SaveGame(filename.clone()));
+    //let filename = format!("{rand_string}-0");
+    //commands.insert_resource(SaveGame(filename.clone()));
 
     next_state.set(GameState::Game);
 }

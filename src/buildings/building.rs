@@ -192,7 +192,8 @@ pub fn spawn_building(
                 }
             } else {
                 // there is no building preview, spawn it
-                let transform = Transform::from_translation(world_position);
+                let transform =
+                    Transform::from_translation(world_position).with_scale(Vec3::splat(4.0));
 
                 commands.spawn((
                     HandleLoaderBundle {

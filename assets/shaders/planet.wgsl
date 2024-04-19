@@ -11,6 +11,7 @@ struct PlanetMaterial {
     atmosphere_density: f32,
     atmosphere_color: vec4<f32>,
     atmosphere_speed: f32,
+    atmosphere_holes_threshold: f32,
 };
 
 @group(2) @binding(0) var<uniform> material: PlanetMaterial;
@@ -81,6 +82,9 @@ fn planet(
 // Atmosphere
 
 fn atmosphere(uv: vec2f) -> vec3f {
-    let noise = nestedMovingNoise(uv * ATMOSPHERE_NOISE_SCALE, material.atmosphere_speed, material.seed);
+    var noise = nestedMovingNoise(uv * ATMOSPHERE_NOISE_SCALE, material.atmosphere_speed, material.seed);
+    if noise < material.atmosphere_holes_threshold {
+        noise = 0.0;
+    }
     return material.atmosphere_color.xyz * noise;
 }
