@@ -14,7 +14,7 @@ pub fn spawn_cargo_shuttle_ui(
     q_cargo_shuttle: Query<(&LogisticFreight, &Inventory)>,
 ) {
     let parent = q_window_parent.single();
-    let (freight, inventory) = q_cargo_shuttle.get(listener.listener()).unwrap();
+    let (_freight, inventory) = q_cargo_shuttle.get(listener.listener()).unwrap();
 
     commands
         .entity(parent)

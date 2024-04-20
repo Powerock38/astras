@@ -46,8 +46,6 @@ pub fn build_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children
 
     let orbit_distance = radius * 2.;
 
-    let temperature = rng.gen_range(1_000..=1_000_000_000);
-
     let number_of_elements = rng.gen_range(1..=3);
 
     let composition = ElementOnAstre::random_elements(
@@ -71,7 +69,7 @@ pub fn build_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children
 
     c.spawn(StarBundle {
         star: Star,
-        astre: Astre::new(temperature, radius, 0.),
+        astre: Astre::new(radius, 0.),
         inventory: Inventory::from(composition),
         loader: HandleLoaderBundle {
             loader: MaterialLoader { material, radius },

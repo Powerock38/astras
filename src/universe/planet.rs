@@ -75,8 +75,6 @@ pub fn build_planet(
 
     let orbit_distance = total_radius * 2.0;
 
-    let temperature = rng.gen_range(20..=1000);
-
     let mut composition = ElementOnAstre::random_elements(
         rng.gen_range(1..=ELEMENTS.len()) as u32,
         rng.gen_range(1_000..=1_000_000),
@@ -125,7 +123,7 @@ pub fn build_planet(
 
     c.spawn(PlanetBundle {
         planet: Planet { orbit_speed },
-        astre: Astre::new(temperature, surface_radius, atmosphere_radius),
+        astre: Astre::new(surface_radius, atmosphere_radius),
         inventory: Inventory::from(composition),
         loader: HandleLoaderBundle {
             loader: MaterialLoader {

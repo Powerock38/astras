@@ -7,16 +7,14 @@ use std::f32::consts::PI;
 #[reflect(Component)]
 pub struct Astre {
     uuid: Uuid,
-    temperature: u32, // in Kelvin  // TODO: why
     surface_radius: f32,
     atmosphere_radius: f32,
 }
 
 impl Astre {
-    pub fn new(temperature: u32, surface_radius: f32, atmosphere_radius: f32) -> Self {
+    pub fn new(surface_radius: f32, atmosphere_radius: f32) -> Self {
         Self {
             uuid: Uuid::new_v4(),
-            temperature,
             surface_radius,
             atmosphere_radius,
         }
@@ -25,11 +23,6 @@ impl Astre {
     #[inline]
     pub fn uuid(&self) -> Uuid {
         self.uuid
-    }
-
-    #[inline]
-    pub fn temperature(&self) -> u32 {
-        self.temperature
     }
 
     #[inline]
