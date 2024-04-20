@@ -11,7 +11,7 @@ const CAMEAR_DOLLY_SPEED: f32 = 0.00001;
 const CAMERA_ZOOM_SPEED: f32 = 2.0;
 const CAMERA_CHANGE_LERP: f32 = 0.1;
 const CAMERA_PAN_MODE_THRESHOLD: f32 = 30.0;
-const CAMERA_PAN_SPEED: f32 = 0.5;
+const CAMERA_PAN_SPEED: f32 = 0.1;
 
 #[derive(Component)]
 pub struct MainCamera;

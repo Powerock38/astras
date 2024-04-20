@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::{universe::DockableOnAstre, HandleLoaderBundle, SpriteLoader};
 
 pub const SHIP_Z: f32 = 100.;
+const SHIP_SCALE: f32 = 1.8;
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
@@ -34,7 +35,8 @@ pub fn build_ship(c: &mut ChildBuilder) {
         },
         DockableOnAstre::default(),
         SpatialBundle {
-            transform: Transform::from_translation(position.extend(SHIP_Z)),
+            transform: Transform::from_translation(position.extend(SHIP_Z))
+                .with_scale(Vec3::splat(SHIP_SCALE)),
             ..default()
         },
     ));
