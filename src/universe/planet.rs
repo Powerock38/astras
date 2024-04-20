@@ -8,7 +8,7 @@ use std::f32::consts::PI;
 
 use crate::{
     items::{ElementOnAstre, ElementState, Inventory, ELEMENTS},
-    universe::Astre,
+    universe::{Astre, Star},
     HandleLoaderBundle, MaterialLoader,
 };
 
@@ -33,13 +33,15 @@ pub struct Planet {
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct PlanetMaterial {
     #[uniform(0)]
-    pub colors: PlanetColors,
-    #[uniform(0)]
     pub seed: f32,
+    #[uniform(0)]
+    pub colors: PlanetColors,
     #[uniform(0)]
     pub noise_scale: f32,
     #[uniform(0)]
     pub planet_radius_normalized: f32,
+    #[uniform(0)]
+    pub shadow_angle: f32,
     #[uniform(0)]
     pub atmosphere_density: f32,
     #[uniform(0)]
@@ -110,10 +112,11 @@ pub fn build_planet(
     composition.extend(atmoshpere_composition);
 
     let material = PlanetMaterial {
-        colors,
         seed: rng.gen::<f32>() * 1000.,
+        colors,
         noise_scale: rng.gen_range(1.0..10.0),
         planet_radius_normalized: surface_radius / total_radius,
+        shadow_angle: 0.0,
         atmosphere_density,
         atmosphere_color,
         atmosphere_speed,
@@ -191,8 +194,18 @@ pub fn build_planet_children(
     }
 }
 
-pub fn update_planets(time: Res<Time>, mut q_planets: Query<(&Planet, &mut Transform)>) {
-    for (planet, mut transform) in q_planets.iter_mut() {
+pub fn update_planets(
+    time: Res<Time>,
+    mut materials: ResMut<Assets<PlanetMaterial>>,
+    mut q_planets: Query<(
+        &Planet,
+        &Handle<PlanetMaterial>,
+        &mut Transform,
+        &GlobalTransform,
+    )>,
+    q_stars: Query<&GlobalTransform, With<Star>>,
+) {
+    for (planet, planet_material_handle, mut transform, global_transform) in q_planets.iter_mut() {
         let angle = transform.translation.y.atan2(transform.translation.x);
         let orbit = (transform.translation.x.powf(2.0) + transform.translation.y.powf(2.0)).sqrt();
 
@@ -200,5 +213,19 @@ pub fn update_planets(time: Res<Time>, mut q_planets: Query<(&Planet, &mut Trans
 
         transform.translation.x = orbit * orbit_angle.cos();
         transform.translation.y = orbit * orbit_angle.sin();
+
+        // Update shadow angle
+        let material = materials.get_mut(planet_material_handle).unwrap();
+
+        //TODO maybe support multiple stars
+        let Some(star_global_transform) = q_stars.iter().next() else {
+            return;
+        };
+
+        let star_position = star_global_transform.translation().truncate();
+        let planet_position = global_transform.translation().truncate();
+        let delta = star_position - planet_position;
+
+        material.shadow_angle = -delta.y.atan2(delta.x) + PI;
     }
 }

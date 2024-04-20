@@ -4,10 +4,11 @@
 const NB_COLORS = 3u;
 
 struct PlanetMaterial {
-    colors: array<vec4<f32>, NB_COLORS>,
     seed: f32,
+    colors: array<vec4<f32>, NB_COLORS>,
     noise_scale: f32,
     planet_radius_normalized: f32,
+    shadow_angle: f32,
     atmosphere_density: f32,
     atmosphere_color: vec4<f32>,
     atmosphere_speed: f32,
@@ -18,16 +19,20 @@ struct PlanetMaterial {
 
 const PLANET_GLOW_THRESHOLD: f32 = 0.6;
 const PLANET_GLOW_MULTIPLIER: f32 = 4.0;
-const VORONOISE_U: f32 = 0.0;
-const VORONOISE_V: f32 = 0.7;
 const ATMOSPHERE_PLANET_MIX: f32 = 0.2;
 const ATMOSPHERE_NOISE_SCALE: f32 = 16.0;
+const SHADOW_RADIUS: f32 = 0.6;
+const SHADOW_CENTER_OFFSET: f32 = 0.6;
+const SHADOW_MIN_COLOR: f32 = 0.02;
 
 @fragment
 fn fragment(
     in: VertexOutput,
 ) -> @location(0) vec4<f32> {
     let len = length(in.uv - vec2f(0.5));
+
+    var color: vec3f;
+    var alpha = 1.0;
 
     var atmo = vec3f(0.0);
     if material.atmosphere_density != 0.0 {
@@ -37,10 +42,17 @@ fn fragment(
     if len > material.planet_radius_normalized / 2.0 {
         let d = length(in.uv - vec2f(0.5)) * 2.0;
         let atmo_alpha = material.atmosphere_density * (1.0 - d);
-        return vec4f(atmo, atmo_alpha);
+        color = atmo;
+        alpha = atmo_alpha;
     } else {
-        return vec4f(planet(in.uv) * (1.0 - ATMOSPHERE_PLANET_MIX) + atmo * ATMOSPHERE_PLANET_MIX, 1.0);
+        color = planet(in.uv) * (1.0 - ATMOSPHERE_PLANET_MIX) + atmo * ATMOSPHERE_PLANET_MIX;
     }
+
+    // Shadow is a circle SDF
+    let shadow = vec2f(cos(material.shadow_angle), sin(material.shadow_angle)) * SHADOW_CENTER_OFFSET + 0.5;
+    color *= max(length(in.uv - shadow) - SHADOW_RADIUS, SHADOW_MIN_COLOR);
+
+    return vec4<f32>(color, alpha);
 }
 
 // Planet
