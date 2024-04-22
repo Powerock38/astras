@@ -2,27 +2,32 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    buildings::LogisticFreight,
-    items::Inventory,
+    buildings::Extractor,
     ui::{spawn_inventory_ui, HudWindow, HudWindowParent},
 };
 
-pub fn spawn_cargo_shuttle_ui(
+pub fn scan_extractor_ui(mut commands: Commands, q_extractor: Query<Entity, Added<Extractor>>) {
+    for entity in q_extractor.iter() {
+        commands
+            .entity(entity)
+            .insert(On::<Pointer<Click>>::run(spawn_extractor_ui));
+    }
+}
+
+pub fn spawn_extractor_ui(
     mut commands: Commands,
     listener: Listener<Pointer<Click>>,
     q_window_parent: Query<Entity, With<HudWindowParent>>,
-    q_cargo_shuttle: Query<(&LogisticFreight, &Inventory)>,
 ) {
     let parent = q_window_parent.single();
-    let (_freight, inventory) = q_cargo_shuttle.get(listener.listener()).unwrap();
+    let entity = listener.listener();
 
     commands
         .entity(parent)
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow::default()).with_children(|c| {
-                // Inventory
-                spawn_inventory_ui(c, inventory);
+                spawn_inventory_ui(c, entity);
             });
         });
 }

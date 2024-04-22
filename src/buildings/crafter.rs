@@ -1,17 +1,11 @@
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
 
-use crate::{
-    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, RECIPES},
-    ui::spawn_crafter_ui,
-};
+use crate::items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, RECIPES};
 
 #[derive(Bundle)]
 pub struct CrafterBundle {
     crafter: Crafter,
     inventory: Inventory, //FIXME: crafting can be blocked if inventory is full of requested items. Solution: input inventory + output inventory ?
-    pointer_event: On<Pointer<Click>>,
-    pickable: PickableBundle,
 }
 
 impl CrafterBundle {
@@ -19,8 +13,6 @@ impl CrafterBundle {
         Self {
             crafter: Crafter::new(possible_recipes),
             inventory: Inventory::new(100),
-            pointer_event: On::<Pointer<Click>>::run(spawn_crafter_ui),
-            pickable: PickableBundle::default(),
         }
     }
 }
@@ -117,7 +109,6 @@ pub fn update_crafters(
                     }
                 }
 
-                //TODO
                 CanCraftResult::NotEnoughSpace => {
                     commands.entity(entity).remove::<LogisticRequest>();
                 }

@@ -23,7 +23,7 @@ const ATMOSPHERE_PLANET_MIX: f32 = 0.2;
 const ATMOSPHERE_NOISE_SCALE: f32 = 16.0;
 const SHADOW_RADIUS: f32 = 0.6;
 const SHADOW_CENTER_OFFSET: f32 = 0.6;
-const SHADOW_MIN_COLOR: f32 = 0.02;
+const SHADOW_MIN_COLOR: f32 = 0.04;
 
 @fragment
 fn fragment(

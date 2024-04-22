@@ -99,7 +99,7 @@ pub fn build_planet(
         rng.gen_range(0.01..0.5)
     };
 
-    let atmosphere_speed = rng.gen_range(0.01..1.0);
+    let atmosphere_speed = rng.gen_range(0.01..0.5);
 
     let atmosphere_holes_threshold = rng.gen_range(0..5) as f32 * 0.1;
 

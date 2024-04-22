@@ -9,7 +9,6 @@ const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 pub struct UiButtonBundle {
     button: ButtonBundle,
     pointer_event: On<Pointer<Click>>,
-    pickable: PickableBundle,
 }
 
 impl UiButtonBundle {
@@ -28,7 +27,6 @@ impl UiButtonBundle {
                 background_color: NORMAL_BUTTON.into(),
                 ..default()
             },
-            pickable: PickableBundle::default(),
             pointer_event,
         }
     }

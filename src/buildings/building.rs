@@ -2,8 +2,7 @@ use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
 use crate::{
     buildings::{
-        CrafterBundle, ElementExtractorBundle, LogisticFreightBundle, SpaceportBundle,
-        WarehouseBundle,
+        CrafterBundle, ExtractorBundle, LogisticFreightBundle, SpaceportBundle, WarehouseBundle,
     },
     universe::{DockableOnAstre, SHIP_Z},
     HandleLoaderBundle, SpriteLoader,
@@ -15,8 +14,9 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         sprite_name: "quarry",
         location: PlacingLocation::Surface,
         build_time_seconds: 3.,
+        scale: BUILDING_SCALE,
         on_build: |c| {
-            c.insert(ElementExtractorBundle::new_solid());
+            c.insert(ExtractorBundle::new_solid());
         },
     },
     "liquid_extractor" => BuildingData {
@@ -24,8 +24,9 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         sprite_name: "quarry",
         location: PlacingLocation::Surface,
         build_time_seconds: 3.,
+        scale: BUILDING_SCALE,
         on_build: |c| {
-            c.insert(ElementExtractorBundle::new_liquid());
+            c.insert(ExtractorBundle::new_liquid());
         },
     },
     "atmosphere_harvester" => BuildingData {
@@ -33,8 +34,9 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         sprite_name: "quarry",
         location: PlacingLocation::Atmosphere,
         build_time_seconds: 3.,
+        scale: BUILDING_SCALE,
         on_build: |c| {
-            c.insert(ElementExtractorBundle::new_gas());
+            c.insert(ExtractorBundle::new_gas());
         },
     },
     "plasma_catalyser" => BuildingData {
@@ -42,8 +44,9 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         sprite_name: "quarry",
         location: PlacingLocation::SurfaceOrAtmosphere,
         build_time_seconds: 3.,
+        scale: BUILDING_SCALE,
         on_build: |c| {
-            c.insert(ElementExtractorBundle::new_plasma());
+            c.insert(ExtractorBundle::new_plasma());
         },
     },
     "warehouse" => BuildingData {
@@ -51,51 +54,70 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         sprite_name: "warehouse",
         location: PlacingLocation::Surface,
         build_time_seconds: 2.,
+        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(WarehouseBundle::default());
         },
     },
     "cargo_shuttle" => BuildingData {
         name: "Cargo Shuttle",
-        sprite_name: "ship",
+        sprite_name: "cargo_shuttle",
         location: PlacingLocation::SurfaceOrAtmosphere,
         build_time_seconds: 1.,
+        scale: BUILDING_SCALE / 2.0,
         on_build: |c| {
             c.insert(LogisticFreightBundle::new_planet());
         },
     },
     "spaceport" => BuildingData {
         name: "Spaceport",
-        sprite_name: "warehouse",
+        sprite_name: "spaceport",
         location: PlacingLocation::Atmosphere,
         build_time_seconds: 1.,
+        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(SpaceportBundle::default());
         },
     },
     "interplanetary_freighter" => BuildingData {
         name: "Interplanetary Freighter",
-        sprite_name: "ship",
+        sprite_name: "cargo_shuttle",
         location: PlacingLocation::Atmosphere,
         build_time_seconds: 1.,
+        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(LogisticFreightBundle::new_solar_system());
         },
     },
-    "smelter" => BuildingData {
-        name: "Smelter",
-        sprite_name: "smelter",
+    "foundry" => BuildingData {
+        name: "Foundry",
+        sprite_name: "foundry",
         location: PlacingLocation::Surface,
         build_time_seconds: 3.,
+        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(CrafterBundle::new(&[
-                "smelt_electronite_ore"
+                "smelt_electronite_ore",
+                "craft_plasma_fuel",
+            ]));
+        },
+    },
+    "assembler" => BuildingData {
+        name: "Assembler",
+        sprite_name: "assembler",
+        location: PlacingLocation::Surface,
+        build_time_seconds: 3.,
+        scale: BUILDING_SCALE,
+        on_build: |c| {
+            c.insert(CrafterBundle::new(&[
+                "craft_computing_core",
             ]));
         },
     },
 };
 
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
+const BUILDING_SCALE: f32 = 3.0;
 
 #[derive(Resource, Debug)]
 pub struct PlacingBuilding(pub String);
@@ -107,6 +129,7 @@ pub struct BuildingData {
     pub location: PlacingLocation,
     pub build_time_seconds: f32,
     pub on_build: fn(&mut EntityCommands),
+    pub scale: f32,
 }
 
 #[derive(Clone, Copy, Reflect, Default, Debug)]
@@ -158,7 +181,7 @@ pub fn spawn_building(
                 q_building_preview.iter_mut().next()
             {
                 // there is already a building preview, update its position
-                *building_preview_transform = Transform::from_translation(world_position);
+                building_preview_transform.translation = world_position;
 
                 let left = mouse_input.just_pressed(MouseButton::Left);
                 let right = mouse_input.just_pressed(MouseButton::Right);
@@ -192,8 +215,8 @@ pub fn spawn_building(
                 }
             } else {
                 // there is no building preview, spawn it
-                let transform =
-                    Transform::from_translation(world_position).with_scale(Vec3::splat(4.0));
+                let transform = Transform::from_translation(world_position)
+                    .with_scale(Vec3::splat(BUILDINGS[&placing_building.0].scale));
 
                 commands.spawn((
                     HandleLoaderBundle {

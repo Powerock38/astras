@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::{seq::IteratorRandom, Rng};
 
-use crate::universe::NB_COLORS;
+use crate::universe::{PlanetColors, NB_COLORS};
 
 pub struct Element {
     pub color: Color,
@@ -72,12 +72,12 @@ impl ElementOnAstre {
             .fold(Color::BLACK, |acc, c| acc + c)
     }
 
-    pub fn get_colors(elements: &[ElementOnAstre]) -> [Color; NB_COLORS] {
+    pub fn get_colors(elements: &[ElementOnAstre]) -> PlanetColors {
         let mut elements = elements.to_vec();
         elements.sort_by_key(|e| e.quantity);
 
         let mut color = elements.get(0).map(|e| ELEMENTS[e.id].color).unwrap();
-        let mut colors = vec![color; NB_COLORS];
+        let colors = &mut [color; NB_COLORS];
         for i in 1..NB_COLORS {
             color = elements
                 .get(i)
@@ -86,18 +86,25 @@ impl ElementOnAstre {
             colors[i] = color;
         }
 
-        colors.try_into().unwrap()
+        *colors
     }
 }
 
 pub static ELEMENTS: phf::Map<&'static str, Element> = phf::phf_map! {
-    "aer" => Element::new(Color::rgba(1.0, 1.0, 1.0, 0.5), ElementState::Gas),
+    // Atmosphere
+    "aer" => Element::new(Color::ANTIQUE_WHITE, ElementState::Gas),
+
+    // Oceans
     "aqua" => Element::new(Color::BLUE, ElementState::Liquid),
+
+    // Rocks
     "terra" => Element::new(Color::MAROON, ElementState::Solid),
-    "rock" => Element::new(Color::GRAY, ElementState::Solid),
+    "astrium" => Element::new(Color::SILVER, ElementState::Solid),
     "electronite_ore" => Element::new(Color::ORANGE_RED, ElementState::Solid),
-    "quark_crystal" => Element::new(Color::TURQUOISE, ElementState::Solid),
+    "quark_crystal" => Element::new(Color::FUCHSIA, ElementState::Solid),
+
+    // Stars
     "photonite" => Element::new(Color::YELLOW, ElementState::Plasma),
-    "neutronite" => Element::new(Color::ALICE_BLUE, ElementState::Plasma),
+    "neutronite" => Element::new(Color::AQUAMARINE, ElementState::Plasma),
     "gravitonite" => Element::new(Color::RED, ElementState::Plasma),
 };

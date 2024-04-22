@@ -7,24 +7,24 @@ use crate::{
 };
 
 #[derive(Bundle)]
-pub struct ElementExtractorBundle {
-    pub element_extractor: ElementExtractor,
-    pub inventory: Inventory,
-    pub logistic_provider: LogisticProvider,
+pub struct ExtractorBundle {
+    extractor: Extractor,
+    inventory: Inventory,
+    logistic_provider: LogisticProvider,
 }
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
-pub struct ElementExtractor {
+pub struct Extractor {
     cooldown: Timer,
     amount_per_tick: u32,
     element_state: ElementState,
 }
 
-impl ElementExtractorBundle {
+impl ExtractorBundle {
     pub fn new_solid() -> Self {
         Self {
-            element_extractor: ElementExtractor {
+            extractor: Extractor {
                 element_state: ElementState::Solid,
                 cooldown: Timer::from_seconds(1., TimerMode::Repeating),
                 amount_per_tick: 100,
@@ -36,7 +36,7 @@ impl ElementExtractorBundle {
 
     pub fn new_liquid() -> Self {
         Self {
-            element_extractor: ElementExtractor {
+            extractor: Extractor {
                 element_state: ElementState::Liquid,
                 cooldown: Timer::from_seconds(1., TimerMode::Repeating),
                 amount_per_tick: 1000,
@@ -48,7 +48,7 @@ impl ElementExtractorBundle {
 
     pub fn new_gas() -> Self {
         Self {
-            element_extractor: ElementExtractor {
+            extractor: Extractor {
                 element_state: ElementState::Gas,
                 cooldown: Timer::from_seconds(1., TimerMode::Repeating),
                 amount_per_tick: 500,
@@ -60,7 +60,7 @@ impl ElementExtractorBundle {
 
     pub fn new_plasma() -> Self {
         Self {
-            element_extractor: ElementExtractor {
+            extractor: Extractor {
                 element_state: ElementState::Plasma,
                 cooldown: Timer::from_seconds(1., TimerMode::Repeating),
                 amount_per_tick: 10,
@@ -71,9 +71,9 @@ impl ElementExtractorBundle {
     }
 }
 
-pub fn update_element_extractors(
+pub fn update_extractors(
     time: Res<Time>,
-    mut q_extractor: Query<(&mut ElementExtractor, &mut Inventory, &Parent), Without<Astre>>,
+    mut q_extractor: Query<(&mut Extractor, &mut Inventory, &Parent), Without<Astre>>,
     mut q_astre_inventories: Query<&mut Inventory, With<Astre>>,
 ) {
     for (mut extractor, mut extractor_inventory, parent) in q_extractor.iter_mut() {

@@ -5,6 +5,8 @@ use bevy::{
 
 use crate::universe::circle_mesh;
 
+// SPRITE LOADER
+
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct SpriteLoader {
@@ -38,6 +40,8 @@ pub fn scan_sprite_loaders(
         ));
     }
 }
+
+// MATERIAL LOADER
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]

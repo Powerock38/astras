@@ -3,20 +3,27 @@ use bevy_mod_picking::prelude::*;
 
 use crate::{
     buildings::Crafter,
-    items::{Inventory, RECIPES},
+    items::RECIPES,
     ui::{spawn_inventory_ui, HudWindow, HudWindowParent, UiButtonBundle},
 };
+
+pub fn scan_crafter_ui(mut commands: Commands, q_crafter: Query<Entity, Added<Crafter>>) {
+    for entity in q_crafter.iter() {
+        commands
+            .entity(entity)
+            .insert(On::<Pointer<Click>>::run(spawn_crafter_ui));
+    }
+}
 
 pub fn spawn_crafter_ui(
     mut commands: Commands,
     listener: Listener<Pointer<Click>>,
     q_window_parent: Query<Entity, With<HudWindowParent>>,
-    q_crafter: Query<(&Crafter, &Inventory)>,
+    q_crafter: Query<&Crafter>,
 ) {
     let parent = q_window_parent.single();
-
     let entity = listener.listener();
-    let (crafter, inventory) = q_crafter.get(entity).unwrap();
+    let crafter = q_crafter.get(entity).unwrap();
 
     commands
         .entity(parent)
@@ -28,10 +35,12 @@ pub fn spawn_crafter_ui(
                     let callback = {
                         let recipe = recipe.clone();
                         move |_event: &mut ListenerInput<Pointer<Click>>, crafter: &mut Crafter| {
+                            println!("Setting recipe: {:?}", recipe);
                             crafter.set_recipe(recipe.clone());
                         }
                     };
 
+                    // FIXME: event is never triggered
                     c.spawn(UiButtonBundle::new(
                         On::<Pointer<Click>>::target_component_mut::<Crafter>(callback),
                     ))
@@ -47,7 +56,7 @@ pub fn spawn_crafter_ui(
                 }
 
                 // Inventory
-                spawn_inventory_ui(c, inventory);
+                spawn_inventory_ui(c, entity);
             });
         });
 }

@@ -5,8 +5,8 @@ use crate::GameplaySet;
 mod building;
 pub use building::*;
 
-mod element_extractor;
-pub use element_extractor::*;
+mod extractor;
+pub use extractor::*;
 
 mod warehouse;
 pub use warehouse::*;
@@ -29,7 +29,7 @@ impl Plugin for BuildingsPlugin {
             (
                 spawn_building,
                 update_constructing_building,
-                update_element_extractors,
+                update_extractors,
                 update_logistic_freights,
                 update_crafters,
             )
@@ -43,7 +43,7 @@ impl Plugin for BuildingsPlugin {
         .register_type::<Option<LogisticJourneyWithTarget>>()
         .register_type::<Spaceport>()
         .register_type::<Warehouse>()
-        .register_type::<ElementExtractor>()
+        .register_type::<Extractor>()
         .register_type::<Crafter>()
         .register_type::<CrafterRecipe>()
         .register_type::<Option<CrafterRecipe>>();

@@ -1,10 +1,6 @@
 use bevy::{prelude::*, utils::Uuid};
-use bevy_mod_picking::prelude::*;
 
-use crate::{
-    items::{Inventory, LogisticJourney, LogisticProvider, LogisticRequest, LogisticScope},
-    ui::{spawn_cargo_shuttle_ui, spawn_interplanetary_freighter_ui},
-};
+use crate::items::{Inventory, LogisticJourney, LogisticProvider, LogisticRequest, LogisticScope};
 
 const RANGE: f32 = 10.0;
 const SPEED: f32 = 1000.0;
@@ -13,7 +9,6 @@ const SPEED: f32 = 1000.0;
 pub struct LogisticFreightBundle {
     logistic_freight: LogisticFreight,
     inventory: Inventory,
-    pointer_event: On<Pointer<Click>>,
 }
 
 impl LogisticFreightBundle {
@@ -27,7 +22,6 @@ impl LogisticFreightBundle {
                 scope: LogisticScope::Planet,
             },
             inventory: Inventory::new(10_000),
-            pointer_event: On::<Pointer<Click>>::run(spawn_cargo_shuttle_ui),
         }
     }
 
@@ -41,7 +35,6 @@ impl LogisticFreightBundle {
                 scope: LogisticScope::SolarSystem,
             },
             inventory: Inventory::new(100_000),
-            pointer_event: On::<Pointer<Click>>::run(spawn_interplanetary_freighter_ui),
         }
     }
 }
@@ -62,6 +55,11 @@ impl LogisticFreight {
     #[inline]
     pub fn logistic_journey(&self) -> Option<&LogisticJourney> {
         self.journey.as_ref().map(|(journey, _)| journey)
+    }
+
+    #[inline]
+    pub fn scope(&self) -> &LogisticScope {
+        &self.scope
     }
 }
 

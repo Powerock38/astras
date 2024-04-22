@@ -11,22 +11,67 @@ use bevy_mod_picking::prelude::*;
 
 use crate::{
     buildings::LogisticFreight,
-    items::{Inventory, LogisticProvider},
+    items::{LogisticProvider, LogisticScope},
     ui::{spawn_inventory_ui, HudWindow, HudWindowDependent, HudWindowParent},
 };
+
+pub fn scan_logistic_freighter(
+    mut commands: Commands,
+    q_cargo_shuttle: Query<(Entity, &LogisticFreight), Added<LogisticFreight>>,
+) {
+    for (entity, logistic_freight) in q_cargo_shuttle.iter() {
+        match logistic_freight.scope() {
+            LogisticScope::Planet => {
+                commands
+                    .entity(entity)
+                    .insert(On::<Pointer<Click>>::run(spawn_cargo_shuttle_ui));
+            }
+
+            LogisticScope::SolarSystem => {
+                commands
+                    .entity(entity)
+                    .insert(On::<Pointer<Click>>::run(spawn_interplanetary_freighter_ui));
+            }
+
+            LogisticScope::Interstellar => {
+                commands
+                    .entity(entity)
+                    .insert(On::<Pointer<Click>>::run(spawn_interplanetary_freighter_ui));
+            }
+        }
+    }
+}
+
+pub fn spawn_cargo_shuttle_ui(
+    mut commands: Commands,
+    listener: Listener<Pointer<Click>>,
+    q_window_parent: Query<Entity, With<HudWindowParent>>,
+) {
+    let parent = q_window_parent.single();
+    let entity = listener.listener();
+
+    commands
+        .entity(parent)
+        .despawn_descendants()
+        .with_children(|c| {
+            c.spawn(HudWindow::default()).with_children(|c| {
+                // Inventory
+                spawn_inventory_ui(c, entity);
+            });
+        });
+}
 
 pub fn spawn_interplanetary_freighter_ui(
     mut commands: Commands,
     listener: Listener<Pointer<Click>>,
     mut images: ResMut<Assets<Image>>,
     q_window_parent: Query<Entity, With<HudWindowParent>>,
-    q_interplanetary_freighters: Query<(&LogisticFreight, &Inventory)>,
+    q_interplanetary_freighters: Query<&LogisticFreight>,
     q_providers: Query<Entity, With<LogisticProvider>>,
 ) {
     let parent = q_window_parent.single();
-    let (freight, inventory) = q_interplanetary_freighters
-        .get(listener.listener())
-        .unwrap();
+    let entity = listener.listener();
+    let freight = q_interplanetary_freighters.get(entity).unwrap();
 
     let image_handle = if let Some(logistic_journey) = freight.logistic_journey() {
         let provider_entity = q_providers.get(logistic_journey.provider()).unwrap();
@@ -102,7 +147,7 @@ pub fn spawn_interplanetary_freighter_ui(
                 }
 
                 // Inventory
-                spawn_inventory_ui(c, inventory);
+                spawn_inventory_ui(c, entity);
             });
         });
 }

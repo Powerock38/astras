@@ -48,4 +48,14 @@ pub static RECIPES: phf::Map<&'static str, Recipe> = phf::phf_map! {
         outputs: &[("electronite", 1)],
         time: 1.,
     },
+    "craft_plasma_fuel" => Recipe {
+        inputs: &[("photonite", 1), ("gravitonite", 1)],
+        outputs: &[("plasma_fuel", 1)],
+        time: 1.,
+    },
+    "craft_computing_core" => Recipe {
+        inputs: &[("electronite", 1), ("quark_crystal", 1)],
+        outputs: &[("computing_core", 1)],
+        time: 2.,
+    },
 };
