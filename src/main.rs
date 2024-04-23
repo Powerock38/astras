@@ -25,9 +25,9 @@ mod universe;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
         .add_plugins(DefaultPickingPlugins)
-        .insert_resource(DebugPickingMode::Normal)
+        // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
+        // .insert_resource(DebugPickingMode::Normal)
         .insert_resource(ClearColor(Color::BLACK))
         .register_type::<SaveName>()
         .register_type::<SpriteLoader>()

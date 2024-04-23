@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::items::{ElementOnAstre, ItemMap, RECIPES};
+use crate::items::{ElementOnAstre, ItemMap, RecipeOutput, RECIPES};
 
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
@@ -67,14 +67,20 @@ impl Inventory {
     }
 
     pub fn can_craft(&self, recipe: &String) -> CanCraftResult {
-        let recipe = RECIPES[&recipe];
+        let Some(recipe) = RECIPES.get(&recipe) else {
+            return CanCraftResult::Yes;
+        };
 
         let has_space_for_outputs = self.size == 0
-            || recipe
-                .outputs()
-                .iter()
-                .fold(0, |total, (_, quantity)| total + quantity)
-                <= self.remaining_space();
+            || match recipe.output() {
+                RecipeOutput::Items(outputs) => {
+                    outputs
+                        .iter()
+                        .fold(0, |total, (_, quantity)| total + quantity)
+                        <= self.remaining_space()
+                }
+                RecipeOutput::Building(_) => true,
+            };
 
         if !has_space_for_outputs {
             return CanCraftResult::NotEnoughSpace;
@@ -104,18 +110,28 @@ impl Inventory {
         CanCraftResult::Yes
     }
 
-    pub fn craft(&mut self, recipe: &String) {
+    // if the recipe output is a building, returns its id
+    pub fn craft(&mut self, recipe: &String) -> Option<String> {
         if self.can_craft(recipe).yes() {
-            let recipe = RECIPES[&recipe];
+            let Some(recipe) = RECIPES.get(&recipe) else {
+                return Some(recipe.clone());
+            };
 
             for (id, quantity) in recipe.inputs() {
                 self.remove(&id.to_string(), *quantity);
             }
 
-            for (id, quantity) in recipe.outputs() {
-                self.add(&id.to_string(), *quantity);
+            match recipe.output() {
+                RecipeOutput::Items(items) => {
+                    for (id, quantity) in items {
+                        self.add(&id.to_string(), *quantity);
+                    }
+                }
+                RecipeOutput::Building(name) => return Some(name.to_string()),
             }
         }
+
+        None
     }
 
     #[inline]

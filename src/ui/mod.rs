@@ -20,6 +20,9 @@ pub use crafter_ui::*;
 mod extractor_ui;
 pub use extractor_ui::*;
 
+mod spaceport_ui;
+pub use spaceport_ui::*;
+
 mod logistic_freighter_ui;
 pub use logistic_freighter_ui::*;
 
@@ -38,6 +41,7 @@ impl Plugin for UIPlugin {
                     update_inventory_ui,
                     scan_crafter_ui,
                     scan_extractor_ui,
+                    scan_spaceport_ui,
                     scan_logistic_freighter,
                 )
                     .in_set(GameplaySet),

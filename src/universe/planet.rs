@@ -81,7 +81,7 @@ pub fn build_planet(
         &[ElementState::Solid, ElementState::Liquid],
     );
 
-    let no_atmosphere = atmosphere_radius == 0.0;
+    let no_atmosphere = rng.gen_bool(0.3);
 
     let atmoshpere_composition = if no_atmosphere {
         vec![]
@@ -155,13 +155,7 @@ pub fn build_planet_children(
             continue;
         }
 
-        let c_no_atmosphere = rng.gen_bool(0.3);
-
-        let c_atmosphere_radius = if c_no_atmosphere {
-            0.0
-        } else {
-            rng.gen_range(0.0..(c_surface_radius * 0.5))
-        };
+        let c_atmosphere_radius = rng.gen_range((c_surface_radius * 0.1)..(c_surface_radius * 0.5));
 
         let c_nb_children = rng.gen_range(0..=(0.1 * nb_children as f32) as u32);
 

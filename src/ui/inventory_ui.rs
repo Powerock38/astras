@@ -49,6 +49,7 @@ pub fn update_inventory_ui(
                         },
                     ));
                 }
+                //TODO: button to transfer to Ship inventory
             });
     }
 }

@@ -7,11 +7,16 @@ use crate::{
     ui::{spawn_inventory_ui, HudWindow, HudWindowParent, UiButtonBundle},
 };
 
-pub fn scan_crafter_ui(mut commands: Commands, q_crafter: Query<Entity, Added<Crafter>>) {
-    for entity in q_crafter.iter() {
-        commands
-            .entity(entity)
-            .insert(On::<Pointer<Click>>::run(spawn_crafter_ui));
+pub fn scan_crafter_ui(
+    mut commands: Commands,
+    q_crafter: Query<(Entity, &Crafter), Added<Crafter>>,
+) {
+    for (entity, crafter) in q_crafter.iter() {
+        if !crafter.is_construction_site() {
+            commands
+                .entity(entity)
+                .insert(On::<Pointer<Click>>::run(spawn_crafter_ui));
+        }
     }
 }
 
@@ -34,25 +39,25 @@ pub fn spawn_crafter_ui(
                 for recipe in crafter.possible_recipes() {
                     let callback = {
                         let recipe = recipe.clone();
-                        move |_event: &mut ListenerInput<Pointer<Click>>, crafter: &mut Crafter| {
-                            println!("Setting recipe: {:?}", recipe);
+                        move |mut q_crafter: Query<&mut Crafter>| {
+                            let mut crafter = q_crafter.get_mut(entity).unwrap();
                             crafter.set_recipe(recipe.clone());
                         }
                     };
 
-                    // FIXME: event is never triggered
-                    c.spawn(UiButtonBundle::new(
-                        On::<Pointer<Click>>::target_component_mut::<Crafter>(callback),
-                    ))
-                    .with_children(|c| {
-                        c.spawn(TextBundle::from_section(
-                            RECIPES[recipe].text(),
-                            TextStyle {
-                                color: Color::rgb(0.9, 0.9, 0.9),
-                                ..default()
-                            },
-                        ));
-                    });
+                    c.spawn(UiButtonBundle::new(On::<Pointer<Click>>::run(callback)))
+                        .with_children(|c| {
+                            c.spawn(TextBundle::from_section(
+                                RECIPES
+                                    .get(recipe)
+                                    .map(|r| r.text())
+                                    .unwrap_or(recipe.clone()),
+                                TextStyle {
+                                    color: Color::rgb(0.9, 0.9, 0.9),
+                                    ..default()
+                                },
+                            ));
+                        });
                 }
 
                 // Inventory

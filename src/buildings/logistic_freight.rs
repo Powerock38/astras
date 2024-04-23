@@ -4,6 +4,9 @@ use crate::items::{Inventory, LogisticJourney, LogisticProvider, LogisticRequest
 
 const RANGE: f32 = 10.0;
 const SPEED: f32 = 1000.0;
+const LOGISTIC_FREIGHTER_Z: f32 = 0.6;
+
+//TODO: implement Ship following (to move freighters manually)
 
 #[derive(Bundle)]
 pub struct LogisticFreightBundle {
@@ -39,7 +42,7 @@ impl LogisticFreightBundle {
     }
 }
 
-pub type LogisticJourneyWithTarget = (LogisticJourney, Option<Vec3>); // (journey, move_target)
+pub type LogisticJourneyWithTarget = (LogisticJourney, Option<Vec2>); // (journey, move_target)
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
@@ -120,16 +123,18 @@ pub fn update_logistic_freights(
                     if logistic_request.id() == journey.request_id() {
                         println!("{:?} {:?}", journey, logistic_request);
 
+                        let mut unregister_freight = false;
+
                         if logistic_request.compute_fulfillment_percentage(&inventory) > 0 {
                             // If freight inventory can (partially) fullfill requester's request, go to requester
-                            let target = requester_transform.translation;
+                            let target = requester_transform.translation.truncate();
                             *move_target = Some(target);
 
                             if is_target_reached(&transform, target) {
                                 // transfer request's items to requester
                                 *move_target = None;
 
-                                //TODO: do not transfer all items at once
+                                // Try transfering some items
                                 for (item_id, &quantity) in logistic_request.items() {
                                     let q = inventory.transfer_to(
                                         &mut requester_inventory,
@@ -137,23 +142,28 @@ pub fn update_logistic_freights(
                                         quantity.min(freight.max_amount_per_transfer),
                                     );
 
-                                    println!("Transferred {} {}", q, item_id);
+                                    if q != 0 {
+                                        println!("Transferred {} {}", q, item_id);
+                                        return; // wait for next tick
+                                    }
                                 }
-                                //TODO: if q = 0, requester is full: go to provider OR go to new requester?
+
+                                // We didn't transfer any items (didn't reach return above), unregister freight
+                                unregister_freight = true;
                             }
                         } else {
                             // If freight inventory can't fullfill requester's request, go to provider
                             if let Ok((_, _, _, provider_transform, mut provider_inventory)) =
                                 q_providers.get_mut(journey.provider())
                             {
-                                let target = provider_transform.translation;
+                                let target = provider_transform.translation.truncate();
                                 *move_target = Some(target);
 
                                 if is_target_reached(&transform, target) {
                                     // transfer request's items from provider
                                     *move_target = None;
 
-                                    //TODO: do not transfer all items at once
+                                    // Try transfering some items
                                     for (item_id, &quantity) in logistic_request.items() {
                                         let q = provider_inventory.transfer_to(
                                             &mut inventory,
@@ -161,13 +171,35 @@ pub fn update_logistic_freights(
                                             quantity.min(freight.max_amount_per_transfer),
                                         );
 
-                                        println!("Transferred {} {}", q, item_id);
+                                        if q != 0 {
+                                            println!("Transferred {} {}", q, item_id);
+                                            return; // wait for next tick
+                                        }
                                     }
+
+                                    // We didn't transfer any items (didn't reach return above), unregister freight
+                                    unregister_freight = true;
                                 }
                             } else {
                                 // Provider doesn't exist anymore
                                 println!("Provider {:?} doesn't exist anymore", journey.provider());
                                 freight.journey = None;
+                            }
+                        }
+
+                        if unregister_freight {
+                            if let Some((journey, _)) = freight.journey.take() {
+                                if let Ok((_, mut logistic_request, _, _, _)) =
+                                    q_requesters.get_mut(journey.requester())
+                                {
+                                    logistic_request.freights.retain(|&f| f != freight_entity);
+                                }
+
+                                if let Ok((_, mut logistic_provider, _, _, _)) =
+                                    q_providers.get_mut(journey.provider())
+                                {
+                                    logistic_provider.freights.retain(|&f| f != freight_entity);
+                                }
                             }
                         }
                     } else {
@@ -203,8 +235,6 @@ pub fn update_logistic_freights(
                     }
                 }
 
-                println!("Requester: {:?}", requester);
-
                 // If we found a requester...
                 if let Some((requester_entity, mut logistic_request)) = requester {
                     // ...search for a compatible provider in the same scope,
@@ -212,7 +242,7 @@ pub fn update_logistic_freights(
                     // and the best fulfillment score of the request
 
                     let mut provider = None;
-                    let mut best_provider_fulfillment_score = 0;
+                    let mut best_provider_fulfillment_score = 1;
                     let mut best_provider_nb_freights = usize::MAX;
                     for (
                         provider_entity,
@@ -233,20 +263,21 @@ pub fn update_logistic_freights(
                             let fulfillment_score = logistic_request
                                 .compute_fulfillment_percentage(&provider_inventory);
 
-                            if fulfillment_score > best_provider_fulfillment_score {
-                                best_provider_fulfillment_score = fulfillment_score;
-                                best_provider_nb_freights = logistic_provider.freights.len();
-                                provider = Some((provider_entity, logistic_provider));
-                            } else if fulfillment_score == best_provider_fulfillment_score
-                                && logistic_provider.freights.len() < best_provider_nb_freights
+                            if fulfillment_score > best_provider_fulfillment_score
+                                || (fulfillment_score == best_provider_fulfillment_score
+                                    && logistic_provider.freights.len() < best_provider_nb_freights)
                             {
+                                best_provider_fulfillment_score = fulfillment_score;
                                 best_provider_nb_freights = logistic_provider.freights.len();
                                 provider = Some((provider_entity, logistic_provider));
                             }
                         }
                     }
 
-                    println!("Provider: {:?}", provider);
+                    println!(
+                        "Request {:?} for {:?} | Provider: {:?}",
+                        logistic_request, requester_entity, provider
+                    );
 
                     // If we found a provider, set the journey and register freight in LogisticRequest and LogisticProvider
                     if let Some((provider_entity, mut logistic_provider)) = provider {
@@ -269,7 +300,7 @@ pub fn update_logistic_freights(
         // Move towards target
         if let Some((_, move_target)) = &freight.journey {
             if let Some(target) = move_target {
-                let direction = *target - transform.translation;
+                let direction = *target - transform.translation.truncate();
                 let distance = direction.length();
 
                 if distance >= RANGE {
@@ -278,10 +309,14 @@ pub fn update_logistic_freights(
                     let distance_per_tick = velocity * time.delta_seconds();
 
                     if distance_per_tick.length() < distance {
-                        transform.translation += distance_per_tick;
+                        transform.translation.x += distance_per_tick.x;
+                        transform.translation.y += distance_per_tick.y;
                     } else {
-                        transform.translation = *target;
+                        transform.translation.x = target.x;
+                        transform.translation.y = target.y;
                     }
+
+                    transform.translation.z = LOGISTIC_FREIGHTER_Z;
 
                     transform.rotation = Quat::from_rotation_z(
                         (transform.translation.y - target.y)
@@ -294,6 +329,6 @@ pub fn update_logistic_freights(
     }
 }
 
-fn is_target_reached(transform: &Transform, target: Vec3) -> bool {
-    (transform.translation - target).length() < RANGE
+fn is_target_reached(transform: &Transform, target: Vec2) -> bool {
+    (transform.translation.truncate() - target).length() < RANGE
 }

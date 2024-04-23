@@ -7,7 +7,7 @@ pub enum LogisticScope {
     #[default]
     Planet,
     SolarSystem,
-    Interstellar, // TODO
+    Interstellar,
 }
 
 #[derive(Component, Reflect, Default, Debug)]
@@ -16,17 +16,8 @@ pub struct LogisticRequest {
     id: Uuid,
     items: ItemMap,
     scope: LogisticScope,
-    pub freights: Vec<Entity>, //FIXME: freights are never removed?
+    pub freights: Vec<Entity>,
 }
-
-// TODO: impl MapEntities ?
-// impl MapEntities for LogisticRequest {
-//     fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
-//         for entity in &mut self.freights {
-//             *entity = entity_mapper.map_entity(*entity);
-//         }
-//     }
-// }
 
 impl LogisticRequest {
     pub fn new(items: ItemMap, scope: LogisticScope) -> Self {
@@ -76,7 +67,7 @@ impl LogisticRequest {
 #[reflect(Component)]
 pub struct LogisticProvider {
     scope: LogisticScope,
-    pub freights: Vec<Entity>, //FIXME: freights are never removed?
+    pub freights: Vec<Entity>,
 }
 
 impl LogisticProvider {

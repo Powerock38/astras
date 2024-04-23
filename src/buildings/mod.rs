@@ -28,7 +28,6 @@ impl Plugin for BuildingsPlugin {
             Update,
             (
                 spawn_building,
-                update_constructing_building,
                 update_extractors,
                 update_logistic_freights,
                 update_crafters,
@@ -36,7 +35,7 @@ impl Plugin for BuildingsPlugin {
                 .in_set(GameplaySet),
         )
         .register_type::<PlacingLocation>()
-        .register_type::<ConstructingBuilding>()
+        .register_type::<ConstructionSite>()
         .register_type::<Building>()
         .register_type::<LogisticFreight>()
         .register_type::<LogisticJourneyWithTarget>()
