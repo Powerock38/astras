@@ -7,9 +7,9 @@ use rand::Rng;
 use std::f32::consts::PI;
 
 use crate::{
-    items::{ElementOnAstre, ElementState, Inventory, ELEMENTS},
-    universe::{Astre, Star},
-    HandleLoaderBundle, MaterialLoader,
+    items::{ElementOnAstre, ElementState, ELEMENTS},
+    universe::{AstreBundle, Star},
+    HandleLoaderBundle, MaterialLoader, MeshType,
 };
 
 pub const NB_COLORS: usize = 3;
@@ -19,8 +19,7 @@ pub type PlanetColors = [Color; NB_COLORS];
 #[derive(Bundle)]
 pub struct PlanetBundle {
     pub planet: Planet,
-    pub astre: Astre,
-    pub inventory: Inventory,
+    pub astre_bundle: AstreBundle,
     pub loader: HandleLoaderBundle<MaterialLoader<PlanetMaterial>>,
 }
 
@@ -123,12 +122,11 @@ pub fn build_planet(
 
     c.spawn(PlanetBundle {
         planet: Planet { orbit_speed },
-        astre: Astre::new(surface_radius, atmosphere_radius),
-        inventory: Inventory::from(composition),
+        astre_bundle: AstreBundle::new(surface_radius, atmosphere_radius, composition),
         loader: HandleLoaderBundle {
             loader: MaterialLoader {
                 material,
-                radius: total_radius,
+                mesh_type: MeshType::Circle(total_radius),
             },
             transform,
             ..default()

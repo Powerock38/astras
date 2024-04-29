@@ -31,6 +31,7 @@ fn main() {
         .insert_resource(ClearColor(Color::BLACK))
         .register_type::<SaveName>()
         .register_type::<SpriteLoader>()
+        .register_type::<MeshType>()
         .register_type::<TimerMode>()
         .register_type::<Option<Uuid>>()
         .register_type::<Option<Vec3>>()

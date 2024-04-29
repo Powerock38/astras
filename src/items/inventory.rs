@@ -140,8 +140,8 @@ impl Inventory {
     }
 
     #[inline]
-    pub fn all_ids(&self) -> Vec<&String> {
-        self.items.keys().collect()
+    pub fn all_ids(&self) -> Vec<String> {
+        self.items.keys().cloned().collect()
     }
 
     #[inline]

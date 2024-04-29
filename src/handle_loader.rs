@@ -46,8 +46,20 @@ pub fn scan_sprite_loaders(
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct MaterialLoader<M: Material2d> {
-    pub radius: f32,
+    pub mesh_type: MeshType,
     pub material: M,
+}
+
+#[derive(Reflect)]
+pub enum MeshType {
+    Circle(f32),
+    Rectangle(Vec2, Vec2),
+}
+
+impl Default for MeshType {
+    fn default() -> Self {
+        MeshType::Circle(1.)
+    }
 }
 
 pub fn scan_atres_material_loaders<M>(
@@ -60,7 +72,11 @@ pub fn scan_atres_material_loaders<M>(
 {
     for (entity, material_loader) in query.iter() {
         let material = materials.add(material_loader.material.clone());
-        let mesh = Mesh2dHandle::from(meshes.add(circle_mesh(material_loader.radius)));
-        commands.entity(entity).insert((mesh, material));
+        let mesh = match material_loader.mesh_type {
+            MeshType::Circle(radius) => circle_mesh(radius),
+            MeshType::Rectangle(c1, c2) => Rectangle::from_corners(c1, c2).into(),
+        };
+        let mesh_handle = Mesh2dHandle::from(meshes.add(mesh));
+        commands.entity(entity).insert((mesh_handle, material));
     }
 }

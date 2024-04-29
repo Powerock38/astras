@@ -6,16 +6,15 @@ use bevy::{
 use rand::Rng;
 
 use crate::{
-    items::{ElementOnAstre, ElementState, Inventory},
-    universe::{build_planet_children, Astre},
-    HandleLoaderBundle, MaterialLoader,
+    items::{ElementOnAstre, ElementState},
+    universe::{build_planet_children, AstreBundle},
+    HandleLoaderBundle, MaterialLoader, MeshType,
 };
 
 #[derive(Bundle)]
 pub struct StarBundle {
     pub star: Star,
-    pub astre: Astre,
-    pub inventory: Inventory,
+    pub astre_bundle: AstreBundle,
     pub loader: HandleLoaderBundle<MaterialLoader<StarMaterial>>,
 }
 
@@ -69,10 +68,12 @@ pub fn build_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children
 
     c.spawn(StarBundle {
         star: Star,
-        astre: Astre::new(radius, 0.),
-        inventory: Inventory::from(composition),
+        astre_bundle: AstreBundle::new(radius, 0., composition),
         loader: HandleLoaderBundle {
-            loader: MaterialLoader { material, radius },
+            loader: MaterialLoader {
+                material,
+                mesh_type: MeshType::Circle(radius),
+            },
             transform,
             ..default()
         },

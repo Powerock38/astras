@@ -26,6 +26,9 @@ pub use dockable_on_astre::*;
 mod worm;
 pub use worm::*;
 
+mod laser;
+pub use laser::*;
+
 pub struct UniversePlugin;
 
 impl Plugin for UniversePlugin {
@@ -34,6 +37,7 @@ impl Plugin for UniversePlugin {
             Material2dPlugin::<BackgroundMaterial>::default(),
             Material2dPlugin::<StarMaterial>::default(),
             Material2dPlugin::<PlanetMaterial>::default(),
+            Material2dPlugin::<LaserMaterial>::default(),
         ))
         .register_type::<SolarSystem>()
         .register_type::<Ship>()
@@ -43,8 +47,10 @@ impl Plugin for UniversePlugin {
         .register_type::<PlanetMaterial>()
         .register_type::<PlanetColors>()
         .register_type::<StarMaterial>()
+        .register_type::<LaserMaterial>()
         .register_type::<MaterialLoader<PlanetMaterial>>()
         .register_type::<MaterialLoader<StarMaterial>>()
+        .register_type::<MaterialLoader<LaserMaterial>>()
         .register_type::<DockableOnAstre>()
         .register_type::<Worm>()
         .register_type::<WormSegment>()
@@ -54,9 +60,12 @@ impl Plugin for UniversePlugin {
                 spawn_ship_sprite,
                 scan_atres_material_loaders::<PlanetMaterial>,
                 scan_atres_material_loaders::<StarMaterial>,
+                scan_atres_material_loaders::<LaserMaterial>,
+                scan_astres,
                 update_ship,
                 update_planets,
                 update_worms,
+                update_lasers,
             )
                 .in_set(GameplaySet),
         )

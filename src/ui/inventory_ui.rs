@@ -35,21 +35,22 @@ pub fn update_inventory_ui(
             continue;
         };
 
-        commands
-            .entity(ui_entity)
-            .despawn_descendants()
-            .with_children(|c| {
-                for (id, quantity) in inventory.items() {
-                    let item = ITEMS.get(id).unwrap();
-                    c.spawn(TextBundle::from_section(
-                        format!("{} (x{})\n{}", item.name, quantity, item.description),
-                        TextStyle {
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                            ..default()
-                        },
-                    ));
-                }
-                //TODO: button to transfer to Ship inventory
-            });
+        let Some(mut ec) = commands.get_entity(ui_entity) else {
+            continue;
+        };
+
+        ec.despawn_descendants().with_children(|c| {
+            for (id, quantity) in inventory.items() {
+                let item = ITEMS.get(id).unwrap();
+                c.spawn(TextBundle::from_section(
+                    format!("{} (x{})\n{}", item.name, quantity, item.description),
+                    TextStyle {
+                        color: Color::rgb(0.9, 0.9, 0.9),
+                        ..default()
+                    },
+                ));
+            }
+            //TODO: button to transfer to Ship inventory
+        });
     }
 }
