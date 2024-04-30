@@ -1,10 +1,11 @@
+use std::f32::consts::PI;
+
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
 use rand::Rng;
-use std::f32::consts::PI;
 
 use crate::{
     items::{ElementOnAstre, ElementState, ELEMENTS},

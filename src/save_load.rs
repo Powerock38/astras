@@ -1,3 +1,5 @@
+use std::{fs::File, io::Write, time::UNIX_EPOCH};
+
 use bevy::{
     prelude::*,
     render::camera::{CameraMainTextureUsages, CameraRenderGraph},
@@ -5,7 +7,6 @@ use bevy::{
     sprite::Mesh2dHandle,
     tasks::IoTaskPool,
 };
-use std::{fs::File, io::Write, time::UNIX_EPOCH};
 
 use crate::{
     ui::Hud,

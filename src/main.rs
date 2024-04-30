@@ -1,16 +1,14 @@
 use bevy::{prelude::*, utils::Uuid};
 use bevy_mod_picking::prelude::*;
-
 use buildings::BuildingsPlugin;
-use items::ItemsPlugin;
-use ui::UIPlugin;
-use universe::UniversePlugin;
-
 use camera::*;
 use handle_loader::*;
+use items::ItemsPlugin;
 use main_menu::*;
 use save_load::*;
 use state::*;
+use ui::UIPlugin;
+use universe::UniversePlugin;
 
 mod buildings;
 mod camera;

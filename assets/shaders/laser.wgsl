@@ -40,7 +40,3 @@ fn fragment(
         laser,
     );
 }
-
-// fn map(value: f32, min: f32, max: f32, new_min: f32, new_max: f32) -> f32 {
-//     return new_min + (value - min) * (new_max - new_min) / (max - min);
-// }

@@ -1,6 +1,9 @@
 use bevy::{prelude::*, utils::Uuid};
 
-use crate::{buildings::PlacingLocation, universe::Astre, universe::SolarSystem};
+use crate::{
+    buildings::PlacingLocation,
+    universe::{Astre, SolarSystem},
+};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]

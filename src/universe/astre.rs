@@ -1,10 +1,10 @@
-use bevy::{prelude::*, render::mesh::CircleMeshBuilder, utils::Uuid};
+use bevy::{prelude::*, utils::Uuid};
 use bevy_mod_picking::prelude::*;
-use std::f32::consts::PI;
 
-use crate::items::{ElementOnAstre, Inventory};
-
-use super::update_ship_mining;
+use crate::{
+    items::{ElementOnAstre, Inventory},
+    universe::update_ship_mining,
+};
 
 #[derive(Bundle)]
 pub struct AstreBundle {
@@ -56,12 +56,6 @@ impl Astre {
     pub fn atmosphere_radius(&self) -> f32 {
         self.atmosphere_radius
     }
-}
-
-pub fn circle_mesh(radius: f32) -> Mesh {
-    const ERR: f32 = 10.0;
-    let vertices = (PI / (1. - ERR / radius).acos()).ceil() as usize;
-    CircleMeshBuilder::new(radius, vertices).build()
 }
 
 pub fn scan_astres(mut commands: Commands, query: Query<Entity, Added<Astre>>) {

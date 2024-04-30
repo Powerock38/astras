@@ -1,8 +1,9 @@
-use bevy::prelude::*;
-use bevy::reflect::TypePath;
-use bevy::render::render_resource::AsBindGroup;
-use bevy::render::render_resource::ShaderRef;
-use bevy::sprite::{Material2d, MaterialMesh2dBundle};
+use bevy::{
+    prelude::*,
+    reflect::TypePath,
+    render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::{Material2d, MaterialMesh2dBundle},
+};
 use rand::Rng;
 
 const BACKGROUND_Z: f32 = -999.;

@@ -1,6 +1,7 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
 use rand::prelude::*;
-use std::f32::consts::PI;
 
 use crate::{universe::SHIP_Z, HandleLoaderBundle, SpriteLoader};
 

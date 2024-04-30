@@ -1,9 +1,12 @@
+use std::f32::consts::PI;
+
 use bevy::{
     prelude::*,
+    render::mesh::CircleMeshBuilder,
     sprite::{Material2d, Mesh2dHandle},
 };
 
-use crate::universe::{circle_mesh, random_polygon};
+use crate::universe::random_polygon;
 
 // SPRITE LOADER
 
@@ -74,11 +77,28 @@ pub fn scan_atres_material_loaders<M>(
     for (entity, material_loader) in query.iter() {
         let material = materials.add(material_loader.material.clone());
         let mesh = match material_loader.mesh_type {
-            MeshType::Circle(radius) => circle_mesh(radius),
+            MeshType::Circle(radius) => {
+                const ERR: f32 = 10.0;
+                let vertices = (PI / (1. - ERR / radius).acos()).ceil() as usize;
+                CircleMeshBuilder::new(radius, vertices).build()
+            }
             MeshType::Rectangle(c1, c2) => Rectangle::from_corners(c1, c2).into(),
             MeshType::RandomPolygon(seed, avg_radius) => random_polygon(seed, avg_radius),
         };
         let mesh_handle = Mesh2dHandle::from(meshes.add(mesh));
         commands.entity(entity).insert((mesh_handle, material));
     }
+}
+
+#[macro_export]
+macro_rules! register_material {
+    ($app:expr, $($material:ty),*) => {
+        $(
+            $app
+                .add_plugins(Material2dPlugin::<$material>::default())
+                .register_type::<$crate::MaterialLoader<$material>>()
+                .register_type::<$material>()
+                .add_systems(Update, $crate::scan_atres_material_loaders::<$material>.in_set($crate::GameplaySet));
+        )*
+    };
 }

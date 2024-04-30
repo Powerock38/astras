@@ -1,23 +1,48 @@
-use crate::handle_loader::{HandleLoaderBundle, MaterialLoader, MeshType};
-use crate::items::{ElementOnAstre, ElementState, ELEMENTS};
-use bevy::render::mesh::Indices;
-use bevy::{prelude::*, render::mesh::PrimitiveTopology, render::render_asset::RenderAssetUsages};
-use rand::prelude::*;
 use std::f32::consts::PI;
 
-use crate::universe::{AstreBundle, StarMaterial};
+use bevy::{
+    prelude::*,
+    render::{
+        mesh::{Indices, PrimitiveTopology},
+        render_asset::RenderAssetUsages,
+        render_resource::{AsBindGroup, ShaderRef},
+    },
+    sprite::Material2d,
+};
+use rand::prelude::*;
+
+use crate::{
+    handle_loader::{HandleLoaderBundle, MaterialLoader, MeshType},
+    items::{ElementOnAstre, ElementState},
+    universe::AstreBundle,
+};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct Asteroid {
     pub seed: u64,
+    // TODO: rotation, orbit_speed (see Planet), shadow like PlanetMaterial
 }
 
 #[derive(Bundle)]
 pub struct AsteroidBundle {
     astre_bundle: AstreBundle,
     asteroid: Asteroid,
-    loader: HandleLoaderBundle<MaterialLoader<StarMaterial>>,
+    loader: HandleLoaderBundle<MaterialLoader<AsteroidMaterial>>,
+}
+
+#[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
+pub struct AsteroidMaterial {
+    #[uniform(0)]
+    pub color: Color,
+    #[uniform(0)]
+    pub seed: f32,
+}
+
+impl Material2d for AsteroidMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/asteroid.wgsl".into()
+    }
 }
 
 pub fn build_asteroid_belt(c: &mut ChildBuilder) {
@@ -26,15 +51,14 @@ pub fn build_asteroid_belt(c: &mut ChildBuilder) {
     let radius: f32 = rng.gen_range(1000.0..100_000.0);
     let nb_asteroids = rng.gen_range(10..100);
 
+    let radius_variation = rng.gen_range(100.0..radius * 0.2);
+
     for i in 0..nb_asteroids {
         let angle = (i as f32 / nb_asteroids as f32) * 2. * PI;
 
-        let local_radius = rng.gen_range(0.8..1.2);
+        let local_radius = rng.gen_range(radius - radius_variation..radius + radius_variation);
 
-        let position = Vec2::new(
-            radius * local_radius * angle.cos(),
-            radius * local_radius * angle.sin(),
-        );
+        let position = Vec2::new(local_radius * angle.cos(), local_radius * angle.sin());
 
         build_asteroid(c, position);
     }
@@ -48,23 +72,15 @@ fn build_asteroid(c: &mut ChildBuilder, position: Vec2) {
 
     let transform = Transform::from_translation(position.extend(0.));
 
-    let rotation_direction =
-        Vec2::new(rng.gen_range(-1.0..=1.0), rng.gen_range(-1.0..=1.0)).normalize();
-
-    let rotation_speed = rng.gen_range(0.001..=0.01);
-
-    let composition = ElementOnAstre::random_elements(
-        rng.gen_range(1..=ELEMENTS.len()) as u32,
-        rng.gen_range(1000..=10_000),
-        &[ElementState::Solid],
-    );
+    // Asteroids have only one element
+    let composition =
+        ElementOnAstre::random_elements(1, rng.gen_range(1000..=10_000), &[ElementState::Solid]);
 
     let color = ElementOnAstre::get_color(&composition);
 
-    let material = StarMaterial {
+    let material = AsteroidMaterial {
         color,
         seed: rng.gen::<f32>() * 1000.,
-        rotation: rotation_direction * rotation_speed,
     };
 
     c.spawn(AsteroidBundle {

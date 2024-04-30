@@ -1,4 +1,5 @@
 #import bevy_pbr::forward_io::VertexOutput
+#import "shaders/noise.wgsl"::randvec2f
 
 struct BackgroundMaterial {
   seed: f32,
@@ -24,11 +25,4 @@ fn dots(uv: vec2f) -> f32 {
     let f = fract(uv);
     let r = randvec2f(g) * 0.19;
     return length(f+r);
-}
-
-fn randvec2f(co: vec2f) -> vec2f {
-    return vec2(
-        fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453),
-        fract(cos(dot(co.yx,vec2(8.64947,45.097))) * 43758.5453)
-    ) * 2.0 - 1.0;
 }
