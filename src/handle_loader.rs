@@ -3,7 +3,7 @@ use bevy::{
     sprite::{Material2d, Mesh2dHandle},
 };
 
-use crate::universe::circle_mesh;
+use crate::universe::{circle_mesh, random_polygon};
 
 // SPRITE LOADER
 
@@ -54,6 +54,7 @@ pub struct MaterialLoader<M: Material2d> {
 pub enum MeshType {
     Circle(f32),
     Rectangle(Vec2, Vec2),
+    RandomPolygon(u64, f32),
 }
 
 impl Default for MeshType {
@@ -75,6 +76,7 @@ pub fn scan_atres_material_loaders<M>(
         let mesh = match material_loader.mesh_type {
             MeshType::Circle(radius) => circle_mesh(radius),
             MeshType::Rectangle(c1, c2) => Rectangle::from_corners(c1, c2).into(),
+            MeshType::RandomPolygon(seed, avg_radius) => random_polygon(seed, avg_radius),
         };
         let mesh_handle = Mesh2dHandle::from(meshes.add(mesh));
         commands.entity(entity).insert((mesh_handle, material));

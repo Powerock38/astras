@@ -18,9 +18,9 @@ pub type PlanetColors = [Color; NB_COLORS];
 
 #[derive(Bundle)]
 pub struct PlanetBundle {
-    pub planet: Planet,
-    pub astre_bundle: AstreBundle,
-    pub loader: HandleLoaderBundle<MaterialLoader<PlanetMaterial>>,
+    planet: Planet,
+    astre_bundle: AstreBundle,
+    loader: HandleLoaderBundle<MaterialLoader<PlanetMaterial>>,
 }
 
 #[derive(Component, Reflect, Default)]

@@ -29,6 +29,9 @@ pub use worm::*;
 mod laser;
 pub use laser::*;
 
+mod asteroid;
+pub use asteroid::*;
+
 pub struct UniversePlugin;
 
 impl Plugin for UniversePlugin {
@@ -44,6 +47,7 @@ impl Plugin for UniversePlugin {
         .register_type::<Astre>()
         .register_type::<Planet>()
         .register_type::<Star>()
+        .register_type::<Laser>()
         .register_type::<PlanetMaterial>()
         .register_type::<PlanetColors>()
         .register_type::<StarMaterial>()
