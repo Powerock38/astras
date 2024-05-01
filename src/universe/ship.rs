@@ -136,11 +136,10 @@ pub fn update_ship_mining(
     mut commands: Commands,
     placing_building: Option<Res<PlacingBuilding>>,
     listener: Listener<Pointer<Down>>,
-    mut q_ship: Query<(Entity, &Ship, &GlobalTransform, &mut Inventory, &Parent)>,
+    mut q_ship: Query<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
     mut q_astres: Query<&mut Inventory, (With<Astre>, Without<Ship>)>,
 ) {
-    let Some((ship_entity, ship, transform, mut inventory, parent)) = q_ship.iter_mut().next()
-    else {
+    let Some((ship_entity, ship, transform, mut inventory)) = q_ship.iter_mut().next() else {
         return;
     };
 
@@ -152,57 +151,52 @@ pub fn update_ship_mining(
 
     // TODO ship.mining_cooldown.tick(time.delta()).finished() ; ship.mining_cooldown.reset();
 
-    if astre_entity == parent.get() {
-        if let Ok(mut astre_inventory) = q_astres.get_mut(astre_entity) {
-            if let Some(position) = listener.hit.position {
-                let position = position.truncate();
-                let ship_position = transform.translation().truncate();
+    if let Ok(mut astre_inventory) = q_astres.get_mut(astre_entity) {
+        if let Some(position) = listener.hit.position {
+            let position = position.truncate();
+            let ship_position = transform.translation().truncate();
 
-                if position.distance(ship_position) < MINING_RANGE {
-                    let mut rng = rand::thread_rng();
-                    let item_ids = astre_inventory.all_ids();
-                    let random_item_id =
-                        item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(id));
+            if position.distance(ship_position) < MINING_RANGE {
+                let mut rng = rand::thread_rng();
+                let item_ids = astre_inventory.all_ids();
+                let random_item_id =
+                    item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(id));
 
-                    if let Ok(item_id) = random_item_id {
-                        let quantity = astre_inventory
-                            .quantity(&item_id)
-                            .min(ship.mining_amount_per_tick);
+                if let Ok(item_id) = random_item_id {
+                    let quantity = astre_inventory
+                        .quantity(&item_id)
+                        .min(ship.mining_amount_per_tick);
 
-                        astre_inventory.transfer_to(&mut inventory, item_id.to_string(), quantity);
+                    astre_inventory.transfer_to(&mut inventory, item_id.to_string(), quantity);
 
-                        // Laser beam
-                        let color = ELEMENTS
-                            .get(item_id)
-                            .map(|e| e.color)
-                            .unwrap_or(Color::WHITE);
+                    // Laser beam
+                    let color = ELEMENTS
+                        .get(item_id)
+                        .map(|e| e.color)
+                        .unwrap_or(Color::WHITE);
 
-                        let relative_position = ship_position - position;
-                        let angle = relative_position.y.atan2(relative_position.x);
+                    let relative_position = ship_position - position;
+                    let angle = relative_position.y.atan2(relative_position.x);
 
-                        commands.entity(ship_entity).with_children(|c| {
-                            c.spawn(LaserBundle {
-                                laser: Laser::new(0.5),
-                                loader: HandleLoaderBundle {
-                                    loader: MaterialLoader {
-                                        mesh_type: MeshType::Rectangle(
-                                            Vec2::ZERO,
-                                            Vec2::new(
-                                                relative_position.length(),
-                                                MINING_LASER_WIDTH,
-                                            ),
-                                        ),
-                                        material: LaserMaterial::new(color),
-                                    },
-                                    transform: Transform::from_translation(
-                                        (-relative_position / 2.0).extend(-0.1),
-                                    )
-                                    .with_rotation(Quat::from_rotation_z(angle)),
-                                    ..default()
+                    commands.entity(ship_entity).with_children(|c| {
+                        c.spawn(LaserBundle {
+                            laser: Laser::new(0.5),
+                            loader: HandleLoaderBundle {
+                                loader: MaterialLoader {
+                                    mesh_type: MeshType::Rectangle(
+                                        Vec2::ZERO,
+                                        Vec2::new(relative_position.length(), MINING_LASER_WIDTH),
+                                    ),
+                                    material: LaserMaterial::new(color),
                                 },
-                            });
+                                transform: Transform::from_translation(
+                                    (-relative_position / 2.0).extend(-0.1),
+                                )
+                                .with_rotation(Quat::from_rotation_z(angle)),
+                                ..default()
+                            },
                         });
-                    }
+                    });
                 }
             }
         }

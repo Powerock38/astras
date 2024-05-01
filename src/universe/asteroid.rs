@@ -13,14 +13,14 @@ use rand::prelude::*;
 
 use crate::{
     handle_loader::{HandleLoaderBundle, MaterialLoader, MeshType},
-    items::{ElementOnAstre, ElementState},
+    items::{ElementOnAstre, ElementState, Inventory},
     universe::AstreBundle,
 };
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct Asteroid {
-    pub seed: u64,
+    pub initial_size: u32,
     // TODO: rotation, orbit_speed (see Planet), shadow like PlanetMaterial
 }
 
@@ -48,7 +48,7 @@ impl Material2d for AsteroidMaterial {
 pub fn build_asteroid_belt(c: &mut ChildBuilder) {
     let mut rng = thread_rng();
 
-    let radius: f32 = rng.gen_range(1000.0..100_000.0);
+    let radius: f32 = rng.gen_range(10_000.0..100_000.0);
     let nb_asteroids = rng.gen_range(10..100);
 
     let radius_variation = rng.gen_range(100.0..radius * 0.2);
@@ -76,6 +76,8 @@ fn build_asteroid(c: &mut ChildBuilder, position: Vec2) {
     let composition =
         ElementOnAstre::random_elements(1, rng.gen_range(1000..=10_000), &[ElementState::Solid]);
 
+    let initial_size = composition[0].quantity;
+
     let color = ElementOnAstre::get_color(&composition);
 
     let material = AsteroidMaterial {
@@ -85,7 +87,7 @@ fn build_asteroid(c: &mut ChildBuilder, position: Vec2) {
 
     c.spawn(AsteroidBundle {
         astre_bundle: AstreBundle::new(avg_radius, 0.0, composition),
-        asteroid: Asteroid { seed },
+        asteroid: Asteroid { initial_size },
         loader: HandleLoaderBundle {
             loader: MaterialLoader {
                 material,
@@ -100,9 +102,9 @@ fn build_asteroid(c: &mut ChildBuilder, position: Vec2) {
 pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
 
-    let num_vertices = rng.gen_range(5..15);
+    let num_vertices = rng.gen_range(7..20);
     let irregularity = rng.gen_range(0.0..1.0);
-    let spikiness = rng.gen_range(0.0..1.0);
+    let spikiness = rng.gen_range(0.0..0.7);
 
     let irregularity = irregularity * 2.0 * PI / (num_vertices as f32);
     let spikiness = spikiness * avg_radius;
@@ -138,8 +140,8 @@ pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {
     }
 
     let mut mesh = Mesh::new(
-        PrimitiveTopology::TriangleList, // Changed to TriangleList
-        RenderAssetUsages::RENDER_WORLD,
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
     );
 
     let mut indices = Vec::new();
@@ -161,7 +163,25 @@ pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {
 
     mesh.insert_indices(Indices::U32(indices));
 
-    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; points.len()]);
+    // Generate UV coordinates based on vertex positions
+    mesh.insert_attribute(
+        Mesh::ATTRIBUTE_UV_0,
+        points
+            .iter()
+            .map(|p| {
+                let u = (p.x / (2.0 * avg_radius)) + 0.5;
+                let v = (p.y / (2.0 * avg_radius)) + 0.5;
+                [u, v]
+            })
+            .collect::<Vec<[f32; 2]>>(),
+    );
 
     mesh
+}
+
+pub fn update_asteroids(mut q_asteroids: Query<(&Asteroid, &mut Transform, &Inventory)>) {
+    for (asteroid, mut transform, inventory) in q_asteroids.iter_mut() {
+        let scale = inventory.total_quantity() as f32 / asteroid.initial_size as f32;
+        transform.scale = Vec3::splat(scale);
+    }
 }

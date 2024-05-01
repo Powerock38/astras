@@ -42,6 +42,7 @@ impl Plugin for UniversePlugin {
             .register_type::<Astre>()
             .register_type::<Planet>()
             .register_type::<Star>()
+            .register_type::<Asteroid>()
             .register_type::<Laser>()
             .register_type::<PlanetColors>()
             .register_type::<DockableOnAstre>()
@@ -56,6 +57,7 @@ impl Plugin for UniversePlugin {
                     update_planets,
                     update_worms,
                     update_lasers,
+                    update_asteroids,
                 )
                     .in_set(GameplaySet),
             )

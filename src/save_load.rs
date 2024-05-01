@@ -10,7 +10,10 @@ use bevy::{
 
 use crate::{
     ui::Hud,
-    universe::{BackgroundMaterial, PlanetMaterial, Ship, SolarSystem, StarMaterial},
+    universe::{
+        AsteroidMaterial, BackgroundMaterial, LaserMaterial, PlanetMaterial, Ship, SolarSystem,
+        StarMaterial,
+    },
     GameState,
 };
 
@@ -66,6 +69,8 @@ pub fn save_solar_system(
                 .deny::<CameraMainTextureUsages>()
                 .deny::<Handle<PlanetMaterial>>()
                 .deny::<Handle<StarMaterial>>()
+                .deny::<Handle<AsteroidMaterial>>()
+                .deny::<Handle<LaserMaterial>>()
                 .deny::<Handle<BackgroundMaterial>>()
                 .deny::<Handle<Image>>()
                 .deny::<Mesh2dHandle>()

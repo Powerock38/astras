@@ -85,7 +85,7 @@ pub fn scan_atres_material_loaders<M>(
             MeshType::Rectangle(c1, c2) => Rectangle::from_corners(c1, c2).into(),
             MeshType::RandomPolygon(seed, avg_radius) => random_polygon(seed, avg_radius),
         };
-        let mesh_handle = Mesh2dHandle::from(meshes.add(mesh));
+        let mesh_handle = Mesh2dHandle(meshes.add(mesh));
         commands.entity(entity).insert((mesh_handle, material));
     }
 }

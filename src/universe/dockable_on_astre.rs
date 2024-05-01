@@ -2,7 +2,7 @@ use bevy::{prelude::*, utils::Uuid};
 
 use crate::{
     buildings::PlacingLocation,
-    universe::{Astre, SolarSystem},
+    universe::{Asteroid, Astre, SolarSystem},
 };
 
 #[derive(Component, Reflect, Default)]
@@ -37,7 +37,10 @@ pub fn update_dockable_on_astre(
         &mut Transform,
         &GlobalTransform,
     )>,
-    q_astre: Query<(Entity, &Astre, &GlobalTransform), Without<DockableOnAstre>>,
+    q_astre: Query<
+        (Entity, &Astre, &GlobalTransform),
+        (Without<DockableOnAstre>, Without<Asteroid>),
+    >,
     q_solar_system: Query<(Entity, &GlobalTransform), With<SolarSystem>>,
 ) {
     let Some(solar_system) = q_solar_system.iter().next() else {

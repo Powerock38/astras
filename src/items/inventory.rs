@@ -148,6 +148,11 @@ impl Inventory {
     pub fn items(&self) -> &ItemMap {
         &self.items
     }
+
+    #[inline]
+    pub fn total_quantity(&self) -> u32 {
+        self.items.values().sum()
+    }
 }
 
 impl From<Vec<ElementOnAstre>> for Inventory {
