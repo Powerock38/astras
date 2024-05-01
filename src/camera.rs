@@ -104,5 +104,6 @@ pub fn update_camera(
     bg_transform.translation.y = position.y - global_transform.translation().y;
     bg_transform.scale = Vec3::new(window.width(), window.height(), 0.0)
         * projection.scale
-        * (1. + 2. * CAMERA_DOLLY_MAX_LENGTH);
+        * (1. + 2. * CAMERA_DOLLY_MAX_LENGTH)
+        * 1.5;
 }

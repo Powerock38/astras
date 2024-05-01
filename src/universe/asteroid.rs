@@ -24,7 +24,6 @@ const ASTEROID_MIN_RADIUS: f32 = 50.0;
 pub struct Asteroid {
     initial_size: u32,
     rotation_speed: f32,
-    // TODO: orbit_speed (see Planet), shadow like PlanetMaterial
 }
 
 #[derive(Bundle)]
@@ -62,19 +61,20 @@ pub fn build_asteroid_belt(c: &mut ChildBuilder) {
 
         let local_radius = rng.gen_range(radius - radius_variation..radius + radius_variation);
 
-        let position = Vec2::new(local_radius * angle.cos(), local_radius * angle.sin());
+        let z = i as f32 / nb_asteroids as f32;
+        let position = Vec3::new(local_radius * angle.cos(), local_radius * angle.sin(), z);
 
         build_asteroid(c, position);
     }
 }
 
-fn build_asteroid(c: &mut ChildBuilder, position: Vec2) {
+fn build_asteroid(c: &mut ChildBuilder, position: Vec3) {
     let seed = random::<u64>();
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
 
     let avg_radius = rng.gen_range(2.0 * ASTEROID_MIN_RADIUS..1000.0);
 
-    let transform = Transform::from_translation(position.extend(0.));
+    let transform = Transform::from_translation(position);
 
     // Asteroids have only one element
     let composition =
