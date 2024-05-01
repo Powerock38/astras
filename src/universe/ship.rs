@@ -10,7 +10,9 @@ use crate::{
 };
 
 pub const SHIP_Z: f32 = 100.;
-const SHIP_INVENTORY_SIZE: u32 = 1000;
+
+const SHIP_INVENTORY_SIZE: u32 = 100_000;
+
 const MINING_COOLDOWN: f32 = 0.5;
 const MINING_AMOUNT_PER_TICK: u32 = 10;
 const MINING_RANGE: f32 = 2000.;

@@ -9,7 +9,7 @@ use rand::Rng;
 
 use crate::{
     items::{ElementOnAstre, ElementState, ELEMENTS},
-    universe::{AstreBundle, Star},
+    universe::{AstreBundle, Orbit, Star},
     HandleLoaderBundle, MaterialLoader, MeshType,
 };
 
@@ -21,14 +21,13 @@ pub type PlanetColors = [Color; NB_COLORS];
 pub struct PlanetBundle {
     planet: Planet,
     astre_bundle: AstreBundle,
+    orbit: Orbit,
     loader: HandleLoaderBundle<MaterialLoader<PlanetMaterial>>,
 }
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
-pub struct Planet {
-    pub orbit_speed: f32,
-}
+pub struct Planet;
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct PlanetMaterial {
@@ -63,7 +62,6 @@ pub fn build_planet(
     surface_radius: f32,
     atmosphere_radius: f32,
     position: Vec2,
-    orbit_speed: f32,
     nb_children: u32,
     z_value: u32,
 ) {
@@ -73,7 +71,7 @@ pub fn build_planet(
 
     let transform = Transform::from_translation(position.extend(z_value as f32));
 
-    let orbit_distance = total_radius * 2.0;
+    let orbit_distance = total_radius * 10.0;
 
     let mut composition = ElementOnAstre::random_elements(
         rng.gen_range(1..=ELEMENTS.len()) as u32,
@@ -122,7 +120,8 @@ pub fn build_planet(
     };
 
     c.spawn(PlanetBundle {
-        planet: Planet { orbit_speed },
+        planet: Planet,
+        orbit: Orbit::new(),
         astre_bundle: AstreBundle::new(surface_radius, atmosphere_radius, composition),
         loader: HandleLoaderBundle {
             loader: MaterialLoader {
@@ -160,10 +159,6 @@ pub fn build_planet_children(
 
         let c_angle = (i as f32 / nb_children as f32) * 2. * PI;
 
-        let c_orbit_speed = rng.gen_range((PI / 100.)..=PI / 50.)
-                // * random direction
-                * if rng.gen_bool(0.5) { 1. } else { -1. };
-
         orbit_distance += c_surface_radius + c_atmosphere_radius;
 
         let position = Vec2::new(
@@ -176,7 +171,6 @@ pub fn build_planet_children(
             c_surface_radius,
             c_atmosphere_radius,
             position,
-            c_orbit_speed,
             c_nb_children,
             z_value + i + 1,
         );
@@ -186,25 +180,11 @@ pub fn build_planet_children(
 }
 
 pub fn update_planets(
-    time: Res<Time>,
     mut materials: ResMut<Assets<PlanetMaterial>>,
-    mut q_planets: Query<(
-        &Planet,
-        &Handle<PlanetMaterial>,
-        &mut Transform,
-        &GlobalTransform,
-    )>,
+    q_planets: Query<(&Handle<PlanetMaterial>, &GlobalTransform)>,
     q_stars: Query<&GlobalTransform, With<Star>>,
 ) {
-    for (planet, planet_material_handle, mut transform, global_transform) in q_planets.iter_mut() {
-        let angle = transform.translation.y.atan2(transform.translation.x);
-        let orbit = (transform.translation.x.powf(2.0) + transform.translation.y.powf(2.0)).sqrt();
-
-        let orbit_angle = angle + planet.orbit_speed * time.delta_seconds();
-
-        transform.translation.x = orbit * orbit_angle.cos();
-        transform.translation.y = orbit * orbit_angle.sin();
-
+    for (planet_material_handle, global_transform) in q_planets.iter() {
         // Update shadow angle
         let material = materials.get_mut(planet_material_handle).unwrap();
 

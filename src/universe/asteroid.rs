@@ -14,20 +14,24 @@ use rand::prelude::*;
 use crate::{
     handle_loader::{HandleLoaderBundle, MaterialLoader, MeshType},
     items::{ElementOnAstre, ElementState, Inventory},
-    universe::AstreBundle,
+    universe::{Astre, AstreBundle, Orbit},
 };
+
+const ASTEROID_MIN_RADIUS: f32 = 50.0;
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct Asteroid {
-    pub initial_size: u32,
-    // TODO: rotation, orbit_speed (see Planet), shadow like PlanetMaterial
+    initial_size: u32,
+    rotation_speed: f32,
+    // TODO: orbit_speed (see Planet), shadow like PlanetMaterial
 }
 
 #[derive(Bundle)]
 pub struct AsteroidBundle {
-    astre_bundle: AstreBundle,
     asteroid: Asteroid,
+    astre_bundle: AstreBundle,
+    orbit: Orbit,
     loader: HandleLoaderBundle<MaterialLoader<AsteroidMaterial>>,
 }
 
@@ -68,17 +72,19 @@ fn build_asteroid(c: &mut ChildBuilder, position: Vec2) {
     let seed = random::<u64>();
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
 
-    let avg_radius = rng.gen_range(100.0..1000.0);
+    let avg_radius = rng.gen_range(2.0 * ASTEROID_MIN_RADIUS..1000.0);
 
     let transform = Transform::from_translation(position.extend(0.));
 
     // Asteroids have only one element
     let composition =
-        ElementOnAstre::random_elements(1, rng.gen_range(1000..=10_000), &[ElementState::Solid]);
+        ElementOnAstre::random_elements(1, avg_radius as u32 * 10, &[ElementState::Solid]);
 
     let initial_size = composition[0].quantity;
 
     let color = ElementOnAstre::get_color(&composition);
+
+    let rotation_speed = rng.gen_range(-0.2..0.2);
 
     let material = AsteroidMaterial {
         color,
@@ -86,8 +92,12 @@ fn build_asteroid(c: &mut ChildBuilder, position: Vec2) {
     };
 
     c.spawn(AsteroidBundle {
+        asteroid: Asteroid {
+            initial_size,
+            rotation_speed,
+        },
+        orbit: Orbit::new(),
         astre_bundle: AstreBundle::new(avg_radius, 0.0, composition),
-        asteroid: Asteroid { initial_size },
         loader: HandleLoaderBundle {
             loader: MaterialLoader {
                 material,
@@ -179,9 +189,24 @@ pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {
     mesh
 }
 
-pub fn update_asteroids(mut q_asteroids: Query<(&Asteroid, &mut Transform, &Inventory)>) {
-    for (asteroid, mut transform, inventory) in q_asteroids.iter_mut() {
+pub fn update_asteroids(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut q_asteroids: Query<(Entity, &Asteroid, &Astre, &mut Transform, &Inventory)>,
+) {
+    for (entity, asteroid, astre, mut transform, inventory) in q_asteroids.iter_mut() {
+        // Rotate the asteroid
+        transform.rotate(Quat::from_rotation_z(
+            asteroid.rotation_speed * time.delta_seconds(),
+        ));
+
+        // Mining the asteroid shrinks it, until it disappears
         let scale = inventory.total_quantity() as f32 / asteroid.initial_size as f32;
-        transform.scale = Vec3::splat(scale);
+
+        if scale * astre.surface_radius() < ASTEROID_MIN_RADIUS {
+            commands.entity(entity).despawn_recursive();
+        } else {
+            transform.scale = Vec3::splat(scale);
+        }
     }
 }

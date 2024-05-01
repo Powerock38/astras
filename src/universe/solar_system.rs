@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
-use crate::universe::{build_asteroid_belt, build_ship, build_star, build_worm};
+use crate::universe::{build_ship, build_star, build_worm};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
@@ -19,7 +19,6 @@ pub fn spawn_solar_system(commands: &mut Commands) {
         .insert(SolarSystem)
         .with_children(|c| {
             build_star(c, star_radius, star_position, nb_planets);
-            build_asteroid_belt(c);
         })
         .with_children(|c| {
             let radius = 50000.;

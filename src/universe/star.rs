@@ -7,7 +7,7 @@ use rand::Rng;
 
 use crate::{
     items::{ElementOnAstre, ElementState},
-    universe::{build_planet_children, AstreBundle},
+    universe::{build_asteroid_belt, build_planet_children, AstreBundle},
     HandleLoaderBundle, MaterialLoader, MeshType,
 };
 
@@ -80,5 +80,7 @@ pub fn build_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children
     })
     .with_children(|c| {
         build_planet_children(c, radius, orbit_distance, nb_children, 0);
+
+        build_asteroid_belt(c);
     });
 }

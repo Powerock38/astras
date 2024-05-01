@@ -23,6 +23,9 @@ pub use star::*;
 mod dockable_on_astre;
 pub use dockable_on_astre::*;
 
+mod orbit;
+pub use orbit::*;
+
 mod worm;
 pub use worm::*;
 
@@ -46,6 +49,7 @@ impl Plugin for UniversePlugin {
             .register_type::<Laser>()
             .register_type::<PlanetColors>()
             .register_type::<DockableOnAstre>()
+            .register_type::<Orbit>()
             .register_type::<Worm>()
             .register_type::<WormSegment>()
             .add_systems(
@@ -53,6 +57,7 @@ impl Plugin for UniversePlugin {
                 (
                     spawn_ship_sprite,
                     scan_astres,
+                    update_orbits,
                     update_ship,
                     update_planets,
                     update_worms,
