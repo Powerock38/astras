@@ -16,8 +16,7 @@ impl UiButtonBundle {
         Self {
             button: ButtonBundle {
                 style: Style {
-                    width: Val::Px(100.0),
-                    height: Val::Px(30.0),
+                    padding: UiRect::all(Val::Px(5.0)),
                     border: UiRect::all(Val::Px(2.0)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,

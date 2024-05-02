@@ -94,7 +94,7 @@ pub fn save_solar_system(
                         .detach();
                 }
                 Err(e) => {
-                    eprintln!("Error while serializing the scene: {:?}", e);
+                    eprintln!("Error while serializing the scene: {e:?}");
                 }
             }
         }

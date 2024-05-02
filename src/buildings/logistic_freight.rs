@@ -112,7 +112,7 @@ pub fn update_logistic_freights(
     >,
 ) {
     for (freight_entity, mut freight, parent, mut transform, mut inventory) in
-        q_logistic_freights.iter_mut()
+        &mut q_logistic_freights
     {
         if freight.cooldown.tick(time.delta()).finished() {
             // If we already have a journey
@@ -121,7 +121,7 @@ pub fn update_logistic_freights(
                     q_requesters.get_mut(journey.requester())
                 {
                     if logistic_request.id() == journey.request_id() {
-                        println!("{:?} {:?}", journey, logistic_request);
+                        println!("{journey:?} {logistic_request:?}");
 
                         let mut unregister_freight = false;
 
@@ -143,7 +143,7 @@ pub fn update_logistic_freights(
                                     );
 
                                     if q != 0 {
-                                        println!("Transferred {} {}", q, item_id);
+                                        println!("Transferred {q} {item_id}");
                                         return; // wait for next tick
                                     }
                                 }
@@ -172,7 +172,7 @@ pub fn update_logistic_freights(
                                         );
 
                                         if q != 0 {
-                                            println!("Transferred {} {}", q, item_id);
+                                            println!("Transferred {q} {item_id}");
                                             return; // wait for next tick
                                         }
                                     }
@@ -213,33 +213,28 @@ pub fn update_logistic_freights(
                     freight.journey = None;
                 }
             } else {
-                // Search for a requester in the same scope, with the minimum number of freights
+                // Search for the best requester / provider pair
 
-                let mut requester = None;
-                let mut best_request_nb_freights = usize::MAX;
-                for (requester_entity, logistic_request, requester_parent, _, _) in
-                    q_requesters.iter_mut()
-                {
-                    let in_scope = &freight.scope == logistic_request.scope()
-                        && match freight.scope {
-                            LogisticScope::Planet => requester_parent.get() == parent.get(),
-                            LogisticScope::SolarSystem => true,
-                            LogisticScope::Interstellar => true,
-                        };
+                // Search for requesters in the same scope, prioritizing the one with the least freights
 
-                    if in_scope {
-                        if logistic_request.freights.len() < best_request_nb_freights {
-                            best_request_nb_freights = logistic_request.freights.len();
-                            requester = Some((requester_entity, logistic_request));
-                        }
-                    }
-                }
+                let mut requesters = q_requesters
+                    .iter_mut()
+                    .filter(|(_, logistic_request, requester_parent, ..)| {
+                        &freight.scope == logistic_request.scope()
+                            && match freight.scope {
+                                LogisticScope::Planet => requester_parent.get() == parent.get(),
+                                LogisticScope::SolarSystem => true,
+                            }
+                    })
+                    .collect::<Vec<_>>();
 
-                // If we found a requester...
-                if let Some((requester_entity, mut logistic_request)) = requester {
-                    // ...search for a compatible provider in the same scope,
+                requesters
+                    .sort_by(|(_, a, ..), (_, b, ..)| a.freights.len().cmp(&b.freights.len()));
+
+                for (requester_entity, mut logistic_request, ..) in requesters {
+                    // Search for a compatible provider in the same scope,
                     // with the minimum number of freights
-                    // and the best fulfillment score of the request
+                    // and the best fulfillment score for the request
 
                     let mut provider = None;
                     let mut best_provider_fulfillment_score = 1;
@@ -250,13 +245,12 @@ pub fn update_logistic_freights(
                         provider_parent,
                         _,
                         provider_inventory,
-                    ) in q_providers.iter_mut()
+                    ) in &mut q_providers
                     {
                         let in_scope = &freight.scope == logistic_provider.scope()
                             && match freight.scope {
                                 LogisticScope::Planet => provider_parent.get() == parent.get(),
                                 LogisticScope::SolarSystem => true,
-                                LogisticScope::Interstellar => true,
                             };
 
                         if in_scope {
@@ -275,8 +269,7 @@ pub fn update_logistic_freights(
                     }
 
                     println!(
-                        "Request {:?} for {:?} | Provider: {:?}",
-                        logistic_request, requester_entity, provider
+                        "Request {logistic_request:?} for {requester_entity:?} | Provider: {provider:?}"
                     );
 
                     // If we found a provider, set the journey and register freight in LogisticRequest and LogisticProvider
@@ -292,38 +285,37 @@ pub fn update_logistic_freights(
                             ),
                             None,
                         ));
+
+                        break;
                     }
                 }
             }
         }
 
         // Move towards target
-        if let Some((_, move_target)) = &freight.journey {
-            if let Some(target) = move_target {
-                let direction = *target - transform.translation.truncate();
-                let distance = direction.length();
+        if let Some((_, Some(target))) = &freight.journey {
+            let direction = *target - transform.translation.truncate();
+            let distance = direction.length();
 
-                if distance >= RANGE {
-                    let direction = direction / distance;
-                    let velocity = direction * SPEED;
-                    let distance_per_tick = velocity * time.delta_seconds();
+            if distance >= RANGE {
+                let direction = direction / distance;
+                let velocity = direction * SPEED;
+                let distance_per_tick = velocity * time.delta_seconds();
 
-                    if distance_per_tick.length() < distance {
-                        transform.translation.x += distance_per_tick.x;
-                        transform.translation.y += distance_per_tick.y;
-                    } else {
-                        transform.translation.x = target.x;
-                        transform.translation.y = target.y;
-                    }
-
-                    transform.translation.z = LOGISTIC_FREIGHTER_Z;
-
-                    transform.rotation = Quat::from_rotation_z(
-                        (transform.translation.y - target.y)
-                            .atan2(transform.translation.x - target.x)
-                            + std::f32::consts::FRAC_PI_2,
-                    );
+                if distance_per_tick.length() < distance {
+                    transform.translation.x += distance_per_tick.x;
+                    transform.translation.y += distance_per_tick.y;
+                } else {
+                    transform.translation.x = target.x;
+                    transform.translation.y = target.y;
                 }
+
+                transform.translation.z = LOGISTIC_FREIGHTER_Z;
+
+                transform.rotation = Quat::from_rotation_z(
+                    (transform.translation.y - target.y).atan2(transform.translation.x - target.x)
+                        + std::f32::consts::FRAC_PI_2,
+                );
             }
         }
     }

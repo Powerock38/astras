@@ -81,7 +81,7 @@ pub fn update_extractors(
     mut q_extractor: Query<(&mut Extractor, &mut Inventory, &Parent), Without<Astre>>,
     mut q_astre_inventories: Query<&mut Inventory, With<Astre>>,
 ) {
-    for (mut extractor, mut extractor_inventory, parent) in q_extractor.iter_mut() {
+    for (mut extractor, mut extractor_inventory, parent) in &mut q_extractor {
         extractor.cooldown.tick(time.delta());
 
         if extractor.cooldown.finished() && extractor_inventory.remaining_space() > 0 {
@@ -94,7 +94,7 @@ pub fn update_extractors(
 
                 if let Ok(item_id) = random_item_id {
                     let quantity = astre_inventory
-                        .quantity(&item_id)
+                        .quantity(item_id)
                         .min(extractor.amount_per_tick);
 
                     astre_inventory.transfer_to(

@@ -7,7 +7,6 @@ pub enum LogisticScope {
     #[default]
     Planet,
     SolarSystem,
-    Interstellar,
 }
 
 #[derive(Component, Reflect, Default, Debug)]
@@ -50,9 +49,9 @@ impl LogisticRequest {
         &self.scope
     }
 
-    pub fn compute_fulfillment_percentage(&self, inventory: &Inventory) -> u32 {
+    pub fn compute_fulfillment_percentage(&self, provider_inventory: &Inventory) -> u32 {
         self.items.iter().fold(0, |total, (id, quantity)| {
-            total + inventory.quantity(id).min(*quantity)
+            total + provider_inventory.quantity(id).min(*quantity)
         }) * 100
             / (self
                 .items

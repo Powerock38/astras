@@ -57,7 +57,7 @@ pub fn update_lasers(
     time: Res<Time>,
     mut q_lasers: Query<(Entity, &mut Laser)>,
 ) {
-    for (entity, mut laser) in q_lasers.iter_mut() {
+    for (entity, mut laser) in &mut q_lasers {
         if laser.ttl.tick(time.delta()).finished() {
             commands.entity(entity).despawn_recursive();
         }

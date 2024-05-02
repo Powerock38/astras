@@ -49,7 +49,6 @@ pub fn build_worm(c: &mut ChildBuilder, position: Vec2) {
             loader: SpriteLoader {
                 texture_path: "sprites/worm_head.png".to_string(),
                 color,
-                ..default()
             },
             transform,
             ..default()
@@ -77,7 +76,6 @@ pub fn build_worm(c: &mut ChildBuilder, position: Vec2) {
                     loader: SpriteLoader {
                         texture_path: "sprites/worm_segment.png".to_string(),
                         color,
-                        ..default()
                     },
                     transform,
                     ..default()
@@ -92,7 +90,7 @@ pub fn update_worms(
     mut q_worms: Query<(&mut Worm, &mut Transform, &Children)>,
     mut q_segments: Query<&mut Transform, (With<WormSegment>, Without<Worm>)>,
 ) {
-    for (mut worm, mut transform, segments) in q_worms.iter_mut() {
+    for (mut worm, mut transform, segments) in &mut q_worms {
         if worm.change_direction_cooldown.tick(time.delta()).finished() {
             let clamped_angle = PI / 1024.;
             let add_angle = rand::thread_rng().gen_range(0.0..=clamped_angle) - clamped_angle;

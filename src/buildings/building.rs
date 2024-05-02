@@ -5,7 +5,7 @@ use crate::{
         Crafter, CrafterBundle, ExtractorBundle, LogisticFreightBundle, SpaceportBundle,
         WarehouseBundle,
     },
-    items::{Inventory, RECIPES},
+    items::{Inventory, Recipe, RECIPES},
     universe::{DockableOnAstre, SHIP_Z},
     HandleLoaderBundle, SpriteLoader,
 };
@@ -124,6 +124,13 @@ pub struct BuildingData {
     pub scale: f32,
 }
 
+impl BuildingData {
+    #[inline]
+    pub fn sprite_path(&self) -> String {
+        format!("sprites/{}.png", self.sprite_name)
+    }
+}
+
 #[derive(Clone, Copy, Reflect, Default, Debug)]
 pub enum PlacingLocation {
     Surface,
@@ -181,8 +188,7 @@ pub fn spawn_building(
                 if left {
                     let recipe_needed_space = RECIPES
                         .get(&placing_building.0)
-                        .map(|r| r.inputs_space_needed())
-                        .unwrap_or(0);
+                        .map_or(0, Recipe::inputs_quantity);
 
                     // recycle the building preview entity to keep sprite texture
                     commands

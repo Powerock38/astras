@@ -14,9 +14,6 @@ pub use save_load_ui::*;
 mod inventory_ui;
 pub use inventory_ui::*;
 
-mod ship_ui;
-pub use ship_ui::*;
-
 mod crafter_ui;
 pub use crafter_ui::*;
 
@@ -39,10 +36,9 @@ impl Plugin for UIPlugin {
                 update_ui_buttons,
                 (
                     setup_hud,
-                    remove_windows_on_escape,
+                    clear_ui_or_spawn_ship_ui,
                     spawn_save_ui,
-                    spawn_ship_ui,
-                    update_inventory_ui.after(remove_windows_on_escape),
+                    update_inventory_ui.after(clear_ui_or_spawn_ship_ui),
                     scan_crafter_ui,
                     scan_extractor_ui,
                     scan_spaceport_ui,

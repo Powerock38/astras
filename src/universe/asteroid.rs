@@ -194,7 +194,7 @@ pub fn update_asteroids(
     time: Res<Time>,
     mut q_asteroids: Query<(Entity, &Asteroid, &Astre, &mut Transform, &Inventory)>,
 ) {
-    for (entity, asteroid, astre, mut transform, inventory) in q_asteroids.iter_mut() {
+    for (entity, asteroid, astre, mut transform, inventory) in &mut q_asteroids {
         // Rotate the asteroid
         transform.rotate(Quat::from_rotation_z(
             asteroid.rotation_speed * time.delta_seconds(),

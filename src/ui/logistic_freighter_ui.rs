@@ -32,12 +32,6 @@ pub fn scan_logistic_freighter(
                     .entity(entity)
                     .insert(On::<Pointer<Click>>::run(spawn_interplanetary_freighter_ui));
             }
-
-            LogisticScope::Interstellar => {
-                commands
-                    .entity(entity)
-                    .insert(On::<Pointer<Click>>::run(spawn_interplanetary_freighter_ui));
-            }
         }
     }
 }

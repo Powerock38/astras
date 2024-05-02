@@ -19,7 +19,7 @@ impl Orbit {
 }
 
 pub fn update_orbits(time: Res<Time>, mut query: Query<(&Orbit, &mut Transform)>) {
-    for (orbit, mut transform) in query.iter_mut() {
+    for (orbit, mut transform) in &mut query {
         let angle = transform.translation.y.atan2(transform.translation.x);
         let distance = transform.translation.distance(Vec3::ZERO);
 

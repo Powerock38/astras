@@ -1,9 +1,7 @@
-use crate::items::ITEMS;
-
 type RecipeItemQuantities = &'static [(&'static str, u32)];
 
 #[derive(Clone, Copy)]
-pub enum RecipeOutput {
+pub enum RecipeOutputs {
     Items(RecipeItemQuantities),
     Building(&'static str),
 }
@@ -11,7 +9,7 @@ pub enum RecipeOutput {
 #[derive(Clone, Copy)]
 pub struct Recipe {
     inputs: RecipeItemQuantities,
-    output: RecipeOutput,
+    outputs: RecipeOutputs,
     time: f32,
 }
 
@@ -23,7 +21,7 @@ impl Recipe {
     ) -> Self {
         Self {
             inputs,
-            output: RecipeOutput::Items(output),
+            outputs: RecipeOutputs::Items(output),
             time,
         }
     }
@@ -35,7 +33,7 @@ impl Recipe {
     ) -> Self {
         Self {
             inputs,
-            output: RecipeOutput::Building(output),
+            outputs: RecipeOutputs::Building(output),
             time,
         }
     }
@@ -51,32 +49,21 @@ impl Recipe {
     }
 
     #[inline]
-    pub fn output(&self) -> RecipeOutput {
-        self.output
+    pub fn outputs(&self) -> RecipeOutputs {
+        self.outputs
     }
 
     #[inline]
-    pub fn inputs_space_needed(&self) -> u32 {
+    pub fn inputs_quantity(&self) -> u32 {
         self.inputs.iter().map(|(_, quantity)| quantity).sum()
     }
 
-    fn slice_to_string(slice: &[(&'static str, u32)]) -> String {
-        slice
-            .iter()
-            .map(|(id, quantity)| format!("{} (x{})", ITEMS[id].name, quantity))
-            .collect::<Vec<_>>()
-            .join(", ")
-    }
-
-    pub fn text(&self) -> String {
-        format!(
-            "{} -> {}",
-            Self::slice_to_string(self.inputs),
-            match self.output {
-                RecipeOutput::Items(slice) => Self::slice_to_string(slice),
-                RecipeOutput::Building(name) => name.to_string(),
-            }
-        )
+    #[inline]
+    pub fn outputs_quantity(&self) -> u32 {
+        match self.outputs {
+            RecipeOutputs::Items(items) => items.iter().map(|(_, quantity)| quantity).sum(),
+            RecipeOutputs::Building(_) => 0,
+        }
     }
 }
 
@@ -98,6 +85,11 @@ pub static RECIPES: phf::Map<&'static str, Recipe> = phf::phf_map! {
     ),
 
     // Buildings
+    "foundry" => Recipe::new_building(
+        &[("astrium", 10)],
+        "foundry",
+        3.,
+    ),
     "spawn_cargo_shuttle" => Recipe::new_building(
         &[("astrium", 10), ("computing_core", 3), ("plasma_fuel", 5)],
         "cargo_shuttle",

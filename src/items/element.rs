@@ -76,14 +76,12 @@ impl ElementOnAstre {
         let mut elements = elements.to_vec();
         elements.sort_by_key(|e| e.quantity);
 
-        let mut color = elements.get(0).map(|e| ELEMENTS[e.id].color).unwrap();
+        let mut color = elements.first().map(|e| ELEMENTS[e.id].color).unwrap();
         let colors = &mut [color; NB_COLORS];
-        for i in 1..NB_COLORS {
-            color = elements
-                .get(i)
-                .map(|e| ELEMENTS[e.id].color)
-                .unwrap_or(color);
-            colors[i] = color;
+
+        for (i, color_item) in colors.iter_mut().enumerate().skip(1) {
+            color = elements.get(i).map_or(color, |e| ELEMENTS[e.id].color);
+            *color_item = color;
         }
 
         *colors

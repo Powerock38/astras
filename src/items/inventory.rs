@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::items::{ElementOnAstre, ItemMap, RecipeOutput, RECIPES};
+use crate::items::{ElementOnAstre, ItemMap, RecipeOutputs, RECIPES};
 
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
@@ -67,20 +67,15 @@ impl Inventory {
     }
 
     pub fn can_craft(&self, recipe: &String) -> CanCraftResult {
-        let Some(recipe) = RECIPES.get(&recipe) else {
+        let Some(recipe) = RECIPES.get(recipe) else {
             return CanCraftResult::Yes;
         };
 
         let has_space_for_outputs = self.size == 0
-            || match recipe.output() {
-                RecipeOutput::Items(outputs) => {
-                    outputs
-                        .iter()
-                        .fold(0, |total, (_, quantity)| total + quantity)
-                        <= self.remaining_space()
-                }
-                RecipeOutput::Building(_) => true,
-            };
+            || recipe
+                .outputs_quantity()
+                .saturating_sub(recipe.inputs_quantity())
+                <= self.remaining_space();
 
         if !has_space_for_outputs {
             return CanCraftResult::NotEnoughSpace;
@@ -89,7 +84,7 @@ impl Inventory {
         let has_inputs = recipe
             .inputs()
             .iter()
-            .all(|(id, quantity)| self.quantity(&id.to_string()) >= *quantity);
+            .all(|(id, quantity)| self.quantity(&(*id).to_string()) >= *quantity);
 
         if !has_inputs {
             return CanCraftResult::MissingInputs(
@@ -97,8 +92,11 @@ impl Inventory {
                     .inputs()
                     .iter()
                     .filter_map(|(id, quantity)| {
-                        if self.quantity(&id.to_string()) < *quantity {
-                            Some((id.to_string(), quantity - self.quantity(&id.to_string())))
+                        if self.quantity(&(*id).to_string()) < *quantity {
+                            Some((
+                                (*id).to_string(),
+                                quantity - self.quantity(&(*id).to_string()),
+                            ))
                         } else {
                             None
                         }
@@ -113,21 +111,21 @@ impl Inventory {
     // if the recipe output is a building, returns its id
     pub fn craft(&mut self, recipe: &String) -> Option<String> {
         if self.can_craft(recipe).yes() {
-            let Some(recipe) = RECIPES.get(&recipe) else {
+            let Some(recipe) = RECIPES.get(recipe) else {
                 return Some(recipe.clone());
             };
 
             for (id, quantity) in recipe.inputs() {
-                self.remove(&id.to_string(), *quantity);
+                self.remove(&(*id).to_string(), *quantity);
             }
 
-            match recipe.output() {
-                RecipeOutput::Items(items) => {
+            match recipe.outputs() {
+                RecipeOutputs::Items(items) => {
                     for (id, quantity) in items {
-                        self.add(&id.to_string(), *quantity);
+                        self.add(&(*id).to_string(), *quantity);
                     }
                 }
-                RecipeOutput::Building(name) => return Some(name.to_string()),
+                RecipeOutputs::Building(name) => return Some(name.to_string()),
             }
         }
 

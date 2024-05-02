@@ -47,7 +47,7 @@ pub fn update_dockable_on_astre(
         return;
     };
 
-    for (mut dockable, entity_dockable, mut transform, global_transform) in q_dockable.iter_mut() {
+    for (mut dockable, entity_dockable, mut transform, global_transform) in &mut q_dockable {
         let mut on_astre_option: Option<(Entity, Uuid, &GlobalTransform, f32)> = None;
 
         for (entity_astre, astre, astre_global_transform) in q_astre.iter() {
@@ -105,17 +105,14 @@ pub fn update_dockable_on_astre(
 
             // If dockable is instant_or_despawn and we found an astre, remove the component
             if dockable.instant_or_despawn {
-                println!(
-                    "Docking forever {:?} on astre {:?}!",
-                    entity_dockable, entity_astre
-                );
+                println!("Docking forever {entity_dockable:?} on astre {entity_astre:?}!");
                 commands.entity(entity_dockable).remove::<DockableOnAstre>();
                 continue;
             }
         } else {
             // If dockable is instant_or_despawn and we didn't find an astre, remove the Entity
             if dockable.instant_or_despawn {
-                println!("Despawning {:?}!", entity_dockable);
+                println!("Despawning {entity_dockable:?}!");
                 commands.entity(entity_dockable).despawn();
                 continue;
             }

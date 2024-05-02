@@ -2,14 +2,14 @@ use bevy::prelude::*;
 
 use crate::{
     buildings::{Building, BUILDINGS},
-    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, RECIPES},
+    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, Recipe, RECIPES},
     HandleLoaderBundle, SpriteLoader,
 };
 
 #[derive(Bundle)]
 pub struct CrafterBundle {
     crafter: Crafter,
-    inventory: Inventory, //FIXME: crafting can be blocked if inventory is full of requested items. Solution: input inventory + output inventory ?
+    inventory: Inventory, //FIXME: crafting can be blocked if inventory is full of requested items (and recipe outputs more than inputs)
 }
 
 impl CrafterBundle {
@@ -38,11 +38,7 @@ impl Crafter {
             } else {
                 None
             },
-            possible_recipes: possible_recipes
-                .to_vec()
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
+            possible_recipes: possible_recipes.iter().map(ToString::to_string).collect(),
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
             is_construction_site,
         }
@@ -70,7 +66,7 @@ pub struct CrafterRecipe {
 
 impl CrafterRecipe {
     pub fn new(recipe: String) -> Self {
-        let duration = RECIPES.get(&recipe).map(|r| r.time()).unwrap_or(1.0);
+        let duration = RECIPES.get(&recipe).map_or(1.0, Recipe::time);
         Self {
             progress: Timer::from_seconds(duration, TimerMode::Once),
             recipe,
@@ -90,8 +86,7 @@ pub fn update_crafters(
         &Parent,
     )>,
 ) {
-    for (entity, mut crafter, mut inventory, logistic_request, transform, parent) in
-        q_crafter.iter_mut()
+    for (entity, mut crafter, mut inventory, logistic_request, transform, parent) in &mut q_crafter
     {
         // If a recipe is selected
         if let Some(recipe_crafter) = &mut crafter.recipe {
@@ -101,13 +96,12 @@ pub fn update_crafters(
                 CanCraftResult::Yes => {
                     commands.entity(entity).remove::<LogisticRequest>();
 
-                    if recipe_crafter.progress.tick(time.delta()).just_finished() {
+                    if recipe_crafter.progress.tick(time.delta()).finished() {
                         recipe_crafter.progress.reset();
                         let building_output = inventory.craft(&recipe_crafter.recipe);
 
                         // SPAWN BUILDING if output is a building
-                        if let Some(building) = building_output.map(|b| BUILDINGS.get(&b)).flatten()
-                        {
+                        if let Some(building) = building_output.and_then(|b| BUILDINGS.get(&b)) {
                             println!("Crafted building: {}", building.name);
 
                             if crafter.is_construction_site {
@@ -119,13 +113,10 @@ pub fn update_crafters(
                                     Building,
                                     HandleLoaderBundle {
                                         loader: SpriteLoader {
-                                            texture_path: format!(
-                                                "sprites/{}.png",
-                                                building.sprite_name
-                                            ),
+                                            texture_path: building.sprite_path(),
                                             ..default()
                                         },
-                                        transform: transform.clone(),
+                                        transform: *transform,
                                         ..default()
                                     },
                                 ));
@@ -138,19 +129,16 @@ pub fn update_crafters(
 
                 // Request missing inputs
                 CanCraftResult::MissingInputs(missing_inputs) => {
-                    if crafter.cooldown.tick(time.delta()).finished() {
-                        if let Some(mut logistic_request) = logistic_request {
-                            if logistic_request.items() != &missing_inputs {
-                                println!("Changed missing inputs: {:?}", missing_inputs);
-                                logistic_request.set_items(missing_inputs);
-                            }
-                        } else {
-                            println!("New missing inputs: {:?}", missing_inputs);
-                            commands.entity(entity).insert(LogisticRequest::new(
-                                missing_inputs,
-                                LogisticScope::Planet,
-                            ));
+                    if let Some(mut logistic_request) = logistic_request {
+                        if logistic_request.items() != &missing_inputs {
+                            println!("Changed missing inputs: {missing_inputs:?}");
+                            logistic_request.set_items(missing_inputs);
                         }
+                    } else {
+                        println!("New missing inputs: {missing_inputs:?}");
+                        commands
+                            .entity(entity)
+                            .insert(LogisticRequest::new(missing_inputs, LogisticScope::Planet));
                     }
                 }
 
