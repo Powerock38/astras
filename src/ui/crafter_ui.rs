@@ -83,11 +83,7 @@ pub fn spawn_crafter_ui(
                                                         build_item_list_ui(c, outputs);
                                                     }
                                                     RecipeOutputs::Building(id) => {
-                                                        build_building_output_ui(
-                                                            c,
-                                                            id,
-                                                            &asset_server,
-                                                        );
+                                                        build_building_ui(c, id, &asset_server);
                                                     }
                                                 });
 
@@ -143,7 +139,7 @@ fn build_item_list_ui(c: &mut ChildBuilder, items: &[(&str, u32)]) {
     }
 }
 
-fn build_building_output_ui(c: &mut ChildBuilder, id: &str, asset_server: &Res<AssetServer>) {
+pub fn build_building_ui(c: &mut ChildBuilder, id: &str, asset_server: &Res<AssetServer>) {
     c.spawn(NodeBundle {
         style: Style {
             align_items: AlignItems::Center,

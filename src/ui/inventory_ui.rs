@@ -106,7 +106,7 @@ pub fn update_inventory_ui(
                 })
                 .with_children(|c| {
                     c.spawn(TextBundle::from_section(
-                        "Logistic Request",
+                        "This building needs:",
                         TextStyle {
                             color: Color::rgb(0.9, 0.9, 0.9),
                             font_size: 24.0,

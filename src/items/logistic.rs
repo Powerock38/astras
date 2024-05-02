@@ -83,7 +83,7 @@ impl LogisticProvider {
     }
 }
 
-#[derive(Reflect, Debug)]
+#[derive(Reflect, Debug, Clone, Copy)]
 pub struct LogisticJourney {
     request_id: Uuid,
     provider: Entity,

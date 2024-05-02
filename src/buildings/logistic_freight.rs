@@ -120,10 +120,10 @@ pub fn update_logistic_freights(
                 if let Ok((_, logistic_request, _, requester_transform, mut requester_inventory)) =
                     q_requesters.get_mut(journey.requester())
                 {
+                    let mut unregister_freight = false;
+
                     if logistic_request.id() == journey.request_id() {
                         println!("{journey:?} {logistic_request:?}");
-
-                        let mut unregister_freight = false;
 
                         if logistic_request.compute_fulfillment_percentage(&inventory) > 0 {
                             // If freight inventory can (partially) fullfill requester's request, go to requester
@@ -186,26 +186,28 @@ pub fn update_logistic_freights(
                                 freight.journey = None;
                             }
                         }
-
-                        if unregister_freight {
-                            if let Some((journey, _)) = freight.journey.take() {
-                                if let Ok((_, mut logistic_request, _, _, _)) =
-                                    q_requesters.get_mut(journey.requester())
-                                {
-                                    logistic_request.freights.retain(|&f| f != freight_entity);
-                                }
-
-                                if let Ok((_, mut logistic_provider, _, _, _)) =
-                                    q_providers.get_mut(journey.provider())
-                                {
-                                    logistic_provider.freights.retain(|&f| f != freight_entity);
-                                }
-                            }
-                        }
                     } else {
                         // Request changed
                         println!("Request changed");
-                        freight.journey = None;
+                        unregister_freight = true;
+                    }
+
+                    if unregister_freight {
+                        if let Some((journey, _)) = freight.journey.take() {
+                            if let Ok((_, mut logistic_request, _, _, _)) =
+                                q_requesters.get_mut(journey.requester())
+                            {
+                                logistic_request.freights.retain(|&f| f != freight_entity);
+                            }
+
+                            if let Ok((_, mut logistic_provider, _, _, _)) =
+                                q_providers.get_mut(journey.provider())
+                            {
+                                logistic_provider.freights.retain(|&f| f != freight_entity);
+                            }
+
+                            freight.journey = None;
+                        }
                     }
                 } else {
                     // Journey requester doesn't exist anymore
@@ -324,3 +326,34 @@ pub fn update_logistic_freights(
 fn is_target_reached(transform: &Transform, target: Vec2) -> bool {
     (transform.translation.truncate() - target).length() < RANGE
 }
+
+/*
+pub fn update_registered_freights(
+    mut q_logistic_freights: Query<(Entity, &mut LogisticFreight)>,
+    mut p_logistic: ParamSet<(Query<&mut LogisticRequest>, Query<&mut LogisticProvider>)>,
+) {
+    for mut logistic_request in &mut p_logistic.p0() {
+        logistic_request.freights.clear();
+    }
+
+    for mut logistic_provider in &mut p_logistic.p1() {
+        logistic_provider.freights.clear();
+    }
+
+    for (entity, mut freight) in &mut q_logistic_freights {
+        if let Some((journey, _)) = freight.journey {
+            if let Ok(mut requester) = p_logistic.p0().get_mut(journey.requester()) {
+                requester.freights.push(entity);
+            } else {
+                freight.journey = None;
+            }
+
+            if let Ok(mut provider) = p_logistic.p1().get_mut(journey.provider()) {
+                provider.freights.push(entity);
+            } else {
+                freight.journey = None;
+            }
+        }
+    }
+}
+*/

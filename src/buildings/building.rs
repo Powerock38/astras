@@ -15,7 +15,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Quarry",
         sprite_name: "quarry",
         location: PlacingLocation::Surface,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(ExtractorBundle::new_solid());
         },
@@ -24,7 +23,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Liquid Extractor",
         sprite_name: "quarry",
         location: PlacingLocation::Surface,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(ExtractorBundle::new_liquid());
         },
@@ -33,7 +31,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Atmosphere Harvester",
         sprite_name: "quarry",
         location: PlacingLocation::Atmosphere,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(ExtractorBundle::new_gas());
         },
@@ -42,7 +39,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Plasma Catalyser",
         sprite_name: "quarry",
         location: PlacingLocation::SurfaceOrAtmosphere,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(ExtractorBundle::new_plasma());
         },
@@ -51,7 +47,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Warehouse",
         sprite_name: "warehouse",
         location: PlacingLocation::Surface,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(WarehouseBundle::default());
         },
@@ -60,7 +55,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Cargo Shuttle",
         sprite_name: "cargo_shuttle",
         location: PlacingLocation::SurfaceOrAtmosphere,
-        scale: BUILDING_SCALE / 2.0,
         on_build: |c| {
             c.insert(LogisticFreightBundle::new_planet());
         },
@@ -69,7 +63,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Spaceport",
         sprite_name: "spaceport",
         location: PlacingLocation::Atmosphere,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(SpaceportBundle::default());
         },
@@ -78,7 +71,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Interplanetary Freighter",
         sprite_name: "cargo_shuttle",
         location: PlacingLocation::Atmosphere,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(LogisticFreightBundle::new_solar_system());
         },
@@ -87,7 +79,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Foundry",
         sprite_name: "foundry",
         location: PlacingLocation::Surface,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(CrafterBundle::new(vec![
                 "smelt_electronite_ore".to_string(),
@@ -99,7 +90,6 @@ pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
         name: "Assembler",
         sprite_name: "assembler",
         location: PlacingLocation::Surface,
-        scale: BUILDING_SCALE,
         on_build: |c| {
             c.insert(CrafterBundle::new(vec![
                 "craft_computing_core".to_string(),
@@ -121,7 +111,6 @@ pub struct BuildingData {
     pub sprite_name: &'static str,
     pub location: PlacingLocation,
     pub on_build: fn(&mut EntityCommands),
-    pub scale: f32,
 }
 
 impl BuildingData {
@@ -170,6 +159,8 @@ pub fn spawn_building(
             return;
         };
 
+        let building = BUILDINGS.get(&placing_building.0).unwrap();
+
         if let Some(world_position) = camera.viewport_to_world_2d(camera_transform, cursor_position)
         {
             let world_position = world_position.extend(BUILDING_PREVIEW_Z);
@@ -198,9 +189,7 @@ pub fn spawn_building(
                             ConstructionSite {
                                 building: placing_building.0.clone(),
                             },
-                            DockableOnAstre::instant_location(
-                                BUILDINGS[&placing_building.0].location,
-                            ),
+                            DockableOnAstre::instant_location(building.location),
                             Crafter::new(vec![placing_building.0.clone()], true),
                             Inventory::new(recipe_needed_space),
                         ));
@@ -216,15 +205,12 @@ pub fn spawn_building(
             } else {
                 // there is no building preview, spawn it
                 let transform = Transform::from_translation(world_position)
-                    .with_scale(Vec3::splat(BUILDINGS[&placing_building.0].scale));
+                    .with_scale(Vec3::splat(BUILDING_SCALE));
 
                 commands.spawn((
                     HandleLoaderBundle {
                         loader: SpriteLoader {
-                            texture_path: format!(
-                                "sprites/{}.png",
-                                BUILDINGS[&placing_building.0].sprite_name
-                            ),
+                            texture_path: format!("sprites/{}.png", building.sprite_name),
                             color: Color::rgba(1., 1., 1., 0.5),
                         },
                         transform,
