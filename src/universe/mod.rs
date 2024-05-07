@@ -1,9 +1,15 @@
 use bevy::{prelude::*, sprite::Material2dPlugin, transform::TransformSystem};
 
-use crate::{register_material, GameplaySet};
+use crate::{register_material, GameState, SolarSystemSet, UniverseMapSet};
+
+mod universe_map;
+pub use universe_map::*;
 
 mod solar_system;
 pub use solar_system::*;
+
+mod camera;
+pub use camera::*;
 
 mod background;
 pub use background::*;
@@ -52,25 +58,32 @@ impl Plugin for UniversePlugin {
             .register_type::<Orbit>()
             .register_type::<Worm>()
             .register_type::<WormSegment>()
+            .add_systems(OnEnter(GameState::GameUniverseMap), spawn_universe_map)
+            .add_systems(OnExit(GameState::GameUniverseMap), clean_universe_map)
             .add_systems(
                 Update,
                 (
-                    spawn_ship_sprite,
-                    scan_astres,
-                    update_orbits,
-                    update_ship,
-                    update_planets,
-                    update_worms,
-                    update_lasers,
-                    update_asteroids,
-                )
-                    .in_set(GameplaySet),
+                    (
+                        spawn_camera,
+                        update_camera,
+                        spawn_ship_sprite,
+                        scan_astres,
+                        update_orbits,
+                        update_ship,
+                        update_planets,
+                        update_worms,
+                        update_lasers,
+                        update_asteroids,
+                    )
+                        .in_set(SolarSystemSet),
+                    (update_universe_map,).in_set(UniverseMapSet),
+                ),
             )
             .add_systems(
                 PostUpdate,
                 update_dockable_on_astre
                     .after(TransformSystem::TransformPropagate)
-                    .in_set(GameplaySet),
+                    .in_set(SolarSystemSet),
             );
 
         register_material!(app, PlanetMaterial);

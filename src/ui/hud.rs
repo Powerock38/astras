@@ -4,8 +4,7 @@ use bevy_mod_picking::prelude::*;
 use crate::{
     buildings::{PlacingBuilding, BUILDINGS},
     ui::{build_building_ui, spawn_inventory_ui, UiButtonBundle},
-    universe::Ship,
-    MainCamera,
+    universe::{MainCamera, Ship},
 };
 
 #[derive(Component)]

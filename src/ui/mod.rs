@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::GameplaySet;
+use crate::SolarSystemSet;
 
 mod buttons;
 pub use buttons::*;
@@ -44,7 +44,7 @@ impl Plugin for UIPlugin {
                     scan_spaceport_ui,
                     scan_logistic_freighter,
                 )
-                    .in_set(GameplaySet),
+                    .in_set(SolarSystemSet),
             ),
         );
     }

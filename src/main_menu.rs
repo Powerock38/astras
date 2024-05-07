@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
-use rand::{distributions::Alphanumeric, Rng};
+use rand::Rng;
 
 use crate::{
     ui::{build_load_ui, UiButtonBundle},
@@ -50,20 +50,19 @@ pub fn setup_main_menu(mut commands: Commands) {
 pub fn spawn_new_game(mut commands: Commands, mut next_state: ResMut<NextState<GameState>>) {
     println!("New game");
 
-    let rand_string: String = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(10)
-        .map(char::from)
-        .collect();
+    let solar_system_position = [
+        rand::thread_rng().gen::<i32>(),
+        rand::thread_rng().gen::<i32>(),
+    ];
 
-    commands.insert_resource(SaveName(rand_string));
+    commands.insert_resource(SaveName(format!(
+        "{},{}",
+        solar_system_position[0], solar_system_position[1]
+    )));
 
-    spawn_solar_system(&mut commands);
+    spawn_solar_system(&mut commands, solar_system_position);
 
-    //let filename = format!("{rand_string}-0");
-    //commands.insert_resource(SaveGame(filename.clone()));
-
-    next_state.set(GameState::Game);
+    next_state.set(GameState::GameSolarSystem);
 }
 
 pub fn clean_main_menu(mut commands: Commands, q: Query<Entity, With<MainMenu>>) {

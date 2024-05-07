@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::GameplaySet;
+use crate::SolarSystemSet;
 
 mod building;
 pub use building::*;
@@ -32,7 +32,7 @@ impl Plugin for BuildingsPlugin {
                 update_logistic_freights,
                 update_crafters,
             )
-                .in_set(GameplaySet),
+                .in_set(SolarSystemSet),
         )
         .register_type::<PlacingLocation>()
         .register_type::<ConstructionSite>()

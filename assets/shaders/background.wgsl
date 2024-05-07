@@ -14,7 +14,7 @@ const GALAXY_COLOR1: vec3<f32> = vec3<f32>(0.2, 0.1, 0.7);
 const GALAXY_COLOR2: vec3<f32> = vec3<f32>(0.1, 0.2, 0.7);
 const GALAXY_COLOR3: vec3<f32> = vec3<f32>(0.1, 0.1, 0.7);
 
-const ENABLE_GALAXY: bool = true; // impact performance a lot
+const ENABLE_GALAXY: bool = false; // impact performance a lot
 
 @fragment
 fn fragment(

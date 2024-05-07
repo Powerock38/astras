@@ -5,7 +5,7 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
-use rand::Rng;
+use rand::prelude::*;
 
 use crate::{
     items::{ElementOnAstre, ElementState, ELEMENTS},
@@ -19,6 +19,7 @@ pub type PlanetColors = [Color; NB_COLORS];
 
 #[derive(Bundle)]
 pub struct PlanetBundle {
+    name: Name,
     planet: Planet,
     astre_bundle: AstreBundle,
     orbit: Orbit,
@@ -59,6 +60,7 @@ impl Material2d for PlanetMaterial {
 
 pub fn build_planet(
     c: &mut ChildBuilder,
+    rng: &mut StdRng,
     surface_radius: f32,
     atmosphere_radius: f32,
     position: Vec2,
@@ -67,15 +69,16 @@ pub fn build_planet(
 ) {
     let total_radius = atmosphere_radius + surface_radius;
 
-    let mut rng = rand::thread_rng();
-
     let transform = Transform::from_translation(position.extend(z_value as f32));
 
     let orbit_distance = total_radius * 10.0;
 
+    let nb_surface_elements = rng.gen_range(1..=ELEMENTS.len()) as u32;
+    let max_quantity_surface_elements = rng.gen_range(1_000..=1_000_000);
     let mut composition = ElementOnAstre::random_elements(
-        rng.gen_range(1..=ELEMENTS.len()) as u32,
-        rng.gen_range(1_000..=1_000_000),
+        rng,
+        nb_surface_elements,
+        max_quantity_surface_elements,
         &[ElementState::Solid, ElementState::Liquid],
     );
 
@@ -84,9 +87,13 @@ pub fn build_planet(
     let atmoshpere_composition = if no_atmosphere {
         vec![]
     } else {
+        let nb_atmosphere_elements = rng.gen_range(1..=5);
+        let max_quantity_atmosphere_elements = rng.gen_range(1_000..=100_000);
+
         ElementOnAstre::random_elements(
-            rng.gen_range(1..=5),
-            rng.gen_range(1_000..=100_000),
+            rng,
+            nb_atmosphere_elements,
+            max_quantity_atmosphere_elements,
             &[ElementState::Gas],
         )
     };
@@ -120,8 +127,9 @@ pub fn build_planet(
     };
 
     c.spawn(PlanetBundle {
+        name: Name::new("Planet"),
         planet: Planet,
-        orbit: Orbit::new(),
+        orbit: Orbit::new(rng),
         astre_bundle: AstreBundle::new(surface_radius, atmosphere_radius, composition),
         loader: HandleLoaderBundle {
             loader: MaterialLoader {
@@ -133,19 +141,18 @@ pub fn build_planet(
         },
     })
     .with_children(|c| {
-        build_planet_children(c, surface_radius, orbit_distance, nb_children, z_value);
+        build_planet_children(c, rng, surface_radius, orbit_distance, nb_children, z_value);
     });
 }
 
 pub fn build_planet_children(
     c: &mut ChildBuilder,
+    rng: &mut StdRng,
     surface_radius: f32,
     mut orbit_distance: f32,
     nb_children: u32,
     z_value: u32,
 ) {
-    let mut rng = rand::thread_rng();
-
     for i in 0..nb_children {
         let c_surface_radius = rng.gen_range((surface_radius * 0.1)..(surface_radius * 0.9));
 
@@ -168,6 +175,7 @@ pub fn build_planet_children(
 
         build_planet(
             c,
+            rng,
             c_surface_radius,
             c_atmosphere_radius,
             position,

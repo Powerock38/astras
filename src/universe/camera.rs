@@ -4,14 +4,20 @@ use bevy::{
     prelude::*,
 };
 
-use crate::universe::{build_background, Background, BackgroundMaterial, Ship};
+use crate::{
+    universe::{build_background, Background, BackgroundMaterial, Ship},
+    GameState,
+};
 
 const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
 const CAMEAR_DOLLY_SPEED: f32 = 0.00001;
 const CAMERA_ZOOM_SPEED: f32 = 2.0;
 const CAMERA_CHANGE_LERP: f32 = 0.1;
-const CAMERA_PAN_MODE_THRESHOLD: f32 = 30.0;
 const CAMERA_PAN_SPEED: f32 = 0.1;
+
+const BASE_SCALE: f32 = 100.0;
+const SWITCH_TO_PAN_MODE: f32 = 30.0;
+const SWITCH_TO_UNIVERSE_MAP: f32 = 500.0;
 
 #[derive(Component)]
 pub struct MainCamera;
@@ -28,6 +34,7 @@ pub fn spawn_camera(
 
     commands.entity(ship).with_children(|c| {
         c.spawn((
+            Name::new("MainCamera"),
             MainCamera,
             Camera2dBundle {
                 camera: Camera {
@@ -35,7 +42,9 @@ pub fn spawn_camera(
                     ..default()
                 },
                 projection: OrthographicProjection {
-                    scale: 100.0,
+                    scale: BASE_SCALE,
+                    near: -1000.0,
+                    far: 1000.0,
                     ..default()
                 },
                 tonemapping: Tonemapping::BlenderFilmic,
@@ -59,9 +68,10 @@ pub fn update_camera(
     >,
     mut q_background: Query<&mut Transform, With<Background>>,
     q_ship: Query<&Ship>,
-    window: Query<&Window>,
+    q_window: Query<&Window>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
-    let window = window.single();
+    let window = q_window.single();
     let Some((camera, global_transform, mut projection)) = q_projection.iter_mut().next() else {
         return;
     };
@@ -74,7 +84,13 @@ pub fn update_camera(
         projection.scale *= 1. - CAMERA_ZOOM_SPEED * scroll.y * time.delta_seconds();
     }
 
-    if projection.scale > CAMERA_PAN_MODE_THRESHOLD {
+    if projection.scale > SWITCH_TO_UNIVERSE_MAP {
+        next_state.set(GameState::GameUniverseMap);
+        projection.scale = SWITCH_TO_UNIVERSE_MAP * 0.9;
+        return;
+    }
+
+    if projection.scale > SWITCH_TO_PAN_MODE {
         for motion in ev_motion.read() {
             if mouse_button_input.pressed(MouseButton::Left) {
                 let mut delta = motion.delta.normalize() * time.delta_seconds() * CAMERA_PAN_SPEED;

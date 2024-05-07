@@ -25,9 +25,7 @@ pub struct Worm {
 #[reflect(Component)]
 pub struct WormSegment;
 
-pub fn build_worm(c: &mut ChildBuilder, position: Vec2) {
-    let mut rng = thread_rng();
-
+pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
     let size = rng.gen_range(1. ..=10.);
     let length = rng.gen_range(5..=50);
     let speed = rng.gen_range(100. ..=1000.);
@@ -45,14 +43,7 @@ pub fn build_worm(c: &mut ChildBuilder, position: Vec2) {
             .with_scale(Vec3::splat(size));
 
     c.spawn((
-        HandleLoaderBundle {
-            loader: SpriteLoader {
-                texture_path: "sprites/worm_head.png".to_string(),
-                color,
-            },
-            transform,
-            ..default()
-        },
+        Name::new("Worm"),
         Worm {
             length,
             speed,
@@ -60,6 +51,14 @@ pub fn build_worm(c: &mut ChildBuilder, position: Vec2) {
             change_direction_cooldown: Timer::from_seconds(change_direction_every, TimerMode::Once),
             seed: rng.gen(),
             wiggle_amplitude,
+        },
+        HandleLoaderBundle {
+            loader: SpriteLoader {
+                texture_path: "sprites/worm_head.png".to_string(),
+                color,
+            },
+            transform,
+            ..default()
         },
     ))
     .with_children(|c| {

@@ -28,6 +28,7 @@ pub struct Asteroid {
 
 #[derive(Bundle)]
 pub struct AsteroidBundle {
+    name: Name,
     asteroid: Asteroid,
     astre_bundle: AstreBundle,
     orbit: Orbit,
@@ -48,9 +49,7 @@ impl Material2d for AsteroidMaterial {
     }
 }
 
-pub fn build_asteroid_belt(c: &mut ChildBuilder) {
-    let mut rng = thread_rng();
-
+pub fn build_asteroid_belt(c: &mut ChildBuilder, rng: &mut StdRng) {
     let radius: f32 = rng.gen_range(10_000.0..100_000.0);
     let nb_asteroids = rng.gen_range(10..100);
 
@@ -64,21 +63,25 @@ pub fn build_asteroid_belt(c: &mut ChildBuilder) {
         let z = i as f32 / nb_asteroids as f32;
         let position = Vec3::new(local_radius * angle.cos(), local_radius * angle.sin(), z);
 
-        build_asteroid(c, position);
+        build_asteroid(c, rng, position);
     }
 }
 
-fn build_asteroid(c: &mut ChildBuilder, position: Vec3) {
-    let seed = random::<u64>();
-    let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
+fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
+    let seed_asteroid = rng.gen::<u64>();
+    let mut rng: StdRng = SeedableRng::seed_from_u64(seed_asteroid);
 
     let avg_radius = rng.gen_range(2.0 * ASTEROID_MIN_RADIUS..1000.0);
 
     let transform = Transform::from_translation(position);
 
     // Asteroids have only one element
-    let composition =
-        ElementOnAstre::random_elements(1, avg_radius as u32 * 10, &[ElementState::Solid]);
+    let composition = ElementOnAstre::random_elements(
+        &mut rng,
+        1,
+        avg_radius as u32 * 10,
+        &[ElementState::Solid],
+    );
 
     let initial_size = composition[0].quantity;
 
@@ -92,16 +95,17 @@ fn build_asteroid(c: &mut ChildBuilder, position: Vec3) {
     };
 
     c.spawn(AsteroidBundle {
+        name: Name::new("Asteroid"),
         asteroid: Asteroid {
             initial_size,
             rotation_speed,
         },
-        orbit: Orbit::new(),
+        orbit: Orbit::new(&mut rng),
         astre_bundle: AstreBundle::new(avg_radius, 0.0, composition),
         loader: HandleLoaderBundle {
             loader: MaterialLoader {
                 material,
-                mesh_type: MeshType::RandomPolygon(seed, avg_radius),
+                mesh_type: MeshType::RandomPolygon(seed_asteroid, avg_radius),
             },
             transform,
             ..default()

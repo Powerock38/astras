@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use rand::Rng;
+use rand::prelude::*;
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
@@ -10,8 +10,7 @@ pub struct Orbit {
 }
 
 impl Orbit {
-    pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+    pub fn new(rng: &mut StdRng) -> Self {
         let speed =
             rng.gen_range((PI / 1000.)..=PI / 100.) * if rng.gen_bool(0.5) { 1. } else { -1. }; // * random direction
         Self { speed }

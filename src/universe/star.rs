@@ -3,7 +3,7 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::Material2d,
 };
-use rand::Rng;
+use rand::prelude::*;
 
 use crate::{
     items::{ElementOnAstre, ElementState},
@@ -13,9 +13,10 @@ use crate::{
 
 #[derive(Bundle)]
 pub struct StarBundle {
-    pub star: Star,
-    pub astre_bundle: AstreBundle,
-    pub loader: HandleLoaderBundle<MaterialLoader<StarMaterial>>,
+    name: Name,
+    star: Star,
+    astre_bundle: AstreBundle,
+    loader: HandleLoaderBundle<MaterialLoader<StarMaterial>>,
 }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
@@ -38,18 +39,23 @@ impl Material2d for StarMaterial {
 #[reflect(Component)]
 pub struct Star;
 
-pub fn build_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children: u32) {
-    let mut rng = rand::thread_rng();
-
+pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
     let transform = Transform::from_translation(position.extend(0.));
+
+    let radius = rng.gen_range((5000.)..10000.);
+
+    let nb_planets = rng.gen_range(5..=15);
 
     let orbit_distance = radius * 2.;
 
     let number_of_elements = rng.gen_range(1..=3);
 
+    let max_quantity = rng.gen_range(100_000..=100_000_000);
+
     let composition = ElementOnAstre::random_elements(
+        rng,
         number_of_elements,
-        rng.gen_range(100_000..=100_000_000),
+        max_quantity,
         &[ElementState::Gas, ElementState::Plasma],
     );
 
@@ -67,6 +73,7 @@ pub fn build_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children
     };
 
     c.spawn(StarBundle {
+        name: Name::new("Star"),
         star: Star,
         astre_bundle: AstreBundle::new(radius, 0., composition),
         loader: HandleLoaderBundle {
@@ -79,8 +86,8 @@ pub fn build_star(c: &mut ChildBuilder, radius: f32, position: Vec2, nb_children
         },
     })
     .with_children(|c| {
-        build_planet_children(c, radius, orbit_distance, nb_children, 0);
+        build_planet_children(c, rng, radius, orbit_distance, nb_planets, 0);
 
-        build_asteroid_belt(c);
+        build_asteroid_belt(c, rng);
     });
 }

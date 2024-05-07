@@ -44,6 +44,7 @@ pub fn build_ship(c: &mut ChildBuilder) {
 
     // Ship is just a SpatialBundle
     c.spawn((
+        Name::new("Ship"),
         Ship {
             speed: Vec2::new(0., 0.),
             max_speed: 50.,

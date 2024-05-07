@@ -109,6 +109,8 @@ pub fn update_dockable_on_astre(
                 commands.entity(entity_dockable).remove::<DockableOnAstre>();
                 continue;
             }
+
+            println!("Docking {entity_dockable:?} on astre {entity_astre:?}!");
         } else {
             // If dockable is instant_or_despawn and we didn't find an astre, remove the Entity
             if dockable.instant_or_despawn {
@@ -130,6 +132,8 @@ pub fn update_dockable_on_astre(
                     .set_parent(entity_solar_system);
 
                 dockable.on_astre = None;
+
+                println!("Undocking {entity_dockable:?}!");
             }
         }
     }

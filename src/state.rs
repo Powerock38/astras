@@ -4,11 +4,18 @@ use bevy::prelude::*;
 pub enum GameState {
     #[default]
     MainMenu,
-    Game,
+    GameSolarSystem,
+    GameUniverseMap,
 }
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct GameplaySet;
+pub struct MainMenuSet;
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct MainMenuSet;
+pub struct GameSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct UniverseMapSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SolarSystemSet;

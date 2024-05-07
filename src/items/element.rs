@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::{seq::IteratorRandom, Rng};
+use rand::prelude::*;
 
 use crate::universe::{PlanetColors, NB_COLORS};
 
@@ -31,12 +31,11 @@ pub struct ElementOnAstre {
 
 impl ElementOnAstre {
     pub fn random_elements(
+        mut rng: &mut StdRng,
         n: u32,
         max_quantity: u32,
         states: &[ElementState],
     ) -> Vec<ElementOnAstre> {
-        let mut rng = rand::thread_rng();
-
         ELEMENTS
             .entries()
             .filter_map(|(id, element)| {

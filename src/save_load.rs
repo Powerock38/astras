@@ -154,5 +154,5 @@ pub fn finish_load_solar_system(
         commands.entity(dynamic_scene).despawn_recursive();
     }
 
-    next_state.set(GameState::Game);
+    next_state.set(GameState::GameSolarSystem);
 }
