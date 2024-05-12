@@ -13,7 +13,7 @@ const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
 const CAMEAR_DOLLY_SPEED: f32 = 0.00001;
 const CAMERA_ZOOM_SPEED: f32 = 2.0;
 const CAMERA_CHANGE_LERP: f32 = 0.1;
-const CAMERA_PAN_SPEED: f32 = 0.1;
+const CAMERA_PAN_SPEED: f32 = 0.07;
 
 const BASE_SCALE: f32 = 100.0;
 const SWITCH_TO_PAN_MODE: f32 = 30.0;
@@ -86,14 +86,14 @@ pub fn update_camera(
 
     if projection.scale > SWITCH_TO_UNIVERSE_MAP {
         next_state.set(GameState::GameUniverseMap);
-        projection.scale = SWITCH_TO_UNIVERSE_MAP * 0.9;
+        projection.scale = SWITCH_TO_UNIVERSE_MAP;
         return;
     }
 
     if projection.scale > SWITCH_TO_PAN_MODE {
         for motion in ev_motion.read() {
             if mouse_button_input.pressed(MouseButton::Left) {
-                let mut delta = motion.delta.normalize() * time.delta_seconds() * CAMERA_PAN_SPEED;
+                let mut delta = motion.delta * time.delta_seconds() * CAMERA_PAN_SPEED;
                 delta.y *= -1.;
                 projection.viewport_origin += delta;
             }

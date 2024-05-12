@@ -12,14 +12,15 @@ use crate::{
 const OBSERVABLE_UNIVERSE_RADIUS: i32 = 5;
 const SOLAR_SYSTEMS_SPACING: f32 = 1_000_000.0;
 const POSITION_MAX_OFFSET: f32 = SOLAR_SYSTEMS_SPACING * 0.5;
-
-const BASE_SCALE: f32 = 100.0;
-const PAN_SPEED: f32 = 0.2;
+const SOLAR_SYSTEMS_SCALE: f32 = 0.1;
+const BASE_SCALE: f32 = 600.0;
+const PAN_SPEED: f32 = 0.1;
+const PAN_KEYBOARD_SPEED: f32 = 1.0;
 const ZOOM_SPEED: f32 = 2.0;
-const SWITCH_TO_SOLAR_SYSTEM: f32 = 50.0;
+const SWITCH_TO_SOLAR_SYSTEM: f32 = 500.0;
 
 #[derive(Component)]
-pub struct UniverseMapDependent;
+pub struct UniverseMap;
 
 #[derive(Component)]
 pub struct UniverseMapCamera;
@@ -42,9 +43,9 @@ pub fn spawn_universe_map(
     commands
         .spawn((
             Name::new("UniverseMap"),
-            UniverseMapDependent,
+            UniverseMap,
             SpatialBundle {
-                transform: Transform::from_scale(Vec3::splat(0.1)),
+                transform: Transform::from_scale(Vec3::splat(SOLAR_SYSTEMS_SCALE)),
                 ..default()
             },
         ))
@@ -77,7 +78,6 @@ pub fn spawn_universe_map(
                         c.spawn((
                             Name::new("UniverseMapCamera"),
                             UniverseMapCamera,
-                            UniverseMapDependent,
                             Camera2dBundle {
                                 camera: Camera {
                                     order: 1,
@@ -101,11 +101,11 @@ pub fn spawn_universe_map(
 
 pub fn clean_universe_map(
     mut commands: Commands,
-    q_universe_map: Query<Entity, With<UniverseMapDependent>>,
+    q_universe_map: Query<Entity, With<UniverseMap>>,
     mut q_main_camera: Query<&mut Camera, With<MainCamera>>,
     mut q_solar_systems: Query<&mut Visibility, With<SolarSystem>>,
 ) {
-    for entity in q_universe_map.iter() {
+    if let Ok(entity) = q_universe_map.get_single() {
         commands.entity(entity).despawn_recursive();
     }
 
@@ -123,10 +123,11 @@ pub fn update_universe_map(
     mut ev_scroll: EventReader<MouseWheel>,
     mut ev_motion: EventReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
-    mut q_projection: Query<&mut OrthographicProjection, With<UniverseMapCamera>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut q_camera: Query<(&mut Transform, &mut OrthographicProjection), With<UniverseMapCamera>>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    let Some(mut projection) = q_projection.iter_mut().next() else {
+    let Some((mut transform, mut projection)) = q_camera.iter_mut().next() else {
         return;
     };
 
@@ -138,12 +139,33 @@ pub fn update_universe_map(
         next_state.set(GameState::GameSolarSystem);
     }
 
-    //TODO: improve + support keyboard
-    for motion in ev_motion.read() {
-        if mouse_button_input.pressed(MouseButton::Left) {
-            let mut delta = motion.delta.normalize() * time.delta_seconds() * PAN_SPEED;
+    let mut camera_delta = Vec2::ZERO;
+
+    if mouse_button_input.pressed(MouseButton::Left) {
+        for motion in ev_motion.read() {
+            let mut delta = motion.delta * time.delta_seconds() * PAN_SPEED;
             delta.y *= -1.;
-            projection.viewport_origin += delta;
+            camera_delta -= delta;
         }
     }
+
+    if keyboard_input.any_pressed(vec![KeyCode::ArrowLeft, KeyCode::KeyA]) {
+        camera_delta.x -= time.delta_seconds() * PAN_KEYBOARD_SPEED;
+    }
+
+    if keyboard_input.any_pressed(vec![KeyCode::ArrowRight, KeyCode::KeyD]) {
+        camera_delta.x += time.delta_seconds() * PAN_KEYBOARD_SPEED;
+    }
+
+    if keyboard_input.any_pressed(vec![KeyCode::ArrowUp, KeyCode::KeyW]) {
+        camera_delta.y += time.delta_seconds() * PAN_KEYBOARD_SPEED;
+    }
+
+    if keyboard_input.any_pressed(vec![KeyCode::ArrowDown, KeyCode::KeyS]) {
+        camera_delta.y -= time.delta_seconds() * PAN_KEYBOARD_SPEED;
+    }
+
+    camera_delta *= SOLAR_SYSTEMS_SPACING;
+    transform.translation.x += camera_delta.x;
+    transform.translation.y += camera_delta.y;
 }
