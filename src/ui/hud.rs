@@ -3,7 +3,7 @@ use bevy_mod_picking::prelude::*;
 
 use crate::{
     buildings::{PlacingBuilding, BUILDINGS},
-    ui::{build_building_ui, spawn_inventory_ui, UiButtonBundle},
+    ui::{build_building_ui, spawn_inventory_ui, NotificationZone, UiButtonBundle},
     universe::{MainCamera, Ship},
 };
 
@@ -70,6 +70,21 @@ pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamer
                         height: Val::Percent(80.0),
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
+                        ..default()
+                    },
+                    ..default()
+                },
+                Pickable::IGNORE,
+            ));
+
+            c.spawn((
+                NotificationZone,
+                NodeBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        bottom: Val::Px(5.0),
+                        right: Val::Px(5.0),
+                        flex_direction: FlexDirection::Column,
                         ..default()
                     },
                     ..default()

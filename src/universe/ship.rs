@@ -4,7 +4,8 @@ use rand::prelude::SliceRandom;
 
 use crate::{
     buildings::PlacingBuilding,
-    items::{Inventory, ELEMENTS},
+    items::{Inventory, ELEMENTS, ITEMS},
+    ui::NotificationEvent,
     universe::{Astre, DockableOnAstre, Laser, LaserBundle, LaserMaterial},
     HandleLoaderBundle, MaterialLoader, MeshType, SpriteLoader,
 };
@@ -142,6 +143,7 @@ pub fn update_ship_mining(
     listener: Listener<Pointer<Down>>,
     mut q_ship: Query<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
     mut q_astres: Query<&mut Inventory, (With<Astre>, Without<Ship>)>,
+    mut ev_notif: EventWriter<NotificationEvent>,
 ) {
     let Some((ship_entity, ship, transform, mut inventory)) = q_ship.iter_mut().next() else {
         return;
@@ -200,6 +202,13 @@ pub fn update_ship_mining(
                             },
                         });
                     });
+
+                    let item = ITEMS.get(item_id).unwrap();
+
+                    ev_notif.send(NotificationEvent(format!(
+                        "Mined {} (x{quantity})",
+                        item.name
+                    )));
                 }
             }
         }

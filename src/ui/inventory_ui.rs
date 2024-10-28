@@ -72,6 +72,26 @@ pub fn update_inventory_ui(
                 ..default()
             })
             .with_children(|c| {
+                c.spawn(TextBundle::from_section(
+                    "Inventory:",
+                    TextStyle {
+                        color: Color::srgb(0.9, 0.9, 0.9),
+                        font_size: 24.0,
+                        ..default()
+                    },
+                ));
+
+                if inventory.items().is_empty() {
+                    c.spawn(TextBundle::from_section(
+                        "Empty",
+                        TextStyle {
+                            color: Color::srgb(0.9, 0.9, 0.9),
+                            font_size: 18.0,
+                            ..default()
+                        },
+                    ));
+                }
+
                 for (id, quantity) in inventory.items() {
                     if ship.is_none() {
                         let callback = item_transfer_callback(
@@ -106,7 +126,7 @@ pub fn update_inventory_ui(
                 })
                 .with_children(|c| {
                     c.spawn(TextBundle::from_section(
-                        "This building needs:",
+                        "Currently requesting:",
                         TextStyle {
                             color: Color::srgb(0.9, 0.9, 0.9),
                             font_size: 24.0,

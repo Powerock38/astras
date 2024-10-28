@@ -47,6 +47,15 @@ pub fn spawn_crafter_ui(
                         ..default()
                     })
                     .with_children(|c| {
+                        c.spawn(TextBundle::from_section(
+                            "Recipes:",
+                            TextStyle {
+                                color: Color::srgb(0.9, 0.9, 0.9),
+                                font_size: 24.0,
+                                ..default()
+                            },
+                        ));
+
                         for recipe in crafter.possible_recipes() {
                             let callback = {
                                 let recipe = recipe.clone();

@@ -71,7 +71,10 @@ pub fn update_camera(
     q_window: Query<&Window>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    let window = q_window.single();
+    let Some(window) = q_window.iter().next() else {
+        return;
+    };
+
     let Some((camera, global_transform, mut projection)) = q_projection.iter_mut().next() else {
         return;
     };

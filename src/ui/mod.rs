@@ -8,6 +8,9 @@ pub use buttons::*;
 mod hud;
 pub use hud::*;
 
+mod notification;
+pub use notification::*;
+
 mod save_load_ui;
 pub use save_load_ui::*;
 
@@ -43,9 +46,12 @@ impl Plugin for UIPlugin {
                     scan_extractor_ui,
                     scan_spaceport_ui,
                     scan_logistic_freighter,
+                    read_notification_events,
+                    update_notifications,
                 )
                     .in_set(SolarSystemSet),
             ),
-        );
+        )
+        .add_event::<NotificationEvent>();
     }
 }
