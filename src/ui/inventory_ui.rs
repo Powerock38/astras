@@ -108,7 +108,7 @@ pub fn update_inventory_ui(
                     c.spawn(TextBundle::from_section(
                         "This building needs:",
                         TextStyle {
-                            color: Color::rgb(0.9, 0.9, 0.9),
+                            color: Color::srgb(0.9, 0.9, 0.9),
                             font_size: 24.0,
                             ..default()
                         },
@@ -145,7 +145,7 @@ pub fn build_item_ui(c: &mut ChildBuilder, id: &String, quantity: u32) {
         ..default()
     })
     .with_children(|c| {
-        let color = ELEMENTS.get(id).map_or(Color::WHITE, |e| e.color);
+        let color = ELEMENTS.get(id).map_or(Color::WHITE.into(), |e| e.color);
 
         c.spawn(NodeBundle {
             style: Style {
@@ -169,7 +169,7 @@ pub fn build_item_ui(c: &mut ChildBuilder, id: &String, quantity: u32) {
             c.spawn(TextBundle::from_section(
                 format!("{} (x{})", item.name, quantity),
                 TextStyle {
-                    color: Color::rgb(0.9, 0.9, 0.9),
+                    color: Color::srgb(0.9, 0.9, 0.9),
                     font_size: 18.0,
                     ..default()
                 },
@@ -178,7 +178,7 @@ pub fn build_item_ui(c: &mut ChildBuilder, id: &String, quantity: u32) {
             c.spawn(TextBundle::from_section(
                 item.description,
                 TextStyle {
-                    color: Color::rgb(0.9, 0.9, 0.9),
+                    color: Color::srgb(0.9, 0.9, 0.9),
                     font_size: 12.0,
                     ..default()
                 },

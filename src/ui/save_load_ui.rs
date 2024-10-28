@@ -58,7 +58,7 @@ pub fn build_load_ui(c: &mut ChildBuilder) {
                 c.spawn(TextBundle::from_section(
                     save_file,
                     TextStyle {
-                        color: Color::rgb(0.9, 0.9, 0.9),
+                        color: Color::srgb(0.9, 0.9, 0.9),
                         ..default()
                     },
                 ));

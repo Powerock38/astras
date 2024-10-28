@@ -32,7 +32,7 @@ pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
     let wiggle_amplitude = rng.gen_range(5. ..=15.);
     let change_direction_every = rng.gen_range(0.1..=3.);
 
-    let color = Color::rgb(
+    let color = Color::srgb(
         rng.gen_range(0. ..=1.),
         rng.gen_range(0. ..=1.),
         rng.gen_range(0. ..=1.),

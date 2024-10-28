@@ -4,12 +4,12 @@ use rand::prelude::*;
 use crate::universe::{PlanetColors, NB_COLORS};
 
 pub struct Element {
-    pub color: Color,
+    pub color: Srgba,
     pub state: ElementState,
 }
 
 impl Element {
-    pub const fn new(color: Color, state: ElementState) -> Self {
+    pub const fn new(color: Srgba, state: ElementState) -> Self {
         Self { color, state }
     }
 }
@@ -58,7 +58,7 @@ impl ElementOnAstre {
             .collect()
     }
 
-    pub fn get_color(elements: &[ElementOnAstre]) -> Color {
+    pub fn get_color(elements: &[ElementOnAstre]) -> LinearRgba {
         let total_mass: u32 = elements.iter().map(|e| e.quantity).sum();
 
         elements
@@ -68,7 +68,7 @@ impl ElementOnAstre {
                 let ratio = e.quantity as f32 / total_mass as f32;
                 element.color * ratio
             })
-            .fold(Color::BLACK, |acc, c| acc + c)
+            .fold(Color::BLACK.into(), |acc, c| acc + c.into())
     }
 
     pub fn get_colors(elements: &[ElementOnAstre]) -> PlanetColors {
@@ -76,32 +76,34 @@ impl ElementOnAstre {
         elements.sort_by_key(|e| e.quantity);
 
         let mut color = elements.first().map(|e| ELEMENTS[e.id].color).unwrap();
-        let colors = &mut [color; NB_COLORS];
+        let colors = &mut [color.into(); NB_COLORS];
 
         for (i, color_item) in colors.iter_mut().enumerate().skip(1) {
             color = elements.get(i).map_or(color, |e| ELEMENTS[e.id].color);
-            *color_item = color;
+            *color_item = color.into();
         }
 
         *colors
     }
 }
 
+use bevy::color::palettes::css::*;
+
 pub static ELEMENTS: phf::Map<&'static str, Element> = phf::phf_map! {
     // Atmosphere
-    "aer" => Element::new(Color::ANTIQUE_WHITE, ElementState::Gas),
+    "aer" => Element::new(ANTIQUE_WHITE, ElementState::Gas),
 
     // Oceans
-    "aqua" => Element::new(Color::BLUE, ElementState::Liquid),
+    "aqua" => Element::new(BLUE, ElementState::Liquid),
 
     // Rocks
-    "terra" => Element::new(Color::MAROON, ElementState::Solid),
-    "astrium" => Element::new(Color::SILVER, ElementState::Solid),
-    "electronite_ore" => Element::new(Color::ORANGE_RED, ElementState::Solid),
-    "quark_crystal" => Element::new(Color::FUCHSIA, ElementState::Solid),
+    "terra" => Element::new(MAROON, ElementState::Solid),
+    "astrium" => Element::new(SILVER, ElementState::Solid),
+    "electronite_ore" => Element::new(ORANGE_RED, ElementState::Solid),
+    "quark_crystal" => Element::new(FUCHSIA, ElementState::Solid),
 
     // Stars
-    "photonite" => Element::new(Color::YELLOW, ElementState::Plasma),
-    "neutronite" => Element::new(Color::AQUAMARINE, ElementState::Plasma),
-    "gravitonite" => Element::new(Color::RED, ElementState::Plasma),
+    "photonite" => Element::new(YELLOW, ElementState::Plasma),
+    "neutronite" => Element::new(AQUAMARINE, ElementState::Plasma),
+    "gravitonite" => Element::new(RED, ElementState::Plasma),
 };

@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
 #[derive(Bundle)]
 pub struct UiButtonBundle {
@@ -41,7 +41,7 @@ pub fn update_ui_buttons(
         match *interaction {
             Interaction::Pressed => {
                 *color = PRESSED_BUTTON.into();
-                border_color.0 = Color::RED;
+                border_color.0 = bevy::color::palettes::css::RED.into();
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();

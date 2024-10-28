@@ -37,7 +37,7 @@ pub fn setup_main_menu(mut commands: Commands) {
                 parent.spawn(TextBundle::from_section(
                     "New game",
                     TextStyle {
-                        color: Color::rgb(0.9, 0.9, 0.9),
+                        color: Color::srgb(0.9, 0.9, 0.9),
                         ..default()
                     },
                 ));

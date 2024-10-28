@@ -211,7 +211,7 @@ pub fn spawn_building(
                     HandleLoaderBundle {
                         loader: SpriteLoader {
                             texture_path: format!("sprites/{}.png", building.sprite_name),
-                            color: Color::rgba(1., 1., 1., 0.5),
+                            color: Color::srgba(1., 1., 1., 0.5),
                         },
                         transform,
                         ..default()

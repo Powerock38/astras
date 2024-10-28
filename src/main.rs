@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::Uuid};
+use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 use buildings::BuildingsPlugin;
 use handle_loader::*;
@@ -8,6 +8,7 @@ use save_load::*;
 use state::*;
 use ui::UIPlugin;
 use universe::UniversePlugin;
+use uuid::Uuid;
 
 mod buildings;
 mod handle_loader;

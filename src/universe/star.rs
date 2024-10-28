@@ -22,7 +22,7 @@ pub struct StarBundle {
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct StarMaterial {
     #[uniform(0)]
-    pub color: Color,
+    pub color: LinearRgba,
     #[uniform(0)]
     pub seed: f32,
     #[uniform(0)]

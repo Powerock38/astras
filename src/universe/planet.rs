@@ -15,7 +15,7 @@ use crate::{
 
 pub const NB_COLORS: usize = 3;
 
-pub type PlanetColors = [Color; NB_COLORS];
+pub type PlanetColors = [LinearRgba; NB_COLORS];
 
 #[derive(Bundle)]
 pub struct PlanetBundle {
@@ -45,7 +45,7 @@ pub struct PlanetMaterial {
     #[uniform(0)]
     pub atmosphere_density: f32,
     #[uniform(0)]
-    pub atmosphere_color: Color,
+    pub atmosphere_color: LinearRgba,
     #[uniform(0)]
     pub atmosphere_speed: f32,
     #[uniform(0)]

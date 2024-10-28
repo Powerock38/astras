@@ -32,7 +32,7 @@ impl Default for HudWindow {
                     padding: UiRect::all(Val::Px(10.)),
                     ..default()
                 },
-                background_color: Color::rgba(0.1, 0.1, 0.1, 0.5).into(),
+                background_color: Color::srgba(0.1, 0.1, 0.1, 0.5).into(),
                 ..default()
             },
         }

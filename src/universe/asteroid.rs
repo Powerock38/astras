@@ -38,7 +38,7 @@ pub struct AsteroidBundle {
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct AsteroidMaterial {
     #[uniform(0)]
-    pub color: Color,
+    pub color: LinearRgba,
     #[uniform(0)]
     pub seed: f32,
 }

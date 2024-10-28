@@ -24,7 +24,7 @@ impl Laser {
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct LaserMaterial {
     #[uniform(0)]
-    pub color: Color,
+    pub color: LinearRgba,
     #[uniform(0)]
     pub seed: f32,
 }
@@ -36,7 +36,7 @@ impl Material2d for LaserMaterial {
 }
 
 impl LaserMaterial {
-    pub fn new(color: Color) -> Self {
+    pub fn new(color: LinearRgba) -> Self {
         let mut rng = rand::thread_rng();
 
         LaserMaterial {

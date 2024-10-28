@@ -1,4 +1,5 @@
-use bevy::{prelude::*, utils::Uuid};
+use bevy::prelude::*;
+use uuid::Uuid;
 
 use crate::items::{Inventory, ItemMap};
 

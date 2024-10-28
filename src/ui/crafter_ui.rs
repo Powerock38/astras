@@ -100,7 +100,7 @@ pub fn spawn_crafter_ui(
                                                     c.spawn(TextBundle::from_section(
                                                         "Needs",
                                                         TextStyle {
-                                                            color: Color::rgb(0.9, 0.9, 0.9),
+                                                            color: Color::srgb(0.9, 0.9, 0.9),
                                                             font_size: 18.0,
                                                             ..default()
                                                         },
@@ -128,7 +128,7 @@ fn build_item_list_ui(c: &mut ChildBuilder, items: &[(&str, u32)]) {
             c.spawn(TextBundle::from_section(
                 "+",
                 TextStyle {
-                    color: Color::rgb(0.9, 0.9, 0.9),
+                    color: Color::srgb(0.9, 0.9, 0.9),
                     font_size: 18.0,
                     ..default()
                 },
@@ -166,7 +166,7 @@ pub fn build_building_ui(c: &mut ChildBuilder, id: &str, asset_server: &Res<Asse
         c.spawn(TextBundle::from_section(
             building.name,
             TextStyle {
-                color: Color::rgb(0.9, 0.9, 0.9),
+                color: Color::srgb(0.9, 0.9, 0.9),
                 font_size: 18.0,
                 ..default()
             },

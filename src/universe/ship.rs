@@ -174,7 +174,9 @@ pub fn update_ship_mining(
                     astre_inventory.transfer_to(&mut inventory, item_id.to_string(), quantity);
 
                     // Laser beam
-                    let color = ELEMENTS.get(item_id).map_or(Color::WHITE, |e| e.color);
+                    let color = ELEMENTS
+                        .get(item_id)
+                        .map_or(Color::WHITE.into(), |e| e.color.into());
 
                     let relative_position = ship_position - position;
                     let angle = relative_position.y.atan2(relative_position.x);

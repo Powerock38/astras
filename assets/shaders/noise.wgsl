@@ -70,7 +70,7 @@ fn nestedNoise(p: vec2<f32>, seed: f32) -> f32 {
 
 fn randvec2f(co: vec2f) -> vec2f {
     return vec2(
-        fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453123),
-        fract(cos(dot(co.yx,vec2(8.64947,45.097))) * 43758.5453123)
+        fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453123),
+        fract(cos(dot(co.yx, vec2(8.64947, 45.097))) * 43758.5453123)
     ) * 2.0 - 1.0;
 }

@@ -1,5 +1,6 @@
-use bevy::{prelude::*, utils::Uuid};
+use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
+use uuid::Uuid;
 
 use crate::{
     items::{ElementOnAstre, Inventory},

@@ -57,7 +57,8 @@ pub fn save_solar_system(
             commands.remove_resource::<SaveGame>();
             println!("Saving scene: {}", save_game.0);
 
-            let app_type_registry = world.resource::<AppTypeRegistry>().clone();
+            let type_registry_arc = &**world.resource::<AppTypeRegistry>();
+            let type_registry = type_registry_arc.read();
 
             let solar_system = q_solar_system.single();
 
@@ -81,7 +82,7 @@ pub fn save_solar_system(
                 .remove_empty_entities()
                 .build();
 
-            match scene.serialize_ron(&app_type_registry) {
+            match scene.serialize(&type_registry) {
                 Ok(serialized) => {
                     let save_name = save_game.0.clone();
 
