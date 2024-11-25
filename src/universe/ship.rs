@@ -4,7 +4,7 @@ use rand::prelude::SliceRandom;
 
 use crate::{
     buildings::PlacingBuilding,
-    items::{Inventory, ELEMENTS, ITEMS},
+    items::{Inventory, ELEMENTS},
     ui::NotificationEvent,
     universe::{Astre, DockableOnAstre, Laser, LaserBundle, LaserMaterial},
     HandleLoaderBundle, MaterialLoader, MeshType, SpriteLoader,
@@ -166,14 +166,14 @@ pub fn update_ship_mining(
                 let mut rng = rand::thread_rng();
                 let item_ids = astre_inventory.all_ids();
                 let random_item_id =
-                    item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(id));
+                    item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(*id));
 
                 if let Ok(item_id) = random_item_id {
                     let quantity = astre_inventory
-                        .quantity(item_id)
+                        .quantity(*item_id)
                         .min(ship.mining_amount_per_tick);
 
-                    astre_inventory.transfer_to(&mut inventory, item_id.to_string(), quantity);
+                    astre_inventory.transfer_to(&mut inventory, *item_id, quantity);
 
                     // Laser beam
                     let color = ELEMENTS
@@ -203,7 +203,7 @@ pub fn update_ship_mining(
                         });
                     });
 
-                    let item = ITEMS.get(item_id).unwrap();
+                    let item = item_id.data();
 
                     ev_notif.send(NotificationEvent(format!(
                         "Mined {} (x{quantity})",

@@ -2,7 +2,7 @@ use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    buildings::{PlacingBuilding, BUILDINGS},
+    buildings::{BuildingId, PlacingBuilding},
     ui::{build_building_ui, spawn_inventory_ui, NotificationZone, UiButtonBundle},
     universe::{MainCamera, Ship},
 };
@@ -149,20 +149,19 @@ pub fn clear_ui_or_spawn_ship_ui(
                             ..default()
                         })
                         .with_children(|c| {
-                            for &building_id in BUILDINGS.keys() {
+                            for building_id in BuildingId::ALL {
                                 let callback =
                                     |_: &mut ListenerInput<Pointer<Click>>,
                                      ec: &mut EntityCommands| {
-                                        ec.commands().insert_resource(PlacingBuilding(
-                                            building_id.to_string(),
-                                        ));
+                                        ec.commands()
+                                            .insert_resource(PlacingBuilding(*building_id));
                                     };
 
                                 c.spawn(UiButtonBundle::new(
                                     On::<Pointer<Click>>::target_commands_mut(callback),
                                 ))
                                 .with_children(|c| {
-                                    build_building_ui(c, building_id, &asset_server);
+                                    build_building_ui(c, *building_id, &asset_server);
                                 });
                             }
                         });

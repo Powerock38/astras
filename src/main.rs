@@ -11,6 +11,7 @@ use universe::UniversePlugin;
 use uuid::Uuid;
 
 mod buildings;
+mod enum_map;
 mod handle_loader;
 mod items;
 mod main_menu;

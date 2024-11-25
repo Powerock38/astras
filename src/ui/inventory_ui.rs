@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    items::{Inventory, LogisticRequest, ELEMENTS, ITEMS},
+    items::{Inventory, ItemId, LogisticRequest, ELEMENTS},
     ui::UiButtonBundle,
     universe::{Ship, SHIP_ACTION_RANGE},
 };
@@ -94,19 +94,15 @@ pub fn update_inventory_ui(
 
                 for (id, quantity) in inventory.items() {
                     if ship.is_none() {
-                        let callback = item_transfer_callback(
-                            id.clone(),
-                            *quantity,
-                            inventory_ui.entity,
-                            false,
-                        );
+                        let callback =
+                            item_transfer_callback(*id, *quantity, inventory_ui.entity, false);
 
                         c.spawn(UiButtonBundle::new(On::<Pointer<Click>>::run(callback)))
                             .with_children(|c| {
-                                build_item_ui(c, id, *quantity);
+                                build_item_ui(c, *id, *quantity);
                             });
                     } else {
-                        build_item_ui(c, id, *quantity);
+                        build_item_ui(c, *id, *quantity);
                     }
                 }
             });
@@ -135,16 +131,12 @@ pub fn update_inventory_ui(
                     ));
 
                     for (id, quantity) in logistic_request.items() {
-                        let callback = item_transfer_callback(
-                            id.clone(),
-                            *quantity,
-                            inventory_ui.entity,
-                            true,
-                        );
+                        let callback =
+                            item_transfer_callback(*id, *quantity, inventory_ui.entity, true);
 
                         c.spawn(UiButtonBundle::new(On::<Pointer<Click>>::run(callback)))
                             .with_children(|c| {
-                                build_item_ui(c, id, *quantity);
+                                build_item_ui(c, *id, *quantity);
                             });
                     }
                 });
@@ -153,8 +145,9 @@ pub fn update_inventory_ui(
     }
 }
 
-pub fn build_item_ui(c: &mut ChildBuilder, id: &String, quantity: u32) {
-    let item = ITEMS.get(id).unwrap();
+pub fn build_item_ui(c: &mut ChildBuilder, id: ItemId, quantity: u32) {
+    let item = id.data();
+
     c.spawn(NodeBundle {
         style: Style {
             align_items: AlignItems::Center,
@@ -165,7 +158,7 @@ pub fn build_item_ui(c: &mut ChildBuilder, id: &String, quantity: u32) {
         ..default()
     })
     .with_children(|c| {
-        let color = ELEMENTS.get(id).map_or(Color::WHITE.into(), |e| e.color);
+        let color = ELEMENTS.get(&id).map_or(Color::WHITE.into(), |e| e.color);
 
         c.spawn(NodeBundle {
             style: Style {
@@ -208,7 +201,7 @@ pub fn build_item_ui(c: &mut ChildBuilder, id: &String, quantity: u32) {
 }
 
 fn item_transfer_callback(
-    id: String,
+    id: ItemId,
     quantity: u32,
     inventory_entity: Entity,
     from_ship: bool,
@@ -232,9 +225,9 @@ fn item_transfer_callback(
             < SHIP_ACTION_RANGE
         {
             if from_ship {
-                ship_inventory.transfer_to(&mut inventory, id.clone(), quantity);
+                ship_inventory.transfer_to(&mut inventory, id, quantity);
             } else {
-                inventory.transfer_to(&mut ship_inventory, id.clone(), quantity);
+                inventory.transfer_to(&mut ship_inventory, id, quantity);
             }
         }
     }

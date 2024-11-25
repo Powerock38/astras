@@ -139,12 +139,12 @@ pub fn update_logistic_freights(
                                 for (item_id, &quantity) in logistic_request.items() {
                                     let q = inventory.transfer_to(
                                         &mut requester_inventory,
-                                        item_id.to_string(),
+                                        *item_id,
                                         quantity.min(freight.max_amount_per_transfer),
                                     );
 
                                     if q != 0 {
-                                        println!("Transferred {q} {item_id}");
+                                        println!("Transferred {q} {item_id:?}");
                                         return; // wait for next tick
                                     }
                                 }
@@ -168,12 +168,12 @@ pub fn update_logistic_freights(
                                     for (item_id, &quantity) in logistic_request.items() {
                                         let q = provider_inventory.transfer_to(
                                             &mut inventory,
-                                            item_id.to_string(),
+                                            *item_id,
                                             quantity.min(freight.max_amount_per_transfer),
                                         );
 
                                         if q != 0 {
-                                            println!("Transferred {q} {item_id}");
+                                            println!("Transferred {q} {item_id:?}");
                                             return; // wait for next tick
                                         }
                                     }

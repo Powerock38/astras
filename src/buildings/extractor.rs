@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 
 use crate::{
-    items::{ElementState, Inventory, LogisticProvider, LogisticScope, ELEMENTS},
+    items::{ElementState, Inventory, ItemId, LogisticProvider, LogisticScope, ELEMENTS},
     universe::Astre,
 };
 
@@ -19,7 +19,7 @@ pub struct Extractor {
     cooldown: Timer,
     amount_per_tick: u32,
     element_state: ElementState,
-    cached_item_ids: Option<Vec<String>>,
+    cached_item_ids: Option<Vec<ItemId>>,
 }
 
 impl ExtractorBundle {
@@ -90,18 +90,14 @@ pub fn update_extractors(
             let mut rng = rand::thread_rng();
             if let Some(random_item_ids) = &extractor.cached_item_ids {
                 let random_item_id =
-                    random_item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(id));
+                    random_item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(*id));
 
                 if let Ok(item_id) = random_item_id {
                     let quantity = astre_inventory
-                        .quantity(item_id)
+                        .quantity(*item_id)
                         .min(extractor.amount_per_tick);
 
-                    astre_inventory.transfer_to(
-                        &mut extractor_inventory,
-                        item_id.clone(),
-                        quantity,
-                    );
+                    astre_inventory.transfer_to(&mut extractor_inventory, *item_id, quantity);
                 } else {
                     extractor.cached_item_ids = None;
                 }
@@ -113,9 +109,9 @@ pub fn update_extractors(
                         .filter(|id| {
                             ELEMENTS
                                 .get(*id)
-                                .map_or(false, |element| element.state == extractor.element_state)
+                                .is_some_and(|element| element.state == extractor.element_state)
                         })
-                        .map(|id| (*id).clone())
+                        .copied()
                         .collect::<Vec<_>>(),
                 );
             }

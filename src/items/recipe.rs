@@ -1,12 +1,16 @@
-type RecipeItemQuantities = &'static [(&'static str, u32)];
+use bevy::prelude::*;
 
-#[derive(Clone, Copy)]
+use crate::{buildings::BuildingId, enum_map, items::ItemId};
+
+type RecipeItemQuantities = &'static [(ItemId, u32)];
+
+#[derive(Clone, Copy, Debug)]
 pub enum RecipeOutputs {
     Items(RecipeItemQuantities),
-    Building(&'static str),
+    Building(BuildingId),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Recipe {
     inputs: RecipeItemQuantities,
     outputs: RecipeOutputs,
@@ -26,11 +30,7 @@ impl Recipe {
         }
     }
 
-    pub const fn new_building(
-        inputs: RecipeItemQuantities,
-        output: &'static str,
-        time: f32,
-    ) -> Self {
+    pub const fn new_building(inputs: RecipeItemQuantities, output: BuildingId, time: f32) -> Self {
         Self {
             inputs,
             outputs: RecipeOutputs::Building(output),
@@ -44,7 +44,7 @@ impl Recipe {
     }
 
     #[inline]
-    pub fn inputs(&self) -> &'static [(&'static str, u32)] {
+    pub fn inputs(&self) -> RecipeItemQuantities {
         self.inputs
     }
 
@@ -67,32 +67,36 @@ impl Recipe {
     }
 }
 
-pub static RECIPES: phf::Map<&'static str, Recipe> = phf::phf_map! {
-    "smelt_electronite_ore" => Recipe::new_items(
-        &[("electronite_ore", 1)],
-        &[("electronite", 1)],
-         1.,
-    ),
-    "craft_plasma_fuel" => Recipe::new_items(
-        &[("photonite", 1), ("gravitonite", 1)],
-        &[("plasma_fuel", 1)],
-        1.,
-    ),
-    "craft_computing_core" => Recipe::new_items(
-        &[("electronite", 1), ("quark_crystal", 1)],
-        &[("computing_core", 1)],
-         2.,
-    ),
+enum_map! {
+    RecipeId => Recipe {
+        SmeltElectroniteOre = Recipe::new_items(
+            &[(ItemId::ElectroniteOre, 1)],
+            &[(ItemId::Electronite, 1)],
+            1.,
+        ),
 
-    // Buildings
-    "foundry" => Recipe::new_building(
-        &[("astrium", 10)],
-        "foundry",
-        3.,
-    ),
-    "spawn_cargo_shuttle" => Recipe::new_building(
-        &[("astrium", 10), ("computing_core", 3), ("plasma_fuel", 5)],
-        "cargo_shuttle",
-        3.,
-    ),
-};
+        CraftPlasmaFuel = Recipe::new_items(
+            &[(ItemId::Photonite, 1), (ItemId::Gravitonite, 1)],
+            &[(ItemId::PlasmaFuel, 1)],
+            1.,
+        ),
+
+        CraftComputingCore = Recipe::new_items(
+            &[(ItemId::Electronite, 1), (ItemId::QuarkCrystal, 1)],
+            &[(ItemId::ComputingCore, 1)],
+            2.,
+        ),
+
+        Foundry = Recipe::new_building(
+            &[(ItemId::Astrium, 10)],
+            BuildingId::Foundry,
+            3.,
+        ),
+
+        SpawnCargoShuttle = Recipe::new_building(
+            &[(ItemId::Astrium, 10), (ItemId::ComputingCore, 3), (ItemId::PlasmaFuel, 5)],
+            BuildingId::CargoShuttle,
+            3.,
+        ),
+    }
+}

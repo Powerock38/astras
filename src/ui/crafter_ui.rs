@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    buildings::{Crafter, BUILDINGS},
-    items::{RecipeOutputs, RECIPES},
+    buildings::{BuildingId, Crafter},
+    items::{ItemId, RecipeOutputs},
     ui::{build_item_ui, spawn_inventory_ui, HudWindow, HudWindowParent, UiButtonBundle},
 };
 
@@ -58,68 +58,69 @@ pub fn spawn_crafter_ui(
 
                         for recipe in crafter.possible_recipes() {
                             let callback = {
-                                let recipe = recipe.clone();
                                 move |mut q_crafter: Query<&mut Crafter>| {
                                     let mut crafter = q_crafter.get_mut(entity).unwrap();
-                                    crafter.set_recipe(recipe.clone());
+                                    crafter.set_recipe(*recipe);
                                 }
                             };
 
                             c.spawn(UiButtonBundle::new(On::<Pointer<Click>>::run(callback)))
                                 .with_children(|c| {
-                                    if let Some(recipe) = RECIPES.get(recipe) {
+                                    let recipe = recipe.data();
+
+                                    c.spawn(NodeBundle {
+                                        style: Style {
+                                            flex_direction: FlexDirection::Column,
+                                            row_gap: Val::Px(5.0),
+                                            ..default()
+                                        },
+                                        ..default()
+                                    })
+                                    .with_children(|c| {
                                         c.spawn(NodeBundle {
                                             style: Style {
-                                                flex_direction: FlexDirection::Column,
-                                                row_gap: Val::Px(5.0),
+                                                align_items: AlignItems::Center,
+                                                flex_direction: FlexDirection::Row,
+                                                column_gap: Val::Px(5.0),
+                                                ..default()
+                                            },
+                                            ..default()
+                                        })
+                                        .with_children(
+                                            |c| match recipe.outputs() {
+                                                RecipeOutputs::Items(outputs) => {
+                                                    build_item_list_ui(c, outputs);
+                                                }
+                                                RecipeOutputs::Building(id) => {
+                                                    build_building_ui(c, id, &asset_server);
+                                                }
+                                            },
+                                        );
+
+                                        c.spawn(NodeBundle {
+                                            style: Style {
+                                                align_items: AlignItems::Center,
+                                                flex_direction: FlexDirection::Row,
+                                                column_gap: Val::Px(5.0),
                                                 ..default()
                                             },
                                             ..default()
                                         })
                                         .with_children(
                                             |c| {
-                                                c.spawn(NodeBundle {
-                                                    style: Style {
-                                                        align_items: AlignItems::Center,
-                                                        flex_direction: FlexDirection::Row,
-                                                        column_gap: Val::Px(5.0),
+                                                c.spawn(TextBundle::from_section(
+                                                    "Needs",
+                                                    TextStyle {
+                                                        color: Color::srgb(0.9, 0.9, 0.9),
+                                                        font_size: 18.0,
                                                         ..default()
                                                     },
-                                                    ..default()
-                                                })
-                                                .with_children(|c| match recipe.outputs() {
-                                                    RecipeOutputs::Items(outputs) => {
-                                                        build_item_list_ui(c, outputs);
-                                                    }
-                                                    RecipeOutputs::Building(id) => {
-                                                        build_building_ui(c, id, &asset_server);
-                                                    }
-                                                });
+                                                ));
 
-                                                c.spawn(NodeBundle {
-                                                    style: Style {
-                                                        align_items: AlignItems::Center,
-                                                        flex_direction: FlexDirection::Row,
-                                                        column_gap: Val::Px(5.0),
-                                                        ..default()
-                                                    },
-                                                    ..default()
-                                                })
-                                                .with_children(|c| {
-                                                    c.spawn(TextBundle::from_section(
-                                                        "Needs",
-                                                        TextStyle {
-                                                            color: Color::srgb(0.9, 0.9, 0.9),
-                                                            font_size: 18.0,
-                                                            ..default()
-                                                        },
-                                                    ));
-
-                                                    build_item_list_ui(c, recipe.inputs());
-                                                });
+                                                build_item_list_ui(c, recipe.inputs());
                                             },
                                         );
-                                    }
+                                    });
                                 });
                         }
                     });
@@ -131,7 +132,7 @@ pub fn spawn_crafter_ui(
         });
 }
 
-fn build_item_list_ui(c: &mut ChildBuilder, items: &[(&str, u32)]) {
+fn build_item_list_ui(c: &mut ChildBuilder, items: &[(ItemId, u32)]) {
     for (i, (id, quantity)) in items.iter().enumerate() {
         if i != 0 {
             c.spawn(TextBundle::from_section(
@@ -144,11 +145,11 @@ fn build_item_list_ui(c: &mut ChildBuilder, items: &[(&str, u32)]) {
             ));
         }
 
-        build_item_ui(c, &(*id).to_string(), *quantity);
+        build_item_ui(c, *id, *quantity);
     }
 }
 
-pub fn build_building_ui(c: &mut ChildBuilder, id: &str, asset_server: &Res<AssetServer>) {
+pub fn build_building_ui(c: &mut ChildBuilder, id: BuildingId, asset_server: &Res<AssetServer>) {
     c.spawn(NodeBundle {
         style: Style {
             align_items: AlignItems::Center,
@@ -159,7 +160,7 @@ pub fn build_building_ui(c: &mut ChildBuilder, id: &str, asset_server: &Res<Asse
         ..default()
     })
     .with_children(|c| {
-        let building = BUILDINGS.get(id).unwrap();
+        let building = id.data();
         let icon = asset_server.load(building.sprite_path());
 
         c.spawn(ImageBundle {

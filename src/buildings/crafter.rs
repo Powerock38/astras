@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use crate::{
-    buildings::{Building, BUILDINGS},
-    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, Recipe, RECIPES},
+    buildings::Building,
+    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, RecipeId},
     HandleLoaderBundle, SpriteLoader,
 };
 
@@ -13,7 +13,7 @@ pub struct CrafterBundle {
 }
 
 impl CrafterBundle {
-    pub fn new(possible_recipes: Vec<String>) -> Self {
+    pub fn new(possible_recipes: Vec<RecipeId>) -> Self {
         Self {
             crafter: Crafter::new(possible_recipes, false),
             inventory: Inventory::new(100),
@@ -25,30 +25,30 @@ impl CrafterBundle {
 #[reflect(Component)]
 pub struct Crafter {
     recipe: Option<CrafterRecipe>,
-    possible_recipes: Vec<String>,
+    possible_recipes: Vec<RecipeId>,
     cooldown: Timer,
     is_construction_site: bool,
 }
 
 impl Crafter {
-    pub fn new(possible_recipes: Vec<String>, is_construction_site: bool) -> Self {
+    pub fn new(possible_recipes: Vec<RecipeId>, is_construction_site: bool) -> Self {
         Self {
             recipe: if possible_recipes.len() == 1 {
-                Some(CrafterRecipe::new(possible_recipes[0].clone()))
+                Some(CrafterRecipe::new(possible_recipes[0]))
             } else {
                 None
             },
-            possible_recipes: possible_recipes.iter().map(ToString::to_string).collect(),
+            possible_recipes,
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
             is_construction_site,
         }
     }
 
-    pub fn set_recipe(&mut self, recipe: String) {
+    pub fn set_recipe(&mut self, recipe: RecipeId) {
         self.recipe = Some(CrafterRecipe::new(recipe));
     }
 
-    pub fn possible_recipes(&self) -> &Vec<String> {
+    pub fn possible_recipes(&self) -> &Vec<RecipeId> {
         &self.possible_recipes
     }
 
@@ -60,13 +60,13 @@ impl Crafter {
 
 #[derive(Reflect, Default)]
 pub struct CrafterRecipe {
-    recipe: String,
+    recipe: RecipeId,
     progress: Timer,
 }
 
 impl CrafterRecipe {
-    pub fn new(recipe: String) -> Self {
-        let duration = RECIPES.get(&recipe).map_or(1.0, Recipe::time);
+    pub fn new(recipe: RecipeId) -> Self {
+        let duration = recipe.data().time();
         Self {
             progress: Timer::from_seconds(duration, TimerMode::Once),
             recipe,
@@ -91,17 +91,17 @@ pub fn update_crafters(
         // If a recipe is selected
         if let Some(recipe_crafter) = &mut crafter.recipe {
             // Try crafting
-            match inventory.can_craft(&recipe_crafter.recipe) {
+            match inventory.can_craft(recipe_crafter.recipe) {
                 // Craft
                 CanCraftResult::Yes => {
                     commands.entity(entity).remove::<LogisticRequest>();
 
                     if recipe_crafter.progress.tick(time.delta()).finished() {
                         recipe_crafter.progress.reset();
-                        let building_output = inventory.craft(&recipe_crafter.recipe);
+                        let building_output = inventory.craft(recipe_crafter.recipe);
 
                         // SPAWN BUILDING if output is a building
-                        if let Some(building) = building_output.and_then(|b| BUILDINGS.get(&b)) {
+                        if let Some(building) = building_output.map(|b| b.data()) {
                             println!("Crafted building: {}", building.name);
 
                             if crafter.is_construction_site {

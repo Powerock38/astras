@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use std::sync::LazyLock;
+
+use bevy::{prelude::*, utils::hashbrown::HashMap};
 use rand::prelude::*;
 
 use crate::universe::{PlanetColors, NB_COLORS};
@@ -25,7 +27,7 @@ pub enum ElementState {
 
 #[derive(Clone, Copy)]
 pub struct ElementOnAstre {
-    pub id: &'static str,
+    pub id: ItemId,
     pub quantity: u32,
 }
 
@@ -37,7 +39,7 @@ impl ElementOnAstre {
         states: &[ElementState],
     ) -> Vec<ElementOnAstre> {
         ELEMENTS
-            .entries()
+            .iter()
             .filter_map(|(id, element)| {
                 if states.contains(&element.state) {
                     Some(*id)
@@ -64,7 +66,7 @@ impl ElementOnAstre {
         elements
             .iter()
             .map(|e| {
-                let element = &ELEMENTS[e.id];
+                let element = &ELEMENTS[&e.id];
                 let ratio = e.quantity as f32 / total_mass as f32;
                 element.color * ratio
             })
@@ -75,11 +77,11 @@ impl ElementOnAstre {
         let mut elements = elements.to_vec();
         elements.sort_by_key(|e| e.quantity);
 
-        let mut color = elements.first().map(|e| ELEMENTS[e.id].color).unwrap();
+        let mut color = elements.first().map(|e| ELEMENTS[&e.id].color).unwrap();
         let colors = &mut [color.into(); NB_COLORS];
 
         for (i, color_item) in colors.iter_mut().enumerate().skip(1) {
-            color = elements.get(i).map_or(color, |e| ELEMENTS[e.id].color);
+            color = elements.get(i).map_or(color, |e| ELEMENTS[&e.id].color);
             *color_item = color.into();
         }
 
@@ -89,21 +91,34 @@ impl ElementOnAstre {
 
 use bevy::color::palettes::css::*;
 
-pub static ELEMENTS: phf::Map<&'static str, Element> = phf::phf_map! {
-    // Atmosphere
-    "aer" => Element::new(ANTIQUE_WHITE, ElementState::Gas),
+use super::ItemId;
 
-    // Oceans
-    "aqua" => Element::new(BLUE, ElementState::Liquid),
-
-    // Rocks
-    "terra" => Element::new(MAROON, ElementState::Solid),
-    "astrium" => Element::new(SILVER, ElementState::Solid),
-    "electronite_ore" => Element::new(ORANGE_RED, ElementState::Solid),
-    "quark_crystal" => Element::new(FUCHSIA, ElementState::Solid),
-
-    // Stars
-    "photonite" => Element::new(YELLOW, ElementState::Plasma),
-    "neutronite" => Element::new(AQUAMARINE, ElementState::Plasma),
-    "gravitonite" => Element::new(RED, ElementState::Plasma),
-};
+pub static ELEMENTS: LazyLock<HashMap<ItemId, Element>> = LazyLock::new(|| {
+    HashMap::from([
+        // Atmosphere
+        (ItemId::Aer, Element::new(ANTIQUE_WHITE, ElementState::Gas)),
+        // Oceans
+        (ItemId::Aqua, Element::new(BLUE, ElementState::Liquid)),
+        // Rocks
+        (ItemId::Terra, Element::new(MAROON, ElementState::Solid)),
+        (ItemId::Astrium, Element::new(SILVER, ElementState::Solid)),
+        (
+            ItemId::ElectroniteOre,
+            Element::new(ORANGE_RED, ElementState::Solid),
+        ),
+        (
+            ItemId::QuarkCrystal,
+            Element::new(FUCHSIA, ElementState::Solid),
+        ),
+        // Stars
+        (
+            ItemId::Photonite,
+            Element::new(YELLOW, ElementState::Plasma),
+        ),
+        (
+            ItemId::Neutronite,
+            Element::new(AQUAMARINE, ElementState::Plasma),
+        ),
+        (ItemId::Gravitonite, Element::new(RED, ElementState::Plasma)),
+    ])
+});

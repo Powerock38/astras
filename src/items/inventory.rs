@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
-use crate::items::{ElementOnAstre, ItemMap, RecipeOutputs, RECIPES};
+use super::{ItemId, RecipeId};
+use crate::{
+    buildings::BuildingId,
+    items::{ElementOnAstre, ItemMap, RecipeOutputs},
+};
 
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
@@ -17,19 +21,19 @@ impl Inventory {
         }
     }
 
-    fn add(&mut self, id: &String, quantity: u32) {
-        if let Some(item) = self.items.get_mut(id) {
+    fn add(&mut self, id: ItemId, quantity: u32) {
+        if let Some(item) = self.items.get_mut(&id) {
             *item += quantity;
         } else {
-            self.items.insert(id.clone(), quantity);
+            self.items.insert(id, quantity);
         }
     }
 
-    fn remove(&mut self, id: &String, quantity: u32) {
-        if let Some(item) = self.items.get_mut(id) {
+    fn remove(&mut self, id: ItemId, quantity: u32) {
+        if let Some(item) = self.items.get_mut(&id) {
             *item -= quantity;
             if *item == 0 {
-                self.items.remove(id);
+                self.items.remove(&id);
             }
         }
     }
@@ -44,7 +48,7 @@ impl Inventory {
     }
 
     // Best-effort item transfer
-    pub fn transfer_to(&mut self, other: &mut Inventory, id: String, max_quantity: u32) -> u32 {
+    pub fn transfer_to(&mut self, other: &mut Inventory, id: ItemId, max_quantity: u32) -> u32 {
         if let Some(item_quantity) = self.items.get_mut(&id) {
             // Adjust quantity if self doesn't have enough quantity
             let mut real_quantity = (*item_quantity).min(max_quantity);
@@ -56,8 +60,8 @@ impl Inventory {
             }
 
             if real_quantity > 0 {
-                self.remove(&id, real_quantity);
-                other.add(&id, real_quantity);
+                self.remove(id, real_quantity);
+                other.add(id, real_quantity);
 
                 return real_quantity;
             }
@@ -66,10 +70,8 @@ impl Inventory {
         0
     }
 
-    pub fn can_craft(&self, recipe: &String) -> CanCraftResult {
-        let Some(recipe) = RECIPES.get(recipe) else {
-            return CanCraftResult::Yes;
-        };
+    pub fn can_craft(&self, recipe: RecipeId) -> CanCraftResult {
+        let recipe = recipe.data();
 
         let has_space_for_outputs = self.size == 0
             || recipe
@@ -84,7 +86,7 @@ impl Inventory {
         let has_inputs = recipe
             .inputs()
             .iter()
-            .all(|(id, quantity)| self.quantity(&(*id).to_string()) >= *quantity);
+            .all(|(id, quantity)| self.quantity(*id) >= *quantity);
 
         if !has_inputs {
             return CanCraftResult::MissingInputs(
@@ -92,11 +94,8 @@ impl Inventory {
                     .inputs()
                     .iter()
                     .filter_map(|(id, quantity)| {
-                        if self.quantity(&(*id).to_string()) < *quantity {
-                            Some((
-                                (*id).to_string(),
-                                quantity - self.quantity(&(*id).to_string()),
-                            ))
+                        if self.quantity(*id) < *quantity {
+                            Some((*id, quantity - self.quantity(*id)))
                         } else {
                             None
                         }
@@ -109,23 +108,21 @@ impl Inventory {
     }
 
     // if the recipe output is a building, returns its id
-    pub fn craft(&mut self, recipe: &String) -> Option<String> {
+    pub fn craft(&mut self, recipe: RecipeId) -> Option<BuildingId> {
         if self.can_craft(recipe).yes() {
-            let Some(recipe) = RECIPES.get(recipe) else {
-                return Some(recipe.clone());
-            };
+            let recipe = recipe.data();
 
             for (id, quantity) in recipe.inputs() {
-                self.remove(&(*id).to_string(), *quantity);
+                self.remove(*id, *quantity);
             }
 
             match recipe.outputs() {
                 RecipeOutputs::Items(items) => {
                     for (id, quantity) in items {
-                        self.add(&(*id).to_string(), *quantity);
+                        self.add(*id, *quantity);
                     }
                 }
-                RecipeOutputs::Building(name) => return Some(name.to_string()),
+                RecipeOutputs::Building(id) => return Some(id),
             }
         }
 
@@ -133,13 +130,13 @@ impl Inventory {
     }
 
     #[inline]
-    pub fn quantity(&self, id: &String) -> u32 {
-        *self.items.get(id).unwrap_or(&0)
+    pub fn quantity(&self, id: ItemId) -> u32 {
+        *self.items.get(&id).unwrap_or(&0)
     }
 
     #[inline]
-    pub fn all_ids(&self) -> Vec<String> {
-        self.items.keys().cloned().collect()
+    pub fn all_ids(&self) -> Vec<ItemId> {
+        self.items.keys().copied().collect()
     }
 
     #[inline]
@@ -158,7 +155,7 @@ impl From<Vec<ElementOnAstre>> for Inventory {
         let mut items = ItemMap::default();
 
         for element in elements {
-            items.insert(element.id.to_string(), element.quantity);
+            items.insert(element.id, element.quantity);
         }
 
         Self { items, size: 0 }

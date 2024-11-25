@@ -5,105 +5,117 @@ use crate::{
         Crafter, CrafterBundle, ExtractorBundle, LogisticFreightBundle, SpaceportBundle,
         WarehouseBundle,
     },
-    items::{Inventory, Recipe, RECIPES},
+    enum_map,
+    items::{Inventory, RecipeId},
     universe::{DockableOnAstre, SHIP_Z},
     HandleLoaderBundle, SpriteLoader,
 };
 
-pub static BUILDINGS: phf::Map<&'static str, BuildingData> = phf::phf_map! {
-    "quarry" => BuildingData {
-        name: "Quarry",
-        sprite_name: "quarry",
-        location: PlacingLocation::Surface,
-        on_build: |c| {
-            c.insert(ExtractorBundle::new_solid());
+enum_map! {
+    BuildingId => BuildingData {
+        Quarry = BuildingData {
+            name: "Quarry",
+            sprite_name: "quarry",
+            location: PlacingLocation::Surface,
+            on_build: |c| {
+                c.insert(ExtractorBundle::new_solid());
+            },
         },
-    },
-    "liquid_extractor" => BuildingData {
-        name: "Liquid Extractor",
-        sprite_name: "quarry",
-        location: PlacingLocation::Surface,
-        on_build: |c| {
-            c.insert(ExtractorBundle::new_liquid());
+
+        LiquidExtractor = BuildingData {
+            name: "Liquid Extractor",
+            sprite_name: "quarry",
+            location: PlacingLocation::Surface,
+            on_build: |c| {
+                c.insert(ExtractorBundle::new_liquid());
+            },
         },
-    },
-    "atmosphere_harvester" => BuildingData {
-        name: "Atmosphere Harvester",
-        sprite_name: "quarry",
-        location: PlacingLocation::Atmosphere,
-        on_build: |c| {
-            c.insert(ExtractorBundle::new_gas());
+
+        AtmosphereHarvester = BuildingData {
+            name: "Atmosphere Harvester",
+            sprite_name: "quarry",
+            location: PlacingLocation::Atmosphere,
+            on_build: |c| {
+                c.insert(ExtractorBundle::new_gas());
+            },
         },
-    },
-    "plasma_catalyser" => BuildingData {
-        name: "Plasma Catalyser",
-        sprite_name: "quarry",
-        location: PlacingLocation::SurfaceOrAtmosphere,
-        on_build: |c| {
-            c.insert(ExtractorBundle::new_plasma());
+
+        PlasmaCatalyser = BuildingData {
+            name: "Plasma Catalyser",
+            sprite_name: "quarry",
+            location: PlacingLocation::SurfaceOrAtmosphere,
+            on_build: |c| {
+                c.insert(ExtractorBundle::new_plasma());
+            },
         },
-    },
-    "warehouse" => BuildingData {
-        name: "Warehouse",
-        sprite_name: "warehouse",
-        location: PlacingLocation::Surface,
-        on_build: |c| {
-            c.insert(WarehouseBundle::default());
+
+        Warehouse = BuildingData {
+            name: "Warehouse",
+            sprite_name: "warehouse",
+            location: PlacingLocation::Surface,
+            on_build: |c| {
+                c.insert(WarehouseBundle::default());
+            },
         },
-    },
-    "cargo_shuttle" => BuildingData {
-        name: "Cargo Shuttle",
-        sprite_name: "cargo_shuttle",
-        location: PlacingLocation::SurfaceOrAtmosphere,
-        on_build: |c| {
-            c.insert(LogisticFreightBundle::new_planet());
+
+        CargoShuttle = BuildingData {
+            name: "Cargo Shuttle",
+            sprite_name: "cargo_shuttle",
+            location: PlacingLocation::SurfaceOrAtmosphere,
+            on_build: |c| {
+                c.insert(LogisticFreightBundle::new_planet());
+            },
         },
-    },
-    "spaceport" => BuildingData {
-        name: "Spaceport",
-        sprite_name: "spaceport",
-        location: PlacingLocation::Atmosphere,
-        on_build: |c| {
-            c.insert(SpaceportBundle::default());
+
+        Spaceport = BuildingData {
+            name: "Spaceport",
+            sprite_name: "spaceport",
+            location: PlacingLocation::Atmosphere,
+            on_build: |c| {
+                c.insert(SpaceportBundle::default());
+            },
         },
-    },
-    "interplanetary_freighter" => BuildingData {
-        name: "Interplanetary Freighter",
-        sprite_name: "cargo_shuttle",
-        location: PlacingLocation::Atmosphere,
-        on_build: |c| {
-            c.insert(LogisticFreightBundle::new_solar_system());
+
+        InterplanetaryFreighter = BuildingData {
+            name: "Interplanetary Freighter",
+            sprite_name: "cargo_shuttle",
+            location: PlacingLocation::Atmosphere,
+            on_build: |c| {
+                c.insert(LogisticFreightBundle::new_solar_system());
+            },
         },
-    },
-    "foundry" => BuildingData {
-        name: "Foundry",
-        sprite_name: "foundry",
-        location: PlacingLocation::Surface,
-        on_build: |c| {
-            c.insert(CrafterBundle::new(vec![
-                "smelt_electronite_ore".to_string(),
-                "craft_plasma_fuel".to_string(),
-            ]));
+
+        Foundry = BuildingData {
+            name: "Foundry",
+            sprite_name: "foundry",
+            location: PlacingLocation::Surface,
+            on_build: |c| {
+                c.insert(CrafterBundle::new(vec![
+                    RecipeId::SmeltElectroniteOre,
+                    RecipeId::CraftPlasmaFuel,
+                ]));
+            },
         },
-    },
-    "assembler" => BuildingData {
-        name: "Assembler",
-        sprite_name: "assembler",
-        location: PlacingLocation::Surface,
-        on_build: |c| {
-            c.insert(CrafterBundle::new(vec![
-                "craft_computing_core".to_string(),
-                "spawn_cargo_shuttle".to_string(),
-            ]));
+
+        Assembler = BuildingData {
+            name: "Assembler",
+            sprite_name: "assembler",
+            location: PlacingLocation::Surface,
+            on_build: |c| {
+                c.insert(CrafterBundle::new(vec![
+                    RecipeId::CraftComputingCore,
+                    RecipeId::SpawnCargoShuttle,
+                ]));
+            },
         },
-    },
-};
+    }
+}
 
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
 const BUILDING_SCALE: f32 = 3.0;
 
 #[derive(Resource, Debug)]
-pub struct PlacingBuilding(pub String);
+pub struct PlacingBuilding(pub BuildingId);
 
 #[derive(Clone, Copy, Debug)]
 pub struct BuildingData {
@@ -131,7 +143,7 @@ pub enum PlacingLocation {
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct ConstructionSite {
-    pub building: String,
+    pub building: BuildingId,
 }
 
 #[derive(Component)]
@@ -159,7 +171,7 @@ pub fn spawn_building(
             return;
         };
 
-        let building = BUILDINGS.get(&placing_building.0).unwrap();
+        let building = placing_building.0.data();
 
         if let Some(world_position) = camera.viewport_to_world_2d(camera_transform, cursor_position)
         {
@@ -177,24 +189,24 @@ pub fn spawn_building(
 
                 // Place building
                 if left {
-                    let recipe_needed_space = RECIPES
-                        .get(&placing_building.0)
-                        .map_or(0, Recipe::inputs_quantity);
+                    if let Some(recipe_id) = RecipeId::from_str(placing_building.0.to_str()) {
+                        let recipe_needed_space = recipe_id.data().inputs_quantity();
 
-                    // recycle the building preview entity to keep sprite texture
-                    commands
-                        .entity(building_preview_entity)
-                        .retain::<(SpriteBundle, SpriteLoader)>()
-                        .insert((
-                            ConstructionSite {
-                                building: placing_building.0.clone(),
-                            },
-                            DockableOnAstre::instant_location(building.location),
-                            Crafter::new(vec![placing_building.0.clone()], true),
-                            Inventory::new(recipe_needed_space),
-                        ));
+                        // recycle the building preview entity to keep sprite texture
+                        commands
+                            .entity(building_preview_entity)
+                            .retain::<(SpriteBundle, SpriteLoader)>()
+                            .insert((
+                                ConstructionSite {
+                                    building: placing_building.0,
+                                },
+                                DockableOnAstre::instant_location(building.location),
+                                Crafter::new(vec![recipe_id], true),
+                                Inventory::new(recipe_needed_space),
+                            ));
 
-                    commands.remove_resource::<PlacingBuilding>();
+                        commands.remove_resource::<PlacingBuilding>();
+                    }
                 }
 
                 // Cancel placing building

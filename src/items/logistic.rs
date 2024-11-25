@@ -52,7 +52,7 @@ impl LogisticRequest {
 
     pub fn compute_fulfillment_percentage(&self, provider_inventory: &Inventory) -> u32 {
         self.items.iter().fold(0, |total, (id, quantity)| {
-            total + provider_inventory.quantity(id).min(*quantity)
+            total + provider_inventory.quantity(*id).min(*quantity)
         }) * 100
             / (self
                 .items
