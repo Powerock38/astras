@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    items::{Inventory, ItemId, LogisticRequest, ELEMENTS},
+    data::{ItemId, ELEMENTS},
+    items::{Inventory, LogisticRequest},
     ui::UiButtonBundle,
     universe::{Ship, SHIP_ACTION_RANGE},
 };

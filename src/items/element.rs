@@ -1,9 +1,10 @@
-use std::sync::LazyLock;
-
-use bevy::{prelude::*, utils::hashbrown::HashMap};
+use bevy::prelude::*;
 use rand::prelude::*;
 
-use crate::universe::{PlanetColors, NB_COLORS};
+use crate::{
+    data::{ItemId, ELEMENTS},
+    universe::{PlanetColors, NB_COLORS},
+};
 
 pub struct Element {
     pub color: Srgba,
@@ -88,37 +89,3 @@ impl ElementOnAstre {
         *colors
     }
 }
-
-use bevy::color::palettes::css::*;
-
-use super::ItemId;
-
-pub static ELEMENTS: LazyLock<HashMap<ItemId, Element>> = LazyLock::new(|| {
-    HashMap::from([
-        // Atmosphere
-        (ItemId::Aer, Element::new(ANTIQUE_WHITE, ElementState::Gas)),
-        // Oceans
-        (ItemId::Aqua, Element::new(BLUE, ElementState::Liquid)),
-        // Rocks
-        (ItemId::Terra, Element::new(MAROON, ElementState::Solid)),
-        (ItemId::Astrium, Element::new(SILVER, ElementState::Solid)),
-        (
-            ItemId::ElectroniteOre,
-            Element::new(ORANGE_RED, ElementState::Solid),
-        ),
-        (
-            ItemId::QuarkCrystal,
-            Element::new(FUCHSIA, ElementState::Solid),
-        ),
-        // Stars
-        (
-            ItemId::Photonite,
-            Element::new(YELLOW, ElementState::Plasma),
-        ),
-        (
-            ItemId::Neutronite,
-            Element::new(AQUAMARINE, ElementState::Plasma),
-        ),
-        (ItemId::Gravitonite, Element::new(RED, ElementState::Plasma)),
-    ])
-});

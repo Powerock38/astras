@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 use crate::{
     buildings::Building,
-    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope, RecipeId},
+    data::RecipeId,
+    items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope},
     HandleLoaderBundle, SpriteLoader,
 };
 

@@ -97,7 +97,6 @@ macro_rules! register_material {
             $app
                 .add_plugins(Material2dPlugin::<$material>::default())
                 .register_type::<$crate::MaterialLoader<$material>>()
-                .register_type::<$material>()
                 .add_systems(Update, $crate::scan_atres_material_loaders::<$material>.in_set($crate::GameSet));
         )*
     };

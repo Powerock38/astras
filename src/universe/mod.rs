@@ -53,7 +53,6 @@ impl Plugin for UniversePlugin {
             .register_type::<Star>()
             .register_type::<Asteroid>()
             .register_type::<Laser>()
-            .register_type::<PlanetColors>()
             .register_type::<DockableOnAstre>()
             .register_type::<Orbit>()
             .register_type::<Worm>()

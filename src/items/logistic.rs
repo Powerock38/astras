@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::entity::MapEntities, prelude::*};
 use uuid::Uuid;
 
 use crate::items::{Inventory, ItemMap};
@@ -17,6 +17,14 @@ pub struct LogisticRequest {
     items: ItemMap,
     scope: LogisticScope,
     pub freights: Vec<Entity>,
+}
+
+impl MapEntities for LogisticRequest {
+    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
+        for entity in &mut self.freights {
+            *entity = entity_mapper.map_entity(*entity);
+        }
+    }
 }
 
 impl LogisticRequest {
@@ -70,6 +78,14 @@ pub struct LogisticProvider {
     pub freights: Vec<Entity>,
 }
 
+impl MapEntities for LogisticProvider {
+    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
+        for entity in &mut self.freights {
+            *entity = entity_mapper.map_entity(*entity);
+        }
+    }
+}
+
 impl LogisticProvider {
     pub fn new(scope: LogisticScope) -> Self {
         Self {
@@ -89,6 +105,13 @@ pub struct LogisticJourney {
     request_id: Uuid,
     provider: Entity,
     requester: Entity,
+}
+
+impl MapEntities for LogisticJourney {
+    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
+        self.provider = entity_mapper.map_entity(self.provider);
+        self.requester = entity_mapper.map_entity(self.requester);
+    }
 }
 
 impl LogisticJourney {

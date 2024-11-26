@@ -1,115 +1,12 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
 use crate::{
-    buildings::{
-        Crafter, CrafterBundle, ExtractorBundle, LogisticFreightBundle, SpaceportBundle,
-        WarehouseBundle,
-    },
-    enum_map,
-    items::{Inventory, RecipeId},
+    buildings::Crafter,
+    data::{BuildingId, RecipeId},
+    items::{Inventory, RecipeOutputs},
     universe::{DockableOnAstre, SHIP_Z},
     HandleLoaderBundle, SpriteLoader,
 };
-
-enum_map! {
-    BuildingId => BuildingData {
-        Quarry = BuildingData {
-            name: "Quarry",
-            sprite_name: "quarry",
-            location: PlacingLocation::Surface,
-            on_build: |c| {
-                c.insert(ExtractorBundle::new_solid());
-            },
-        },
-
-        LiquidExtractor = BuildingData {
-            name: "Liquid Extractor",
-            sprite_name: "quarry",
-            location: PlacingLocation::Surface,
-            on_build: |c| {
-                c.insert(ExtractorBundle::new_liquid());
-            },
-        },
-
-        AtmosphereHarvester = BuildingData {
-            name: "Atmosphere Harvester",
-            sprite_name: "quarry",
-            location: PlacingLocation::Atmosphere,
-            on_build: |c| {
-                c.insert(ExtractorBundle::new_gas());
-            },
-        },
-
-        PlasmaCatalyser = BuildingData {
-            name: "Plasma Catalyser",
-            sprite_name: "quarry",
-            location: PlacingLocation::SurfaceOrAtmosphere,
-            on_build: |c| {
-                c.insert(ExtractorBundle::new_plasma());
-            },
-        },
-
-        Warehouse = BuildingData {
-            name: "Warehouse",
-            sprite_name: "warehouse",
-            location: PlacingLocation::Surface,
-            on_build: |c| {
-                c.insert(WarehouseBundle::default());
-            },
-        },
-
-        CargoShuttle = BuildingData {
-            name: "Cargo Shuttle",
-            sprite_name: "cargo_shuttle",
-            location: PlacingLocation::SurfaceOrAtmosphere,
-            on_build: |c| {
-                c.insert(LogisticFreightBundle::new_planet());
-            },
-        },
-
-        Spaceport = BuildingData {
-            name: "Spaceport",
-            sprite_name: "spaceport",
-            location: PlacingLocation::Atmosphere,
-            on_build: |c| {
-                c.insert(SpaceportBundle::default());
-            },
-        },
-
-        InterplanetaryFreighter = BuildingData {
-            name: "Interplanetary Freighter",
-            sprite_name: "cargo_shuttle",
-            location: PlacingLocation::Atmosphere,
-            on_build: |c| {
-                c.insert(LogisticFreightBundle::new_solar_system());
-            },
-        },
-
-        Foundry = BuildingData {
-            name: "Foundry",
-            sprite_name: "foundry",
-            location: PlacingLocation::Surface,
-            on_build: |c| {
-                c.insert(CrafterBundle::new(vec![
-                    RecipeId::SmeltElectroniteOre,
-                    RecipeId::CraftPlasmaFuel,
-                ]));
-            },
-        },
-
-        Assembler = BuildingData {
-            name: "Assembler",
-            sprite_name: "assembler",
-            location: PlacingLocation::Surface,
-            on_build: |c| {
-                c.insert(CrafterBundle::new(vec![
-                    RecipeId::CraftComputingCore,
-                    RecipeId::SpawnCargoShuttle,
-                ]));
-            },
-        },
-    }
-}
 
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
 const BUILDING_SCALE: f32 = 3.0;
@@ -189,7 +86,13 @@ pub fn spawn_building(
 
                 // Place building
                 if left {
-                    if let Some(recipe_id) = RecipeId::from_str(placing_building.0.to_str()) {
+                    if let Some(recipe_id) = RecipeId::ALL.iter().find(|recipe_id| match recipe_id
+                        .data()
+                        .outputs()
+                    {
+                        RecipeOutputs::Building(building_id) => building_id == placing_building.0,
+                        _ => false,
+                    }) {
                         let recipe_needed_space = recipe_id.data().inputs_quantity();
 
                         // recycle the building preview entity to keep sprite texture
@@ -201,11 +104,13 @@ pub fn spawn_building(
                                     building: placing_building.0,
                                 },
                                 DockableOnAstre::instant_location(building.location),
-                                Crafter::new(vec![recipe_id], true),
+                                Crafter::new(vec![*recipe_id], true),
                                 Inventory::new(recipe_needed_space),
                             ));
 
                         commands.remove_resource::<PlacingBuilding>();
+                    } else {
+                        println!("WARNING: Building {:?} has no recipe", placing_building.0);
                     }
                 }
 

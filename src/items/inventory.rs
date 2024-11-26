@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
-use super::{ItemId, RecipeId};
 use crate::{
-    buildings::BuildingId,
+    data::{BuildingId, ItemId, RecipeId},
     items::{ElementOnAstre, ItemMap, RecipeOutputs},
 };
 

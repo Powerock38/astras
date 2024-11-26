@@ -8,9 +8,9 @@ use save_load::*;
 use state::*;
 use ui::UIPlugin;
 use universe::UniversePlugin;
-use uuid::Uuid;
 
 mod buildings;
+mod data;
 mod enum_map;
 mod handle_loader;
 mod items;
@@ -25,16 +25,9 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(DefaultPickingPlugins)
         // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
-        // .insert_resource(DebugPickingMode::Noisy)
         .insert_resource(ClearColor(Color::BLACK))
         .register_type::<SaveName>()
         .register_type::<SpriteLoader>()
-        .register_type::<MeshType>()
-        .register_type::<TimerMode>()
-        .register_type::<Option<Uuid>>()
-        .register_type::<Option<Vec3>>()
-        .register_type::<Vec<String>>()
-        .register_type::<[u8; 32]>()
         .add_plugins((UniversePlugin, UIPlugin, ItemsPlugin, BuildingsPlugin))
         .configure_sets(
             Update,

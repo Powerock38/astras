@@ -2,7 +2,8 @@ use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    buildings::{BuildingId, PlacingBuilding},
+    buildings::PlacingBuilding,
+    data::BuildingId,
     ui::{build_building_ui, spawn_inventory_ui, NotificationZone, UiButtonBundle},
     universe::{MainCamera, Ship},
 };

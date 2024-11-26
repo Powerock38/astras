@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 
 use crate::{
-    items::{ElementState, Inventory, ItemId, LogisticProvider, LogisticScope, ELEMENTS},
+    data::{ItemId, ELEMENTS},
+    items::{ElementState, Inventory, LogisticProvider, LogisticScope},
     universe::Astre,
 };
 

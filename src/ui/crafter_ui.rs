@@ -2,8 +2,9 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::{
-    buildings::{BuildingId, Crafter},
-    items::{ItemId, RecipeOutputs},
+    buildings::Crafter,
+    data::{BuildingId, ItemId},
+    items::RecipeOutputs,
     ui::{build_item_ui, spawn_inventory_ui, HudWindow, HudWindowParent, UiButtonBundle},
 };
 
@@ -58,9 +59,10 @@ pub fn spawn_crafter_ui(
 
                         for recipe in crafter.possible_recipes() {
                             let callback = {
+                                let recipe = *recipe;
                                 move |mut q_crafter: Query<&mut Crafter>| {
                                     let mut crafter = q_crafter.get_mut(entity).unwrap();
-                                    crafter.set_recipe(*recipe);
+                                    crafter.set_recipe(recipe);
                                 }
                             };
 

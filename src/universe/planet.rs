@@ -8,7 +8,8 @@ use bevy::{
 use rand::prelude::*;
 
 use crate::{
-    items::{ElementOnAstre, ElementState, ELEMENTS},
+    data::ELEMENTS,
+    items::{ElementOnAstre, ElementState},
     universe::{AstreBundle, Orbit, Star},
     HandleLoaderBundle, MaterialLoader, MeshType,
 };

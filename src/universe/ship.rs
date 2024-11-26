@@ -4,7 +4,8 @@ use rand::prelude::SliceRandom;
 
 use crate::{
     buildings::PlacingBuilding,
-    items::{Inventory, ELEMENTS},
+    data::ELEMENTS,
+    items::Inventory,
     ui::NotificationEvent,
     universe::{Astre, DockableOnAstre, Laser, LaserBundle, LaserMaterial},
     HandleLoaderBundle, MaterialLoader, MeshType, SpriteLoader,

@@ -26,3 +26,25 @@ cast_precision_loss = "allow"
 cast_sign_loss = "allow"
 cast_lossless = "allow"
 needless_pass_by_value = "allow"
+match_wildcard_for_single_variants = "allow"
+
+# Dev optimizations
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+
+# Release optimizations
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"      # Optimize with size in mind (also try "z", sometimes it is better).
+strip = "debuginfo"
+# also try wasm-opt -Os

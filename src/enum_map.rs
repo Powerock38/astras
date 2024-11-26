@@ -31,27 +31,6 @@ macro_rules! enum_map {
                     )*
                 }
             }
-
-            #[allow(dead_code)]
-            pub fn to_str(self) -> &'static str {
-                match self {
-                    Self::$first_name => stringify!($first_name),
-                    $(
-                        Self::$name => stringify!($name),
-                    )*
-                }
-            }
-
-            #[allow(dead_code)]
-            pub fn from_str(s: &str) -> Option<Self> {
-                match s {
-                    stringify!($first_name) => Some(Self::$first_name),
-                    $(
-                        stringify!($name) => Some(Self::$name),
-                    )*
-                    _ => None,
-                }
-            }
         }
     }
 }
