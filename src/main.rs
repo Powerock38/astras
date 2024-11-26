@@ -25,6 +25,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(DefaultPickingPlugins)
         // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
+        // .add_plugins(bevy::diagnostic::LogDiagnosticsPlugin::default())
+        // .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .insert_resource(ClearColor(Color::BLACK))
         .register_type::<SaveName>()
         .register_type::<SpriteLoader>()

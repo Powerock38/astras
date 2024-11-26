@@ -66,7 +66,7 @@ impl Default for MeshType {
     }
 }
 
-pub fn scan_atres_material_loaders<M>(
+pub fn scan_material_loaders<M>(
     mut commands: Commands,
     mut materials: ResMut<Assets<M>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -97,7 +97,7 @@ macro_rules! register_material {
             $app
                 .add_plugins(Material2dPlugin::<$material>::default())
                 .register_type::<$crate::MaterialLoader<$material>>()
-                .add_systems(Update, $crate::scan_atres_material_loaders::<$material>.in_set($crate::GameSet));
+                .add_systems(Update, $crate::scan_material_loaders::<$material>.in_set($crate::GameSet));
         )*
     };
 }
