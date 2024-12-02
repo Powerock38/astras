@@ -1,7 +1,7 @@
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
+    sprite::{AlphaMode2d, Material2d},
 };
 use rand::Rng;
 
@@ -33,6 +33,10 @@ pub struct LaserMaterial {
 impl Material2d for LaserMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/laser.wgsl".into()
+    }
+
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Blend
     }
 }
 

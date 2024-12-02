@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
+    sprite::{AlphaMode2d, Material2d},
 };
 use rand::prelude::*;
 
@@ -48,6 +48,10 @@ pub struct PlanetMaterial {
 impl Material2d for PlanetMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/planet.wgsl".into()
+    }
+
+    fn alpha_mode(&self) -> AlphaMode2d {
+        AlphaMode2d::Blend
     }
 }
 
