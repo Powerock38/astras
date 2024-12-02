@@ -4,12 +4,13 @@ use crate::{
     buildings::Crafter,
     data::{BuildingId, RecipeId},
     items::{Inventory, RecipeOutputs},
-    universe::{DockableOnAstre, SHIP_Z},
+    universe::{Asteroid, Astre, DockableOnAstre, SHIP_Z},
     HandleLoaderBundle, SpriteLoader,
 };
 
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
 const BUILDING_SCALE: f32 = 3.0;
+const PLACING_ZONES_COLOR: Color = Color::srgba(0.5, 0.8, 0.8, 0.5);
 
 #[derive(Resource, Debug)]
 pub struct PlacingBuilding(pub BuildingId);
@@ -55,7 +56,7 @@ pub fn spawn_building(
     mouse_input: Res<ButtonInput<MouseButton>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     q_windows: Query<&Window, With<PrimaryWindow>>,
-    placing_building: Option<ResMut<PlacingBuilding>>,
+    placing_building: Option<Res<PlacingBuilding>>,
     mut q_building_preview: Query<(Entity, &mut Transform), With<BuildingPreview>>,
 ) {
     // Resource PlacingBuilding stores the building that is currently being placed
@@ -135,6 +136,40 @@ pub fn spawn_building(
                     },
                     BuildingPreview,
                 ));
+            }
+        }
+    }
+}
+
+pub fn draw_placing_zones(
+    mut gizmos: Gizmos,
+    placing_building: Option<Res<PlacingBuilding>>,
+    q_astre: Query<(&Astre, &GlobalTransform), Without<Asteroid>>,
+) {
+    if let Some(placing_building) = placing_building {
+        let location = placing_building.0.data().location;
+
+        for (astre, global_transform) in q_astre.iter() {
+            if matches!(
+                location,
+                PlacingLocation::Surface | PlacingLocation::SurfaceOrAtmosphere
+            ) {
+                gizmos.circle_2d(
+                    global_transform.translation().truncate(),
+                    astre.surface_radius(),
+                    PLACING_ZONES_COLOR,
+                );
+            }
+
+            if matches!(
+                location,
+                PlacingLocation::Atmosphere | PlacingLocation::SurfaceOrAtmosphere
+            ) {
+                gizmos.circle_2d(
+                    global_transform.translation().truncate(),
+                    astre.surface_radius() + astre.atmosphere_radius(),
+                    PLACING_ZONES_COLOR,
+                );
             }
         }
     }

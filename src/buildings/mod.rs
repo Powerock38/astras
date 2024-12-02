@@ -28,6 +28,7 @@ impl Plugin for BuildingsPlugin {
             Update,
             (
                 spawn_building,
+                draw_placing_zones,
                 update_extractors,
                 update_logistic_freights,
                 update_crafters,

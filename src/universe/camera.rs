@@ -83,9 +83,8 @@ pub fn update_camera(
         return;
     };
 
-    for scroll in ev_scroll.read() {
-        projection.scale *= 1. - CAMERA_ZOOM_SPEED * scroll.y * time.delta_seconds();
-    }
+    let scroll = ev_scroll.read().map(|scroll| scroll.y).sum::<f32>();
+    projection.scale *= 1. - CAMERA_ZOOM_SPEED * scroll * time.delta_seconds();
 
     if projection.scale > SWITCH_TO_UNIVERSE_MAP {
         next_state.set(GameState::GameUniverseMap);
@@ -104,6 +103,7 @@ pub fn update_camera(
     } else {
         let dolly_offset =
             (ship.speed() * CAMEAR_DOLLY_SPEED).clamp_length_max(CAMERA_DOLLY_MAX_LENGTH);
+
         projection.viewport_origin = projection
             .viewport_origin
             .lerp(dolly_offset + Vec2::new(0.5, 0.5), CAMERA_CHANGE_LERP);

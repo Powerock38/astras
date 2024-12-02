@@ -1,11 +1,18 @@
-# Use mold
+# Linux: mold
 [target.x86_64-unknown-linux-gnu]
 linker = "clang"
 rustflags = [
   "-C",
   "link-arg=-fuse-ld=/usr/bin/mold",
-  "-Zshare-generics=y",              # also use generic sharing (nightly)
+  "-Zshare-generics=y",
+  "-Zthreads=0",
 ]
+
+
+# Windows: LLD
+# [target.x86_64-pc-windows-msvc]
+# linker = "rust-lld.exe"
+# rustflags = ["-Zshare-generics=y", "-Zthreads=0"]
 
 
 # Use cranelift
