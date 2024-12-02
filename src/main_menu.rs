@@ -7,15 +7,12 @@ use crate::{
     GameState, SaveName,
 };
 
-#[derive(Component)]
-pub struct MainMenu;
-
 pub fn setup_main_menu(mut commands: Commands) {
-    commands.spawn((MainMenu, Camera2d));
+    commands.spawn((StateScoped(GameState::MainMenu), Camera2d));
 
     commands
         .spawn((
-            MainMenu,
+            StateScoped(GameState::MainMenu),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -56,10 +53,4 @@ pub fn spawn_new_game(
     spawn_solar_system(&mut commands, solar_system_position);
 
     next_state.set(GameState::GameSolarSystem);
-}
-
-pub fn clean_main_menu(mut commands: Commands, q: Query<Entity, With<MainMenu>>) {
-    for e in q.iter() {
-        commands.entity(e).despawn_recursive();
-    }
 }

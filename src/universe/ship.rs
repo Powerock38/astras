@@ -59,12 +59,8 @@ pub fn build_ship(c: &mut ChildBuilder) {
     ));
 }
 
-pub fn spawn_ship_sprite(mut commands: Commands, q_ship: Query<Entity, Added<Ship>>) {
-    let Some(ship) = q_ship.iter().next() else {
-        return;
-    };
-
-    commands.entity(ship).with_children(|c| {
+pub fn spawn_ship_sprite(mut commands: Commands, ship: Single<Entity, Added<Ship>>) {
+    commands.entity(*ship).with_children(|c| {
         // Ship sprite as a child of ship, so we can rotate the sprite without rotating camera
         c.spawn((
             ShipSprite,
@@ -79,54 +75,52 @@ pub fn spawn_ship_sprite(mut commands: Commands, q_ship: Query<Entity, Added<Shi
 pub fn update_ship(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q_ship: Query<(&mut Ship, &mut Transform, &DockableOnAstre), Without<ShipSprite>>,
-    mut q_ship_sprite: Query<&mut Transform, With<ShipSprite>>,
+    q_ship: Single<(&mut Ship, &mut Transform, &DockableOnAstre), Without<ShipSprite>>,
+    mut ship_sprite_transform: Single<&mut Transform, With<ShipSprite>>,
 ) {
-    for (mut ship, mut transform, dockable) in &mut q_ship {
-        let mut movement = Vec2::new(0., 0.);
+    let (mut ship, mut transform, dockable) = q_ship.into_inner();
 
-        if keyboard_input.pressed(KeyCode::Space) {
-            ship.speed *= 0.9;
-        }
+    let mut movement = Vec2::new(0., 0.);
 
-        if keyboard_input.any_pressed(vec![KeyCode::ArrowLeft, KeyCode::KeyA]) {
-            movement.x -= 1.;
-        }
-        if keyboard_input.any_pressed(vec![KeyCode::ArrowRight, KeyCode::KeyD]) {
-            movement.x += 1.;
-        }
-        if keyboard_input.any_pressed(vec![KeyCode::ArrowUp, KeyCode::KeyW]) {
-            movement.y += 1.;
-        }
-        if keyboard_input.any_pressed(vec![KeyCode::ArrowDown, KeyCode::KeyS]) {
-            movement.y -= 1.;
-        }
+    if keyboard_input.pressed(KeyCode::Space) {
+        ship.speed *= 0.9;
+    }
 
-        let acceleration = movement * ship.thrust;
+    if keyboard_input.any_pressed(vec![KeyCode::ArrowLeft, KeyCode::KeyA]) {
+        movement.x -= 1.;
+    }
+    if keyboard_input.any_pressed(vec![KeyCode::ArrowRight, KeyCode::KeyD]) {
+        movement.x += 1.;
+    }
+    if keyboard_input.any_pressed(vec![KeyCode::ArrowUp, KeyCode::KeyW]) {
+        movement.y += 1.;
+    }
+    if keyboard_input.any_pressed(vec![KeyCode::ArrowDown, KeyCode::KeyS]) {
+        movement.y -= 1.;
+    }
 
-        let max_speed = ship.max_speed;
+    let acceleration = movement * ship.thrust;
 
-        ship.speed += (acceleration * time.delta_secs()).clamp_length_max(max_speed);
+    let max_speed = ship.max_speed;
 
-        if dockable.is_docked() {
-            ship.speed *= 0.99;
-        }
+    ship.speed += (acceleration * time.delta_secs()).clamp_length_max(max_speed);
 
-        if ship.speed.length() < 0.001 {
-            ship.speed = Vec2::ZERO;
-        }
+    if dockable.is_docked() {
+        ship.speed *= 0.99;
+    }
 
-        transform.translation.x += ship.speed.x * time.delta_secs();
-        transform.translation.y += ship.speed.y * time.delta_secs();
+    if ship.speed.length() < 0.001 {
+        ship.speed = Vec2::ZERO;
+    }
 
-        // Sprite rotation
-        if let Some(mut sprite_transform) = q_ship_sprite.iter_mut().next() {
-            if ship.speed == Vec2::ZERO {
-                sprite_transform.rotation = Quat::from_rotation_z(0.);
-            } else {
-                sprite_transform.rotation = Quat::from_rotation_z(-ship.speed.angle_to(Vec2::Y));
-            }
-        }
+    transform.translation.x += ship.speed.x * time.delta_secs();
+    transform.translation.y += ship.speed.y * time.delta_secs();
+
+    // Sprite rotation
+    if ship.speed == Vec2::ZERO {
+        ship_sprite_transform.rotation = Quat::from_rotation_z(0.);
+    } else {
+        ship_sprite_transform.rotation = Quat::from_rotation_z(-ship.speed.angle_to(Vec2::Y));
     }
 }
 
@@ -134,13 +128,11 @@ pub fn update_ship_mining(
     mut trigger: Trigger<Pointer<Down>>,
     mut commands: Commands,
     placing_building: Option<Res<PlacingBuilding>>,
-    mut q_ship: Query<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
+    q_ship: Single<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
     mut q_astres: Query<&mut Inventory, (With<Astre>, Without<Ship>)>,
     mut ev_notif: EventWriter<NotificationEvent>,
 ) {
-    let Some((ship_entity, ship, transform, mut inventory)) = q_ship.iter_mut().next() else {
-        return;
-    };
+    let (ship_entity, ship, transform, mut inventory) = q_ship.into_inner();
 
     if placing_building.is_some() {
         return;

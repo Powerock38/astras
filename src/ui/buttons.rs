@@ -20,12 +20,12 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 pub struct UiButton;
 
 pub fn update_ui_buttons(
-    mut interaction_query: Query<
+    mut q_interactions: Query<
         (&Interaction, &mut BackgroundColor, &mut BorderColor),
         (Changed<Interaction>, With<Button>),
     >,
 ) {
-    for (interaction, mut color, mut border_color) in &mut interaction_query {
+    for (interaction, mut color, mut border_color) in &mut q_interactions {
         match *interaction {
             Interaction::Pressed => {
                 *color = PRESSED_BUTTON.into();

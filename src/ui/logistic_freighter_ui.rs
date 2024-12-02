@@ -16,9 +16,9 @@ use crate::{
 
 pub fn scan_logistic_freighter(
     mut commands: Commands,
-    q_cargo_shuttle: Query<(Entity, &LogisticFreight), Added<LogisticFreight>>,
+    q_cargo_shuttles: Query<(Entity, &LogisticFreight), Added<LogisticFreight>>,
 ) {
-    for (entity, logistic_freight) in q_cargo_shuttle.iter() {
+    for (entity, logistic_freight) in &q_cargo_shuttles {
         match logistic_freight.scope() {
             LogisticScope::Planet => {
                 commands.entity(entity).observe(spawn_cargo_shuttle_ui);
@@ -36,13 +36,12 @@ pub fn scan_logistic_freighter(
 pub fn spawn_cargo_shuttle_ui(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
-    q_window_parent: Query<Entity, With<HudWindowParent>>,
+    window_parent: Single<Entity, With<HudWindowParent>>,
 ) {
-    let parent = q_window_parent.single();
     let entity = trigger.entity();
 
     commands
-        .entity(parent)
+        .entity(*window_parent)
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
@@ -55,11 +54,10 @@ pub fn spawn_interplanetary_freighter_ui(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
-    q_window_parent: Query<Entity, With<HudWindowParent>>,
+    window_parent: Single<Entity, With<HudWindowParent>>,
     q_interplanetary_freighters: Query<&LogisticFreight>,
     q_providers: Query<Entity, With<LogisticProvider>>,
 ) {
-    let parent = q_window_parent.single();
     let entity = trigger.entity();
     let freight = q_interplanetary_freighters.get(entity).unwrap();
 
@@ -113,7 +111,7 @@ pub fn spawn_interplanetary_freighter_ui(
     };
 
     commands
-        .entity(parent)
+        .entity(*window_parent)
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {

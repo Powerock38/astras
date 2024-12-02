@@ -17,14 +17,10 @@ pub struct Notification {
 pub fn read_notification_events(
     mut commands: Commands,
     mut notification_events: EventReader<NotificationEvent>,
-    q_zone: Query<Entity, With<NotificationZone>>,
+    zone: Single<Entity, With<NotificationZone>>,
 ) {
-    let Some(zone) = q_zone.iter().next() else {
-        return;
-    };
-
     for event in notification_events.read() {
-        commands.entity(zone).with_children(|c| {
+        commands.entity(*zone).with_children(|c| {
             c.spawn((
                 Text::new(event.0.clone()),
                 TextFont {

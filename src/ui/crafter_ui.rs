@@ -7,8 +7,8 @@ use crate::{
     ui::{build_item_ui, spawn_inventory_ui, HudWindow, HudWindowParent, UiButton},
 };
 
-pub fn scan_crafter_ui(mut commands: Commands, q_crafter: Query<Entity, Added<Crafter>>) {
-    for entity in q_crafter.iter() {
+pub fn scan_crafter_ui(mut commands: Commands, q_crafters: Query<Entity, Added<Crafter>>) {
+    for entity in &q_crafters {
         commands.entity(entity).observe(spawn_crafter_ui);
     }
 }
@@ -16,16 +16,15 @@ pub fn scan_crafter_ui(mut commands: Commands, q_crafter: Query<Entity, Added<Cr
 pub fn spawn_crafter_ui(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
-    q_window_parent: Query<Entity, With<HudWindowParent>>,
+    window_parent: Single<Entity, With<HudWindowParent>>,
     q_crafter: Query<&Crafter>,
     asset_server: Res<AssetServer>,
 ) {
-    let parent = q_window_parent.single();
     let entity = trigger.entity();
     let crafter = q_crafter.get(entity).unwrap();
 
     commands
-        .entity(parent)
+        .entity(*window_parent)
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {

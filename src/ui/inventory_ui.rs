@@ -184,15 +184,13 @@ fn item_transfer_callback(
     from_ship: bool,
 ) -> impl FnMut(
     Trigger<Pointer<Click>>,
-    Query<(&mut Inventory, &GlobalTransform), With<Ship>>,
+    Single<(&mut Inventory, &GlobalTransform), With<Ship>>,
     Query<(&mut Inventory, &GlobalTransform), Without<Ship>>,
 ) {
     move |_trigger: Trigger<Pointer<Click>>,
-          mut q_ship: Query<(&mut Inventory, &GlobalTransform), With<Ship>>,
+          q_ship: Single<(&mut Inventory, &GlobalTransform), With<Ship>>,
           mut q_inventory: Query<(&mut Inventory, &GlobalTransform), Without<Ship>>| {
-        let Some((mut ship_inventory, ship_transform)) = q_ship.iter_mut().next() else {
-            return;
-        };
+        let (mut ship_inventory, ship_transform) = q_ship.into_inner();
 
         let Ok((mut inventory, transform)) = q_inventory.get_mut(inventory_entity) else {
             return;

@@ -32,26 +32,24 @@ impl DockableOnAstre {
 
 pub fn update_dockable_on_astre(
     mut commands: Commands,
+    q_solar_system: Single<(Entity, &GlobalTransform), With<SolarSystem>>,
     mut q_dockable: Query<(
         &mut DockableOnAstre,
         Entity,
         &mut Transform,
         &GlobalTransform,
     )>,
-    q_astre: Query<
+    q_astres: Query<
         (Entity, &Astre, &GlobalTransform),
         (Without<DockableOnAstre>, Without<Asteroid>),
     >,
-    q_solar_system: Query<(Entity, &GlobalTransform), With<SolarSystem>>,
 ) {
-    let Some(solar_system) = q_solar_system.iter().next() else {
-        return;
-    };
+    let (entity_solar_system, solar_system_global_transform) = q_solar_system.into_inner();
 
     for (mut dockable, entity_dockable, mut transform, global_transform) in &mut q_dockable {
         let mut on_astre_option: Option<(Entity, Uuid, &GlobalTransform, f32)> = None;
 
-        for (entity_astre, astre, astre_global_transform) in q_astre.iter() {
+        for (entity_astre, astre, astre_global_transform) in &q_astres {
             let distance = global_transform.translation().truncate()
                 - astre_global_transform.translation().truncate();
             let distance = distance.length();
@@ -122,7 +120,6 @@ pub fn update_dockable_on_astre(
 
             if dockable.on_astre.is_some() {
                 // Entity left astre, goes in referential of solar system
-                let (entity_solar_system, solar_system_global_transform) = solar_system;
 
                 *transform = global_transform.reparented_to(solar_system_global_transform);
                 if dockable.adjust_z {

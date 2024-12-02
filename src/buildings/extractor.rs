@@ -57,10 +57,10 @@ impl Extractor {
 
 pub fn update_extractors(
     time: Res<Time>,
-    mut q_extractor: Query<(&mut Extractor, &mut Inventory, &Parent), Without<Astre>>,
+    mut q_extractors: Query<(&mut Extractor, &mut Inventory, &Parent), Without<Astre>>,
     mut q_astre_inventories: Query<&mut Inventory, With<Astre>>,
 ) {
-    for (mut extractor, mut extractor_inventory, parent) in &mut q_extractor {
+    for (mut extractor, mut extractor_inventory, parent) in &mut q_extractors {
         extractor.cooldown.tick(time.delta());
 
         if extractor.cooldown.finished() && extractor_inventory.remaining_space() > 0 {

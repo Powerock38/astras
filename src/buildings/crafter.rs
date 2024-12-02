@@ -72,7 +72,7 @@ impl CrafterRecipe {
 pub fn update_crafters(
     mut commands: Commands,
     time: Res<Time>,
-    mut q_crafter: Query<(
+    mut q_crafters: Query<(
         Entity,
         &mut Crafter,
         &mut Inventory,
@@ -81,7 +81,7 @@ pub fn update_crafters(
         &Parent,
     )>,
 ) {
-    for (entity, mut crafter, mut inventory, logistic_request, transform, parent) in &mut q_crafter
+    for (entity, mut crafter, mut inventory, logistic_request, transform, parent) in &mut q_crafters
     {
         // If a recipe is selected
         if let Some(recipe_crafter) = &mut crafter.recipe {

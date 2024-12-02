@@ -7,14 +7,12 @@ use crate::{
 
 pub fn spawn_save_ui(
     mut commands: Commands,
-    q_window_parent: Query<Entity, With<HudWindowParent>>,
+    window_parent: Single<Entity, With<HudWindowParent>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyM) {
-        let parent = q_window_parent.single();
-
         commands
-            .entity(parent)
+            .entity(*window_parent)
             .despawn_descendants()
             .with_children(|c| {
                 c.spawn(HudWindow).with_children(|c| {

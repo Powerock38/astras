@@ -29,11 +29,7 @@ pub struct HudWindowDependent;
 )]
 pub struct HudWindow;
 
-pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamera>>) {
-    let Some(camera) = q_camera.iter().next() else {
-        return;
-    };
-
+pub fn setup_hud(mut commands: Commands, camera: Single<Entity, Added<MainCamera>>) {
     commands
         .spawn((
             Hud,
@@ -46,7 +42,7 @@ pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamer
                 ..default()
             },
             PickingBehavior::IGNORE,
-            TargetCamera(camera),
+            TargetCamera(*camera),
         ))
         .with_children(|c| {
             c.spawn((
@@ -79,28 +75,22 @@ pub fn clear_ui_or_spawn_ship_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    q_window_parent: Query<Entity, With<HudWindowParent>>,
-    q_window_dependent: Query<Entity, With<HudWindowDependent>>,
+    window_parent: Single<Entity, With<HudWindowParent>>,
+    q_window_dependents: Query<Entity, With<HudWindowDependent>>,
     q_children: Query<Entity, With<Children>>,
-    q_ship: Query<Entity, With<Ship>>,
+    ship: Single<Entity, With<Ship>>,
 ) {
     if keyboard_input.any_just_pressed([KeyCode::Escape, KeyCode::KeyE]) {
-        let parent = q_window_parent.single();
+        if q_children.get(*window_parent).is_ok() {
+            commands.entity(*window_parent).despawn_descendants();
 
-        if q_children.get(parent).is_ok() {
-            commands.entity(parent).despawn_descendants();
-
-            for entity in q_window_dependent.iter() {
+            for entity in &q_window_dependents {
                 commands.entity(entity).despawn_recursive();
             }
         } else {
             // SPAWN SHIP UI
 
-            let Some(entity) = q_ship.iter().next() else {
-                return;
-            };
-
-            commands.entity(parent).with_children(|c| {
+            commands.entity(*window_parent).with_children(|c| {
                 c.spawn(HudWindow).with_children(|c| {
                     c.spawn(Node {
                         width: Val::Percent(100.0),
@@ -112,7 +102,7 @@ pub fn clear_ui_or_spawn_ship_ui(
                         ..default()
                     })
                     .with_children(|c| {
-                        spawn_inventory_ui(c, entity);
+                        spawn_inventory_ui(c, *ship);
 
                         c.spawn(Node {
                             width: Val::Percent(50.0),

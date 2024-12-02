@@ -46,55 +46,51 @@ pub fn save_key_shortcut(
 
 pub fn save_solar_system(
     mut commands: Commands,
-    save_game: Option<Res<SaveGame>>,
-    q_solar_system: Query<Entity, With<SolarSystem>>,
+    save_game: Res<SaveGame>,
+    solar_system: Single<Entity, With<SolarSystem>>,
     q_children: Query<&Children, Without<Ship>>,
     world: &World,
 ) {
-    if let Some(save_game) = save_game {
-        if save_game.is_added() {
-            commands.remove_resource::<SaveGame>();
-            println!("Saving scene: {}", save_game.0);
+    if save_game.is_added() {
+        commands.remove_resource::<SaveGame>();
+        println!("Saving scene: {}", save_game.0);
 
-            let type_registry_arc = &**world.resource::<AppTypeRegistry>();
-            let type_registry = type_registry_arc.read();
+        let type_registry_arc = &**world.resource::<AppTypeRegistry>();
+        let type_registry = type_registry_arc.read();
 
-            let solar_system = q_solar_system.single();
+        let scene = DynamicSceneBuilder::from_world(world)
+            .deny_all_resources()
+            .allow_all_components()
+            .allow_resource::<SaveName>()
+            .deny_component::<CameraRenderGraph>()
+            .deny_component::<CameraMainTextureUsages>()
+            .deny_component::<MeshMaterial2d<PlanetMaterial>>()
+            .deny_component::<MeshMaterial2d<StarMaterial>>()
+            .deny_component::<MeshMaterial2d<AsteroidMaterial>>()
+            .deny_component::<MeshMaterial2d<LaserMaterial>>()
+            .deny_component::<MeshMaterial2d<BackgroundMaterial>>()
+            .deny_component::<Mesh2d>()
+            .deny_component::<Sprite>()
+            .extract_resources()
+            .extract_entity(*solar_system)
+            .extract_entities(q_children.iter_descendants(*solar_system))
+            .remove_empty_entities()
+            .build();
 
-            let scene = DynamicSceneBuilder::from_world(world)
-                .deny_all_resources()
-                .allow_all_components()
-                .allow_resource::<SaveName>()
-                .deny_component::<CameraRenderGraph>()
-                .deny_component::<CameraMainTextureUsages>()
-                .deny_component::<MeshMaterial2d<PlanetMaterial>>()
-                .deny_component::<MeshMaterial2d<StarMaterial>>()
-                .deny_component::<MeshMaterial2d<AsteroidMaterial>>()
-                .deny_component::<MeshMaterial2d<LaserMaterial>>()
-                .deny_component::<MeshMaterial2d<BackgroundMaterial>>()
-                .deny_component::<Mesh2d>()
-                .deny_component::<Sprite>()
-                .extract_resources()
-                .extract_entity(solar_system)
-                .extract_entities(q_children.iter_descendants(solar_system))
-                .remove_empty_entities()
-                .build();
+        match scene.serialize(&type_registry) {
+            Ok(serialized) => {
+                let save_name = save_game.0.clone();
 
-            match scene.serialize(&type_registry) {
-                Ok(serialized) => {
-                    let save_name = save_game.0.clone();
-
-                    IoTaskPool::get()
-                        .spawn(async move {
-                            File::create(format!("{SAVE_DIR}/{save_name}.{SAVE_FILE_EXTENSION}"))
-                                .and_then(|mut file| file.write(serialized.as_bytes()))
-                                .expect("Error while writing scene to file");
-                        })
-                        .detach();
-                }
-                Err(e) => {
-                    eprintln!("Error while serializing the scene: {e:?}");
-                }
+                IoTaskPool::get()
+                    .spawn(async move {
+                        File::create(format!("{SAVE_DIR}/{save_name}.{SAVE_FILE_EXTENSION}"))
+                            .and_then(|mut file| file.write(serialized.as_bytes()))
+                            .expect("Error while writing scene to file");
+                    })
+                    .detach();
+            }
+            Err(e) => {
+                eprintln!("Error while serializing the scene: {e:?}");
             }
         }
     }
@@ -102,34 +98,28 @@ pub fn save_solar_system(
 
 pub fn load_solar_system(
     mut commands: Commands,
-    load_game: Option<Res<LoadGame>>,
+    load_game: Res<LoadGame>,
     asset_server: Res<AssetServer>,
-    q_hud: Query<Entity, With<Hud>>,
-    q_solar_system: Query<Entity, With<SolarSystem>>,
+    hud: Single<Entity, With<Hud>>,
+    solar_system: Single<Entity, With<SolarSystem>>,
 ) {
-    if let Some(load_game) = load_game {
-        if load_game.is_added() {
-            commands.remove_resource::<LoadGame>();
-            println!("Loading scene: {}", load_game.0);
+    if load_game.is_added() {
+        commands.remove_resource::<LoadGame>();
+        println!("Loading scene: {}", load_game.0);
 
-            // Remove the current SolarSystem is there is one
-            if let Some(solar_system) = q_solar_system.iter().next() {
-                commands.entity(solar_system).despawn_recursive();
-            }
+        // Remove the current SolarSystem
+        commands.entity(*solar_system).despawn_recursive();
 
-            // HUD will be recreated when Ship is Added<>
-            if let Some(hud) = q_hud.iter().next() {
-                commands.entity(hud).despawn_recursive();
-            }
+        // HUD will be recreated when Ship is Added<>
+        commands.entity(*hud).despawn_recursive();
 
-            commands.spawn((
-                DynamicSceneForLoading,
-                DynamicSceneRoot(asset_server.load(format!(
-                    "{SAVE_DIR_ASSETS_RELATIVE}/{}.{SAVE_FILE_EXTENSION}",
-                    load_game.0.clone()
-                ))),
-            ));
-        }
+        commands.spawn((
+            DynamicSceneForLoading,
+            DynamicSceneRoot(asset_server.load(format!(
+                "{SAVE_DIR_ASSETS_RELATIVE}/{}.{SAVE_FILE_EXTENSION}",
+                load_game.0.clone()
+            ))),
+        ));
     }
 }
 
@@ -137,18 +127,11 @@ pub fn load_solar_system(
 pub fn finish_load_solar_system(
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
-    q_solar_system: Query<Entity, (Added<SolarSystem>, With<Parent>)>,
-    q_dynamic_scene: Query<Entity, (With<DynamicSceneForLoading>, Added<SceneInstance>)>,
+    solar_system: Single<Entity, (Added<SolarSystem>, With<Parent>)>,
+    dynamic_scene: Single<Entity, (With<DynamicSceneForLoading>, Added<SceneInstance>)>,
 ) {
-    let Some(solar_system) = q_solar_system.iter().next() else {
-        return;
-    };
-
-    commands.entity(solar_system).remove_parent();
-
-    if let Some(dynamic_scene) = q_dynamic_scene.iter().next() {
-        commands.entity(dynamic_scene).despawn_recursive();
-    }
+    commands.entity(*solar_system).remove_parent();
+    commands.entity(*dynamic_scene).despawn_recursive();
 
     next_state.set(GameState::GameSolarSystem);
 }

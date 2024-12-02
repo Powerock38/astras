@@ -27,22 +27,19 @@ pub struct UniverseMapCamera;
 
 pub fn spawn_universe_map(
     mut commands: Commands,
-    mut q_main_camera: Query<&mut Camera, With<MainCamera>>,
-    mut q_solar_systems: Query<(&SolarSystem, &mut Visibility)>,
+    mut main_camera: Single<&mut Camera, With<MainCamera>>,
+    q_solar_system: Single<(&SolarSystem, &mut Visibility)>,
 ) {
-    if let Ok(mut camera) = q_main_camera.get_single_mut() {
-        camera.is_active = false;
-    }
+    main_camera.is_active = false;
 
-    let Ok((solar_system, mut solar_system_visibility)) = q_solar_systems.get_single_mut() else {
-        return;
-    };
+    let (solar_system, mut solar_system_visibility) = q_solar_system.into_inner();
 
     *solar_system_visibility = Visibility::Hidden;
 
     commands
         .spawn((
             Name::new("UniverseMap"),
+            StateScoped(GameState::GameUniverseMap),
             UniverseMap,
             Transform::from_scale(Vec3::splat(SOLAR_SYSTEMS_SCALE)),
             Visibility::default(),
@@ -96,22 +93,11 @@ pub fn spawn_universe_map(
 }
 
 pub fn clean_universe_map(
-    mut commands: Commands,
-    q_universe_map: Query<Entity, With<UniverseMap>>,
-    mut q_main_camera: Query<&mut Camera, With<MainCamera>>,
-    mut q_solar_systems: Query<&mut Visibility, With<SolarSystem>>,
+    solar_system_visibility: Single<&mut Visibility, With<SolarSystem>>,
+    mut main_camera: Single<&mut Camera, With<MainCamera>>,
 ) {
-    if let Ok(entity) = q_universe_map.get_single() {
-        commands.entity(entity).despawn_recursive();
-    }
-
-    if let Ok(mut solar_system_visibility) = q_solar_systems.get_single_mut() {
-        *solar_system_visibility = Visibility::Inherited;
-    }
-
-    if let Ok(mut camera) = q_main_camera.get_single_mut() {
-        camera.is_active = true;
-    }
+    *(solar_system_visibility.into_inner()) = Visibility::Inherited;
+    main_camera.is_active = true;
 }
 
 pub fn update_universe_map(
@@ -120,12 +106,10 @@ pub fn update_universe_map(
     mut ev_motion: EventReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut q_camera: Query<(&mut Transform, &mut OrthographicProjection), With<UniverseMapCamera>>,
+    q_camera: Single<(&mut Transform, &mut OrthographicProjection), With<UniverseMapCamera>>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    let Some((mut transform, mut projection)) = q_camera.iter_mut().next() else {
-        return;
-    };
+    let (mut transform, mut projection) = q_camera.into_inner();
 
     for scroll in ev_scroll.read() {
         projection.scale *= 1. - ZOOM_SPEED * scroll.y * time.delta_secs();

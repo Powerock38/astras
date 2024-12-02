@@ -182,19 +182,14 @@ pub fn build_planet_children(
     }
 }
 
-pub fn update_planets(
+pub fn update_planet_shadows(
     mut materials: ResMut<Assets<PlanetMaterial>>,
     q_planets: Query<(&MeshMaterial2d<PlanetMaterial>, &GlobalTransform)>,
-    q_stars: Query<&GlobalTransform, With<Star>>,
+    star_global_transform: Single<&GlobalTransform, With<Star>>, //TODO maybe support multiple stars
 ) {
-    for (planet_material_handle, global_transform) in q_planets.iter() {
+    for (planet_material_handle, global_transform) in &q_planets {
         // Update shadow angle
         let material = materials.get_mut(planet_material_handle).unwrap();
-
-        //TODO maybe support multiple stars
-        let Some(star_global_transform) = q_stars.iter().next() else {
-            return;
-        };
 
         let star_position = star_global_transform.translation().truncate();
         let planet_position = global_transform.translation().truncate();

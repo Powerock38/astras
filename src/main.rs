@@ -46,7 +46,6 @@ fn main() {
             (SolarSystemSet.run_if(in_state(GameState::GameSolarSystem)),),
         )
         .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
-        .add_systems(OnExit(GameState::MainMenu), clean_main_menu)
         .add_systems(
             Update,
             (
@@ -56,5 +55,6 @@ fn main() {
             ),
         )
         .init_state::<GameState>()
+        .enable_state_scoped_entities::<GameState>()
         .run();
 }

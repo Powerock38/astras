@@ -24,15 +24,11 @@ pub struct MainCamera;
 
 pub fn spawn_camera(
     mut commands: Commands,
-    q_ship: Query<Entity, Added<Ship>>,
+    ship: Single<Entity, Added<Ship>>,
     meshes: ResMut<Assets<Mesh>>,
     background_materials: ResMut<Assets<BackgroundMaterial>>,
 ) {
-    let Some(ship) = q_ship.iter().next() else {
-        return;
-    };
-
-    commands.entity(ship).with_children(|c| {
+    commands.entity(*ship).with_children(|c| {
         c.spawn((
             Name::new("MainCamera"),
             MainCamera,
@@ -57,29 +53,19 @@ pub fn spawn_camera(
 
 pub fn update_camera(
     time: Res<Time>,
+    mut next_state: ResMut<NextState<GameState>>,
     mut ev_scroll: EventReader<MouseWheel>,
     mut ev_motion: EventReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
-    mut q_projection: Query<
+    window: Single<&Window>,
+    q_projection: Single<
         (&Camera, &GlobalTransform, &mut OrthographicProjection),
         With<MainCamera>,
     >,
-    mut q_background: Query<&mut Transform, With<Background>>,
-    q_ship: Query<&Ship>,
-    q_window: Query<&Window>,
-    mut next_state: ResMut<NextState<GameState>>,
+    ship: Single<&Ship>,
+    mut bg_transform: Single<&mut Transform, With<Background>>,
 ) {
-    let Some(window) = q_window.iter().next() else {
-        return;
-    };
-
-    let Some((camera, global_transform, mut projection)) = q_projection.iter_mut().next() else {
-        return;
-    };
-
-    let Some(ship) = q_ship.iter().next() else {
-        return;
-    };
+    let (camera, global_transform, mut projection) = q_projection.into_inner();
 
     let scroll = ev_scroll.read().map(|scroll| scroll.y).sum::<f32>();
     projection.scale *= 1. - CAMERA_ZOOM_SPEED * scroll * time.delta_secs();
@@ -106,10 +92,6 @@ pub fn update_camera(
             .viewport_origin
             .lerp(dolly_offset + Vec2::new(0.5, 0.5), CAMERA_CHANGE_LERP);
     }
-
-    let Some(mut bg_transform) = q_background.iter_mut().next() else {
-        return;
-    };
 
     let viewport_position = Vec2::new(0.5 * window.width(), 0.5 * window.height());
 

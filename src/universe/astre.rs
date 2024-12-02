@@ -38,7 +38,7 @@ impl Astre {
 }
 
 pub fn scan_astres(mut commands: Commands, query: Query<Entity, Added<Astre>>) {
-    for entity in query.iter() {
+    for entity in &query {
         commands.entity(entity).observe(update_ship_mining);
     }
 }

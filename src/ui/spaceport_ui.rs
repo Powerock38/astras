@@ -5,8 +5,8 @@ use crate::{
     ui::{spawn_inventory_ui, HudWindow, HudWindowParent},
 };
 
-pub fn scan_spaceport_ui(mut commands: Commands, q_extractor: Query<Entity, Added<Spaceport>>) {
-    for entity in q_extractor.iter() {
+pub fn scan_spaceport_ui(mut commands: Commands, q_extractors: Query<Entity, Added<Spaceport>>) {
+    for entity in &q_extractors {
         commands.entity(entity).observe(spawn_spaceport_ui);
     }
 }
@@ -14,13 +14,12 @@ pub fn scan_spaceport_ui(mut commands: Commands, q_extractor: Query<Entity, Adde
 pub fn spawn_spaceport_ui(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
-    q_window_parent: Query<Entity, With<HudWindowParent>>,
+    window_parent: Single<Entity, With<HudWindowParent>>,
 ) {
-    let parent = q_window_parent.single();
     let entity = trigger.entity();
 
     commands
-        .entity(parent)
+        .entity(*window_parent)
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {

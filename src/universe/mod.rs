@@ -69,7 +69,7 @@ impl Plugin for UniversePlugin {
                         scan_astres,
                         update_orbits,
                         update_ship,
-                        update_planets,
+                        update_planet_shadows,
                         update_worms,
                         update_lasers,
                         update_asteroids,

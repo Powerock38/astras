@@ -19,7 +19,7 @@ pub fn scan_sprite_loaders(
     asset_server: Res<AssetServer>,
     query: Query<(Entity, &SpriteLoader), Added<SpriteLoader>>,
 ) {
-    for (entity, sprite_loader) in query.iter() {
+    for (entity, sprite_loader) in &query {
         let image = asset_server.load(sprite_loader.texture_path.clone());
         commands.entity(entity).insert(Sprite {
             image,
@@ -60,7 +60,7 @@ pub fn scan_material_loaders<M>(
 ) where
     M: Material2d,
 {
-    for (entity, material_loader) in query.iter() {
+    for (entity, material_loader) in &query {
         let mesh = match material_loader.mesh_type {
             MeshType::Circle(radius) => {
                 const ERR: f32 = 10.0;
