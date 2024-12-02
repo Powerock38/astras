@@ -22,7 +22,7 @@ pub fn update_orbits(time: Res<Time>, mut query: Query<(&Orbit, &mut Transform)>
         let angle = transform.translation.y.atan2(transform.translation.x);
         let distance = transform.translation.distance(Vec3::ZERO);
 
-        let orbit_angle = angle + orbit.speed * time.delta_seconds();
+        let orbit_angle = angle + orbit.speed * time.delta_secs();
 
         transform.translation.x = distance * orbit_angle.cos();
         transform.translation.y = distance * orbit_angle.sin();

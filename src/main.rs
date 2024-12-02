@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
 use buildings::BuildingsPlugin;
 use handle_loader::*;
 use items::ItemsPlugin;
@@ -23,7 +22,7 @@ mod universe;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(DefaultPickingPlugins)
+        .add_plugins(MeshPickingPlugin)
         // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
         // .add_plugins(bevy::diagnostic::LogDiagnosticsPlugin::default())
         // .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
@@ -36,8 +35,7 @@ fn main() {
             (
                 MainMenuSet.run_if(in_state(GameState::MainMenu)),
                 GameSet.run_if(
-                    in_state(GameState::GameSolarSystem)
-                        .or_else(in_state(GameState::GameUniverseMap)),
+                    in_state(GameState::GameSolarSystem).or(in_state(GameState::GameUniverseMap)),
                 ),
                 SolarSystemSet.run_if(in_state(GameState::GameSolarSystem)),
                 UniverseMapSet.run_if(in_state(GameState::GameUniverseMap)),

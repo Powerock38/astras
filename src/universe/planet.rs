@@ -190,7 +190,7 @@ pub fn build_planet_children(
 
 pub fn update_planets(
     mut materials: ResMut<Assets<PlanetMaterial>>,
-    q_planets: Query<(&Handle<PlanetMaterial>, &GlobalTransform)>,
+    q_planets: Query<(&MeshMaterial2d<PlanetMaterial>, &GlobalTransform)>,
     q_stars: Query<&GlobalTransform, With<Star>>,
 ) {
     for (planet_material_handle, global_transform) in q_planets.iter() {

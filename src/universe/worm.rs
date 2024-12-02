@@ -106,7 +106,7 @@ pub fn update_worms(
 
         let speed = worm.speed * move_progress;
 
-        transform.translation += worm.direction.extend(0.) * speed * time.delta_seconds();
+        transform.translation += worm.direction.extend(0.) * speed * time.delta_secs();
 
         // Wiggle
         let mut last_y = 0.0;
@@ -114,7 +114,7 @@ pub fn update_worms(
             let mut segment_transform = q_segments.get_mut(*segment).unwrap();
 
             let x = (i as f32) / (worm.length as f32) * 2.0 * PI
-                + time.elapsed_seconds()
+                + time.elapsed_secs()
                 + worm.seed * 100.0;
 
             segment_transform.translation.y = x.sin() * i as f32 * worm.wiggle_amplitude;

@@ -71,8 +71,7 @@ pub fn spawn_building(
 
         let building = placing_building.0.data();
 
-        if let Some(world_position) = camera.viewport_to_world_2d(camera_transform, cursor_position)
-        {
+        if let Ok(world_position) = camera.viewport_to_world_2d(camera_transform, cursor_position) {
             let world_position = world_position.extend(BUILDING_PREVIEW_Z);
 
             // Building Preview
@@ -96,18 +95,25 @@ pub fn spawn_building(
                     }) {
                         let recipe_needed_space = recipe_id.data().inputs_quantity();
 
-                        // recycle the building preview entity to keep sprite texture
-                        commands
-                            .entity(building_preview_entity)
-                            .retain::<(SpriteBundle, SpriteLoader)>()
-                            .insert((
-                                ConstructionSite {
-                                    building: placing_building.0,
+                        // spawn the building at building_preview_transform
+                        commands.spawn((
+                            HandleLoaderBundle {
+                                loader: SpriteLoader {
+                                    texture_path: format!("sprites/{}.png", building.sprite_name),
+                                    ..default()
                                 },
-                                DockableOnAstre::instant_location(building.location),
-                                Crafter::new(vec![*recipe_id], true),
-                                Inventory::new(recipe_needed_space),
-                            ));
+                                transform: *building_preview_transform,
+                                ..default()
+                            },
+                            ConstructionSite {
+                                building: placing_building.0,
+                            },
+                            DockableOnAstre::instant_location(building.location),
+                            Crafter::new(vec![*recipe_id], true),
+                            Inventory::new(recipe_needed_space),
+                        ));
+
+                        commands.entity(building_preview_entity).despawn_recursive();
 
                         commands.remove_resource::<PlacingBuilding>();
                     } else {

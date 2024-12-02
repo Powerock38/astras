@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
 use rand::Rng;
 
 use crate::{
-    ui::{build_load_ui, UiButtonBundle},
+    ui::{build_load_ui, UiButton},
     universe::spawn_solar_system,
     GameState, SaveName,
 };
@@ -12,42 +11,36 @@ use crate::{
 pub struct MainMenu;
 
 pub fn setup_main_menu(mut commands: Commands) {
-    commands.spawn((MainMenu, Camera2dBundle::default()));
+    commands.spawn((MainMenu, Camera2d));
 
     commands
         .spawn((
             MainMenu,
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..default()
-                },
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
                 ..default()
             },
         ))
         .with_children(|c| {
-            c.spawn(UiButtonBundle::new(On::<Pointer<Click>>::run(
-                spawn_new_game,
-            )))
-            .with_children(|parent| {
-                parent.spawn(TextBundle::from_section(
-                    "New game",
-                    TextStyle {
-                        color: Color::srgb(0.9, 0.9, 0.9),
-                        ..default()
-                    },
-                ));
-            });
+            c.spawn(UiButton)
+                .observe(spawn_new_game)
+                .with_children(|parent| {
+                    parent.spawn(Text::new("New game"));
+                });
 
             build_load_ui(c);
         });
 }
 
-pub fn spawn_new_game(mut commands: Commands, mut next_state: ResMut<NextState<GameState>>) {
+pub fn spawn_new_game(
+    _trigger: Trigger<Pointer<Click>>,
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
     println!("New game");
 
     let solar_system_position = [

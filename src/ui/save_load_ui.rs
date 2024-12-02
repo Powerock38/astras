@@ -1,8 +1,7 @@
-use bevy::{ecs::system::EntityCommands, prelude::*};
-use bevy_mod_picking::prelude::*;
+use bevy::prelude::*;
 
 use crate::{
-    ui::{HudWindow, HudWindowParent, UiButtonBundle},
+    ui::{HudWindow, HudWindowParent, UiButton},
     LoadGame, SAVE_DIR, SAVE_FILE_EXTENSION,
 };
 
@@ -18,7 +17,7 @@ pub fn spawn_save_ui(
             .entity(parent)
             .despawn_descendants()
             .with_children(|c| {
-                c.spawn(HudWindow::default()).with_children(|c| {
+                c.spawn(HudWindow).with_children(|c| {
                     build_load_ui(c);
                 });
             });
@@ -43,25 +42,13 @@ pub fn build_load_ui(c: &mut ChildBuilder) {
         for save_file in save_files {
             let callback = {
                 let save_file = save_file.clone();
-                move |_event: &mut ListenerInput<Pointer<Click>>,
-                      target_commands: &mut EntityCommands| {
-                    target_commands
-                        .commands()
-                        .insert_resource(LoadGame(save_file.clone()));
+                move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                    commands.insert_resource(LoadGame(save_file.clone()));
                 }
             };
 
-            c.spawn(UiButtonBundle::new(
-                On::<Pointer<Click>>::target_commands_mut(callback),
-            ))
-            .with_children(|c| {
-                c.spawn(TextBundle::from_section(
-                    save_file,
-                    TextStyle {
-                        color: Color::srgb(0.9, 0.9, 0.9),
-                        ..default()
-                    },
-                ));
+            c.spawn(UiButton).observe(callback).with_children(|c| {
+                c.spawn(Text::new(save_file));
             });
         }
     }

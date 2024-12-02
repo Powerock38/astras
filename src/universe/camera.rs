@@ -1,5 +1,5 @@
 use bevy::{
-    core_pipeline::{bloom::BloomSettings, tonemapping::Tonemapping},
+    core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
 };
@@ -36,21 +36,19 @@ pub fn spawn_camera(
         c.spawn((
             Name::new("MainCamera"),
             MainCamera,
-            Camera2dBundle {
-                camera: Camera {
-                    hdr: true,
-                    ..default()
-                },
-                projection: OrthographicProjection {
-                    scale: BASE_SCALE,
-                    near: -1000.0,
-                    far: 1000.0,
-                    ..default()
-                },
-                tonemapping: Tonemapping::BlenderFilmic,
+            Camera2d,
+            Camera {
+                hdr: true,
                 ..default()
             },
-            BloomSettings::default(),
+            OrthographicProjection {
+                scale: BASE_SCALE,
+                near: -1000.0,
+                far: 1000.0,
+                ..OrthographicProjection::default_2d()
+            },
+            Tonemapping::BlenderFilmic,
+            Bloom::default(),
         ));
 
         build_background(c, meshes, background_materials);
@@ -84,7 +82,7 @@ pub fn update_camera(
     };
 
     let scroll = ev_scroll.read().map(|scroll| scroll.y).sum::<f32>();
-    projection.scale *= 1. - CAMERA_ZOOM_SPEED * scroll * time.delta_seconds();
+    projection.scale *= 1. - CAMERA_ZOOM_SPEED * scroll * time.delta_secs();
 
     if projection.scale > SWITCH_TO_UNIVERSE_MAP {
         next_state.set(GameState::GameUniverseMap);
@@ -95,7 +93,7 @@ pub fn update_camera(
     if projection.scale > SWITCH_TO_PAN_MODE {
         for motion in ev_motion.read() {
             if mouse_button_input.pressed(MouseButton::Left) {
-                let mut delta = motion.delta * time.delta_seconds() * CAMERA_PAN_SPEED;
+                let mut delta = motion.delta * time.delta_secs() * CAMERA_PAN_SPEED;
                 delta.y *= -1.;
                 projection.viewport_origin += delta;
             }
@@ -115,7 +113,7 @@ pub fn update_camera(
 
     let viewport_position = Vec2::new(0.5 * window.width(), 0.5 * window.height());
 
-    let Some(position) = camera.viewport_to_world_2d(global_transform, viewport_position) else {
+    let Ok(position) = camera.viewport_to_world_2d(global_transform, viewport_position) else {
         return;
     };
 

@@ -4,7 +4,6 @@ use bevy::{
     prelude::*,
     render::camera::{CameraMainTextureUsages, CameraRenderGraph},
     scene::SceneInstance,
-    sprite::Mesh2dHandle,
     tasks::IoTaskPool,
 };
 
@@ -64,18 +63,17 @@ pub fn save_solar_system(
 
             let scene = DynamicSceneBuilder::from_world(world)
                 .deny_all_resources()
-                .allow_all()
+                .allow_all_components()
                 .allow_resource::<SaveName>()
-                .deny::<CameraRenderGraph>()
-                .deny::<CameraMainTextureUsages>()
-                .deny::<Handle<PlanetMaterial>>()
-                .deny::<Handle<StarMaterial>>()
-                .deny::<Handle<AsteroidMaterial>>()
-                .deny::<Handle<LaserMaterial>>()
-                .deny::<Handle<BackgroundMaterial>>()
-                .deny::<Handle<Image>>()
-                .deny::<Mesh2dHandle>()
-                .deny::<Sprite>()
+                .deny_component::<CameraRenderGraph>()
+                .deny_component::<CameraMainTextureUsages>()
+                .deny_component::<MeshMaterial2d<PlanetMaterial>>()
+                .deny_component::<MeshMaterial2d<StarMaterial>>()
+                .deny_component::<MeshMaterial2d<AsteroidMaterial>>()
+                .deny_component::<MeshMaterial2d<LaserMaterial>>()
+                .deny_component::<MeshMaterial2d<BackgroundMaterial>>()
+                .deny_component::<Mesh2d>()
+                .deny_component::<Sprite>()
                 .extract_resources()
                 .extract_entity(solar_system)
                 .extract_entities(q_children.iter_descendants(solar_system))
@@ -126,13 +124,10 @@ pub fn load_solar_system(
 
             commands.spawn((
                 DynamicSceneForLoading,
-                DynamicSceneBundle {
-                    scene: asset_server.load(format!(
-                        "{SAVE_DIR_ASSETS_RELATIVE}/{}.{SAVE_FILE_EXTENSION}",
-                        load_game.0.clone()
-                    )),
-                    ..default()
-                },
+                DynamicSceneRoot(asset_server.load(format!(
+                    "{SAVE_DIR_ASSETS_RELATIVE}/{}.{SAVE_FILE_EXTENSION}",
+                    load_game.0.clone()
+                ))),
             ));
         }
     }

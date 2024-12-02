@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
 use rand::prelude::SliceRandom;
 
 use crate::{
@@ -55,10 +54,8 @@ pub fn build_ship(c: &mut ChildBuilder) {
             mining_amount_per_tick: MINING_AMOUNT_PER_TICK,
         },
         DockableOnAstre::default(),
-        SpatialBundle {
-            transform: Transform::from_translation(position.extend(SHIP_Z)),
-            ..default()
-        },
+        Transform::from_translation(position.extend(SHIP_Z)),
+        Visibility::default(),
         Inventory::new(SHIP_INVENTORY_SIZE),
     ));
 }
@@ -113,7 +110,7 @@ pub fn update_ship(
 
         let max_speed = ship.max_speed;
 
-        ship.speed += (acceleration * time.delta_seconds()).clamp_length_max(max_speed);
+        ship.speed += (acceleration * time.delta_secs()).clamp_length_max(max_speed);
 
         if dockable.is_docked() {
             ship.speed *= 0.99;
@@ -123,25 +120,24 @@ pub fn update_ship(
             ship.speed = Vec2::ZERO;
         }
 
-        transform.translation.x += ship.speed.x * time.delta_seconds();
-        transform.translation.y += ship.speed.y * time.delta_seconds();
+        transform.translation.x += ship.speed.x * time.delta_secs();
+        transform.translation.y += ship.speed.y * time.delta_secs();
 
         // Sprite rotation
         if let Some(mut sprite_transform) = q_ship_sprite.iter_mut().next() {
             if ship.speed == Vec2::ZERO {
                 sprite_transform.rotation = Quat::from_rotation_z(0.);
             } else {
-                sprite_transform.rotation =
-                    Quat::from_rotation_z(-ship.speed.angle_between(Vec2::Y));
+                sprite_transform.rotation = Quat::from_rotation_z(-ship.speed.angle_to(Vec2::Y));
             }
         }
     }
 }
 
 pub fn update_ship_mining(
+    mut trigger: Trigger<Pointer<Down>>,
     mut commands: Commands,
     placing_building: Option<Res<PlacingBuilding>>,
-    listener: Listener<Pointer<Down>>,
     mut q_ship: Query<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
     mut q_astres: Query<&mut Inventory, (With<Astre>, Without<Ship>)>,
     mut ev_notif: EventWriter<NotificationEvent>,
@@ -154,12 +150,14 @@ pub fn update_ship_mining(
         return;
     }
 
-    let astre_entity = listener.listener();
+    let astre_entity = trigger.entity();
+
+    trigger.propagate(true);
 
     // TODO ship.mining_cooldown.tick(time.delta()).finished() ; ship.mining_cooldown.reset();
 
     if let Ok(mut astre_inventory) = q_astres.get_mut(astre_entity) {
-        if let Some(position) = listener.hit.position {
+        if let Some(position) = trigger.hit.position {
             let position = position.truncate();
             let ship_position = transform.translation().truncate();
 

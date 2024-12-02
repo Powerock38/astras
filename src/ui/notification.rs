@@ -26,13 +26,11 @@ pub fn read_notification_events(
     for event in notification_events.read() {
         commands.entity(zone).with_children(|c| {
             c.spawn((
-                TextBundle::from_section(
-                    event.0.clone(),
-                    TextStyle {
-                        font_size: NOTIFICATION_SIZE,
-                        ..default()
-                    },
-                ),
+                Text::new(event.0.clone()),
+                TextFont {
+                    font_size: NOTIFICATION_SIZE,
+                    ..default()
+                },
                 Notification {
                     timer: Timer::from_seconds(NOTIFICATION_TIMER, TimerMode::Once),
                 },

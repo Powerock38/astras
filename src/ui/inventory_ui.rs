@@ -1,10 +1,9 @@
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
 
 use crate::{
     data::{ItemId, ELEMENTS},
     items::{Inventory, LogisticRequest},
-    ui::UiButtonBundle,
+    ui::UiButton,
     universe::{Ship, SHIP_ACTION_RANGE},
 };
 
@@ -20,15 +19,12 @@ pub fn spawn_inventory_ui(c: &mut ChildBuilder, entity: Entity) {
             entity,
             just_added: true,
         },
-        NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::SpaceBetween,
-                flex_direction: FlexDirection::Row,
-                ..default()
-            },
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            align_items: AlignItems::Start,
+            justify_content: JustifyContent::SpaceBetween,
+            flex_direction: FlexDirection::Row,
             ..default()
         },
     ));
@@ -60,33 +56,28 @@ pub fn update_inventory_ui(
         };
 
         ec.despawn_descendants().with_children(|c| {
-            c.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Start,
-                    justify_content: JustifyContent::Start,
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Val::Percent(5.0),
-                    ..default()
-                },
+            c.spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Percent(5.0),
                 ..default()
             })
             .with_children(|c| {
-                c.spawn(TextBundle::from_section(
-                    "Inventory:",
-                    TextStyle {
-                        color: Color::srgb(0.9, 0.9, 0.9),
+                c.spawn((
+                    Text::new("Inventory:"),
+                    TextFont {
                         font_size: 24.0,
                         ..default()
                     },
                 ));
 
                 if inventory.items().is_empty() {
-                    c.spawn(TextBundle::from_section(
-                        "Empty",
-                        TextStyle {
-                            color: Color::srgb(0.9, 0.9, 0.9),
+                    c.spawn((
+                        Text::new("Empty"),
+                        TextFont {
                             font_size: 18.0,
                             ..default()
                         },
@@ -98,10 +89,9 @@ pub fn update_inventory_ui(
                         let callback =
                             item_transfer_callback(*id, *quantity, inventory_ui.entity, false);
 
-                        c.spawn(UiButtonBundle::new(On::<Pointer<Click>>::run(callback)))
-                            .with_children(|c| {
-                                build_item_ui(c, *id, *quantity);
-                            });
+                        c.spawn(UiButton).observe(callback).with_children(|c| {
+                            build_item_ui(c, *id, *quantity);
+                        });
                     } else {
                         build_item_ui(c, *id, *quantity);
                     }
@@ -109,23 +99,19 @@ pub fn update_inventory_ui(
             });
 
             if let Some(logistic_request) = logistic_request {
-                c.spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: Val::Percent(100.0),
-                        align_items: AlignItems::Start,
-                        justify_content: JustifyContent::Start,
-                        flex_direction: FlexDirection::Column,
-                        row_gap: Val::Percent(5.0),
-                        ..default()
-                    },
+                c.spawn(Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    align_items: AlignItems::Start,
+                    justify_content: JustifyContent::Start,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Percent(5.0),
                     ..default()
                 })
                 .with_children(|c| {
-                    c.spawn(TextBundle::from_section(
-                        "Currently requesting:",
-                        TextStyle {
-                            color: Color::srgb(0.9, 0.9, 0.9),
+                    c.spawn((
+                        Text::new("Currently requesting:"),
+                        TextFont {
                             font_size: 24.0,
                             ..default()
                         },
@@ -135,10 +121,9 @@ pub fn update_inventory_ui(
                         let callback =
                             item_transfer_callback(*id, *quantity, inventory_ui.entity, true);
 
-                        c.spawn(UiButtonBundle::new(On::<Pointer<Click>>::run(callback)))
-                            .with_children(|c| {
-                                build_item_ui(c, *id, *quantity);
-                            });
+                        c.spawn(UiButton).observe(callback).with_children(|c| {
+                            build_item_ui(c, *id, *quantity);
+                        });
                     }
                 });
             }
@@ -149,50 +134,41 @@ pub fn update_inventory_ui(
 pub fn build_item_ui(c: &mut ChildBuilder, id: ItemId, quantity: u32) {
     let item = id.data();
 
-    c.spawn(NodeBundle {
-        style: Style {
-            align_items: AlignItems::Center,
-            flex_direction: FlexDirection::Row,
-            column_gap: Val::Px(10.0),
-            ..default()
-        },
+    c.spawn(Node {
+        align_items: AlignItems::Center,
+        flex_direction: FlexDirection::Row,
+        column_gap: Val::Px(10.0),
         ..default()
     })
     .with_children(|c| {
         let color = ELEMENTS.get(&id).map_or(Color::WHITE.into(), |e| e.color);
 
-        c.spawn(NodeBundle {
-            style: Style {
+        c.spawn((
+            Node {
                 width: Val::Px(30.),
                 height: Val::Px(30.),
                 ..default()
             },
-            background_color: color.into(),
-            ..default()
-        });
+            BackgroundColor(color.into()),
+        ));
 
-        c.spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(5.0),
-                ..default()
-            },
+        c.spawn(Node {
+            flex_direction: FlexDirection::Column,
+            row_gap: Val::Px(5.0),
             ..default()
         })
         .with_children(|c| {
-            c.spawn(TextBundle::from_section(
-                format!("{} (x{})", item.name, quantity),
-                TextStyle {
-                    color: Color::srgb(0.9, 0.9, 0.9),
+            c.spawn((
+                Text::new(format!("{} (x{})", item.name, quantity)),
+                TextFont {
                     font_size: 18.0,
                     ..default()
                 },
             ));
 
-            c.spawn(TextBundle::from_section(
-                item.description,
-                TextStyle {
-                    color: Color::srgb(0.9, 0.9, 0.9),
+            c.spawn((
+                Text::new(item.description),
+                TextFont {
                     font_size: 12.0,
                     ..default()
                 },
@@ -207,10 +183,12 @@ fn item_transfer_callback(
     inventory_entity: Entity,
     from_ship: bool,
 ) -> impl FnMut(
+    Trigger<Pointer<Click>>,
     Query<(&mut Inventory, &GlobalTransform), With<Ship>>,
     Query<(&mut Inventory, &GlobalTransform), Without<Ship>>,
 ) {
-    move |mut q_ship: Query<(&mut Inventory, &GlobalTransform), With<Ship>>,
+    move |_trigger: Trigger<Pointer<Click>>,
+          mut q_ship: Query<(&mut Inventory, &GlobalTransform), With<Ship>>,
           mut q_inventory: Query<(&mut Inventory, &GlobalTransform), Without<Ship>>| {
         let Some((mut ship_inventory, ship_transform)) = q_ship.iter_mut().next() else {
             return;

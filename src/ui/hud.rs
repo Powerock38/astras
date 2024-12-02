@@ -1,10 +1,9 @@
-use bevy::{ecs::system::EntityCommands, prelude::*};
-use bevy_mod_picking::prelude::*;
+use bevy::prelude::*;
 
 use crate::{
     buildings::PlacingBuilding,
     data::BuildingId,
-    ui::{build_building_ui, spawn_inventory_ui, NotificationZone, UiButtonBundle},
+    ui::{build_building_ui, spawn_inventory_ui, NotificationZone, UiButton},
     universe::{MainCamera, Ship},
 };
 
@@ -17,28 +16,18 @@ pub struct HudWindowParent;
 #[derive(Component)]
 pub struct HudWindowDependent;
 
-#[derive(Bundle)]
-pub struct HudWindow {
-    node: NodeBundle,
-}
-
-impl Default for HudWindow {
-    fn default() -> Self {
-        Self {
-            node: NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.),
-                    height: Val::Percent(100.),
-                    flex_direction: FlexDirection::Column,
-                    padding: UiRect::all(Val::Px(10.)),
-                    ..default()
-                },
-                background_color: Color::srgba(0.1, 0.1, 0.1, 0.5).into(),
-                ..default()
-            },
-        }
-    }
-}
+#[derive(Component)]
+#[require(
+    Node(|| Node {
+        width: Val::Percent(100.),
+        height: Val::Percent(100.),
+        flex_direction: FlexDirection::Column,
+        padding: UiRect::all(Val::Px(10.)),
+        ..default()
+    }),
+    BackgroundColor(|| BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.5)))
+)]
+pub struct HudWindow;
 
 pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamera>>) {
     let Some(camera) = q_camera.iter().next() else {
@@ -48,49 +37,40 @@ pub fn setup_hud(mut commands: Commands, q_camera: Query<Entity, Added<MainCamer
     commands
         .spawn((
             Hud,
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..default()
-                },
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
                 ..default()
             },
-            Pickable::IGNORE,
+            PickingBehavior::IGNORE,
             TargetCamera(camera),
         ))
         .with_children(|c| {
             c.spawn((
                 HudWindowParent,
-                NodeBundle {
-                    style: Style {
-                        width: Val::Percent(80.0),
-                        height: Val::Percent(80.0),
-                        align_items: AlignItems::Center,
-                        justify_content: JustifyContent::Center,
-                        ..default()
-                    },
+                Node {
+                    width: Val::Percent(80.0),
+                    height: Val::Percent(80.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
                     ..default()
                 },
-                Pickable::IGNORE,
+                PickingBehavior::IGNORE,
             ));
 
             c.spawn((
                 NotificationZone,
-                NodeBundle {
-                    style: Style {
-                        position_type: PositionType::Absolute,
-                        bottom: Val::Px(5.0),
-                        right: Val::Px(5.0),
-                        flex_direction: FlexDirection::Column,
-                        ..default()
-                    },
+                Node {
+                    position_type: PositionType::Absolute,
+                    bottom: Val::Px(5.0),
+                    right: Val::Px(5.0),
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                Pickable::IGNORE,
+                PickingBehavior::IGNORE,
             ));
         });
 }
@@ -121,47 +101,36 @@ pub fn clear_ui_or_spawn_ship_ui(
             };
 
             commands.entity(parent).with_children(|c| {
-                c.spawn(HudWindow::default()).with_children(|c| {
-                    c.spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(100.0),
-                            align_items: AlignItems::Start,
-                            justify_content: JustifyContent::SpaceBetween,
-                            flex_direction: FlexDirection::Row,
-                            row_gap: Val::Px(10.0),
-                            ..default()
-                        },
+                c.spawn(HudWindow).with_children(|c| {
+                    c.spawn(Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
+                        align_items: AlignItems::Start,
+                        justify_content: JustifyContent::SpaceBetween,
+                        flex_direction: FlexDirection::Row,
+                        row_gap: Val::Px(10.0),
                         ..default()
                     })
                     .with_children(|c| {
                         spawn_inventory_ui(c, entity);
 
-                        c.spawn(NodeBundle {
-                            style: Style {
-                                width: Val::Percent(50.0),
-                                height: Val::Percent(100.0),
-                                align_items: AlignItems::End,
-                                justify_content: JustifyContent::Start,
-                                flex_direction: FlexDirection::Column,
-                                row_gap: Val::Px(10.0),
-                                ..default()
-                            },
+                        c.spawn(Node {
+                            width: Val::Percent(50.0),
+                            height: Val::Percent(100.0),
+                            align_items: AlignItems::End,
+                            justify_content: JustifyContent::Start,
+                            flex_direction: FlexDirection::Column,
+                            row_gap: Val::Px(10.0),
                             ..default()
                         })
                         .with_children(|c| {
                             for building_id in BuildingId::ALL {
                                 let callback =
-                                    |_: &mut ListenerInput<Pointer<Click>>,
-                                     ec: &mut EntityCommands| {
-                                        ec.commands()
-                                            .insert_resource(PlacingBuilding(*building_id));
+                                    |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                                        commands.insert_resource(PlacingBuilding(*building_id));
                                     };
 
-                                c.spawn(UiButtonBundle::new(
-                                    On::<Pointer<Click>>::target_commands_mut(callback),
-                                ))
-                                .with_children(|c| {
+                                c.spawn(UiButton).observe(callback).with_children(|c| {
                                     build_building_ui(c, *building_id, &asset_server);
                                 });
                             }

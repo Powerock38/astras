@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
 use uuid::Uuid;
 
 use crate::{
@@ -61,8 +60,6 @@ impl Astre {
 
 pub fn scan_astres(mut commands: Commands, query: Query<Entity, Added<Astre>>) {
     for entity in query.iter() {
-        commands
-            .entity(entity)
-            .insert(On::<Pointer<Down>>::run(update_ship_mining));
+        commands.entity(entity).observe(update_ship_mining);
     }
 }

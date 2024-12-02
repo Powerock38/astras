@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     reflect::TypePath,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, MaterialMesh2dBundle},
+    sprite::Material2d,
 };
 use rand::Rng;
 
@@ -30,13 +30,10 @@ pub fn build_background(
 ) {
     c.spawn((
         Background,
-        MaterialMesh2dBundle {
-            mesh: meshes.add(Mesh::from(Rectangle::default())).into(),
-            material: materials.add(BackgroundMaterial {
-                seed: rand::thread_rng().gen::<f32>() * 1000.,
-            }),
-            transform: Transform::from_translation(Vec3::new(0., 0., BACKGROUND_Z)),
-            ..default()
-        },
+        Mesh2d(meshes.add(Rectangle::default())),
+        MeshMaterial2d(materials.add(BackgroundMaterial {
+            seed: rand::thread_rng().gen::<f32>() * 1000.,
+        })),
+        Transform::from_translation(Vec3::new(0., 0., BACKGROUND_Z)),
     ));
 }

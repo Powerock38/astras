@@ -303,7 +303,7 @@ pub fn update_logistic_freights(
             if distance >= RANGE {
                 let direction = direction / distance;
                 let velocity = direction * SPEED;
-                let distance_per_tick = velocity * time.delta_seconds();
+                let distance_per_tick = velocity * time.delta_secs();
 
                 if distance_per_tick.length() < distance {
                     transform.translation.x += distance_per_tick.x;

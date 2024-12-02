@@ -44,10 +44,8 @@ pub fn spawn_universe_map(
         .spawn((
             Name::new("UniverseMap"),
             UniverseMap,
-            SpatialBundle {
-                transform: Transform::from_scale(Vec3::splat(SOLAR_SYSTEMS_SCALE)),
-                ..default()
-            },
+            Transform::from_scale(Vec3::splat(SOLAR_SYSTEMS_SCALE)),
+            Visibility::default(),
         ))
         .with_children(|c| {
             let x_min = solar_system.x() - OBSERVABLE_UNIVERSE_RADIUS / 2;
@@ -78,20 +76,18 @@ pub fn spawn_universe_map(
                         c.spawn((
                             Name::new("UniverseMapCamera"),
                             UniverseMapCamera,
-                            Camera2dBundle {
-                                camera: Camera {
-                                    order: 1,
-                                    ..default()
-                                },
-                                projection: OrthographicProjection {
-                                    scale: BASE_SCALE,
-                                    near: -1000.0,
-                                    far: 1000.0,
-                                    ..default()
-                                },
-                                transform: Transform::from_translation(position.extend(0.)),
+                            Camera2d,
+                            Camera {
+                                order: 1,
                                 ..default()
                             },
+                            OrthographicProjection {
+                                scale: BASE_SCALE,
+                                near: -1000.0,
+                                far: 1000.0,
+                                ..OrthographicProjection::default_2d()
+                            },
+                            Transform::from_translation(position.extend(0.)),
                         ));
                     }
                 }
@@ -132,7 +128,7 @@ pub fn update_universe_map(
     };
 
     for scroll in ev_scroll.read() {
-        projection.scale *= 1. - ZOOM_SPEED * scroll.y * time.delta_seconds();
+        projection.scale *= 1. - ZOOM_SPEED * scroll.y * time.delta_secs();
     }
 
     if projection.scale < SWITCH_TO_SOLAR_SYSTEM {
@@ -143,26 +139,26 @@ pub fn update_universe_map(
 
     if mouse_button_input.pressed(MouseButton::Left) {
         for motion in ev_motion.read() {
-            let mut delta = motion.delta * time.delta_seconds() * PAN_SPEED;
+            let mut delta = motion.delta * time.delta_secs() * PAN_SPEED;
             delta.y *= -1.;
             camera_delta -= delta;
         }
     }
 
     if keyboard_input.any_pressed(vec![KeyCode::ArrowLeft, KeyCode::KeyA]) {
-        camera_delta.x -= time.delta_seconds() * PAN_KEYBOARD_SPEED;
+        camera_delta.x -= time.delta_secs() * PAN_KEYBOARD_SPEED;
     }
 
     if keyboard_input.any_pressed(vec![KeyCode::ArrowRight, KeyCode::KeyD]) {
-        camera_delta.x += time.delta_seconds() * PAN_KEYBOARD_SPEED;
+        camera_delta.x += time.delta_secs() * PAN_KEYBOARD_SPEED;
     }
 
     if keyboard_input.any_pressed(vec![KeyCode::ArrowUp, KeyCode::KeyW]) {
-        camera_delta.y += time.delta_seconds() * PAN_KEYBOARD_SPEED;
+        camera_delta.y += time.delta_secs() * PAN_KEYBOARD_SPEED;
     }
 
     if keyboard_input.any_pressed(vec![KeyCode::ArrowDown, KeyCode::KeyS]) {
-        camera_delta.y -= time.delta_seconds() * PAN_KEYBOARD_SPEED;
+        camera_delta.y -= time.delta_secs() * PAN_KEYBOARD_SPEED;
     }
 
     camera_delta *= SOLAR_SYSTEMS_SPACING;

@@ -33,7 +33,8 @@ pub fn spawn_solar_system(commands: &mut Commands, position: [i32; 2]) {
         .spawn((
             Name::new("SolarSytem"),
             SolarSystem { position },
-            SpatialBundle::default(),
+            Transform::default(),
+            Visibility::default(),
         ))
         .with_children(|c| {
             build_star(c, &mut rng, Vec2::ZERO);

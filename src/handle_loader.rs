@@ -1,10 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::{
-    prelude::*,
-    render::mesh::CircleMeshBuilder,
-    sprite::{Material2d, Mesh2dHandle},
-};
+use bevy::{prelude::*, render::mesh::CircleMeshBuilder, sprite::Material2d};
 
 use crate::universe::random_polygon;
 
@@ -33,14 +29,12 @@ pub fn scan_sprite_loaders(
     query: Query<(Entity, &SpriteLoader), Added<SpriteLoader>>,
 ) {
     for (entity, sprite_loader) in query.iter() {
-        let handle: Handle<Image> = asset_server.load(sprite_loader.texture_path.clone());
-        commands.entity(entity).insert((
-            handle,
-            Sprite {
-                color: sprite_loader.color,
-                ..default()
-            },
-        ));
+        let image = asset_server.load(sprite_loader.texture_path.clone());
+        commands.entity(entity).insert(Sprite {
+            image,
+            color: sprite_loader.color,
+            ..default()
+        });
     }
 }
 
@@ -75,18 +69,20 @@ pub fn scan_material_loaders<M>(
     M: Material2d,
 {
     for (entity, material_loader) in query.iter() {
-        let material = materials.add(material_loader.material.clone());
         let mesh = match material_loader.mesh_type {
             MeshType::Circle(radius) => {
                 const ERR: f32 = 10.0;
-                let vertices = (PI / (1. - ERR / radius).acos()).ceil() as usize;
+                let vertices = (PI / (1. - ERR / radius).acos()).ceil() as u32;
                 CircleMeshBuilder::new(radius, vertices).build()
             }
             MeshType::Rectangle(c1, c2) => Rectangle::from_corners(c1, c2).into(),
             MeshType::RandomPolygon(seed, avg_radius) => random_polygon(seed, avg_radius),
         };
-        let mesh_handle = Mesh2dHandle(meshes.add(mesh));
-        commands.entity(entity).insert((mesh_handle, material));
+
+        commands.entity(entity).insert((
+            Mesh2d(meshes.add(mesh)),
+            MeshMaterial2d(materials.add(material_loader.material.clone())),
+        ));
     }
 }
 

@@ -201,7 +201,7 @@ pub fn update_asteroids(
     for (entity, asteroid, astre, mut transform, inventory) in &mut q_asteroids {
         // Rotate the asteroid
         transform.rotate(Quat::from_rotation_z(
-            asteroid.rotation_speed * time.delta_seconds(),
+            asteroid.rotation_speed * time.delta_secs(),
         ));
 
         // Mining the asteroid shrinks it, until it disappears
