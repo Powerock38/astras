@@ -4,26 +4,12 @@ use crate::{
     buildings::Building,
     data::RecipeId,
     items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope},
-    HandleLoaderBundle, SpriteLoader,
+    SpriteLoader,
 };
-
-#[derive(Bundle)]
-pub struct CrafterBundle {
-    crafter: Crafter,
-    inventory: Inventory, //FIXME: crafting can be blocked if inventory is full of requested items (and recipe outputs more than inputs)
-}
-
-impl CrafterBundle {
-    pub fn new(possible_recipes: Vec<RecipeId>) -> Self {
-        Self {
-            crafter: Crafter::new(possible_recipes, false),
-            inventory: Inventory::new(100),
-        }
-    }
-}
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Inventory)] //FIXME: crafting can be blocked if inventory is full of requested items (and recipe outputs more than inputs)
 pub struct Crafter {
     recipe: Option<CrafterRecipe>,
     possible_recipes: Vec<RecipeId>,
@@ -32,7 +18,7 @@ pub struct Crafter {
 }
 
 impl Crafter {
-    pub fn new(possible_recipes: Vec<RecipeId>, is_construction_site: bool) -> Self {
+    fn new(possible_recipes: Vec<RecipeId>, is_construction_site: bool) -> Self {
         Self {
             recipe: if possible_recipes.len() == 1 {
                 Some(CrafterRecipe::new(possible_recipes[0]))
@@ -43,6 +29,14 @@ impl Crafter {
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
             is_construction_site,
         }
+    }
+
+    pub fn new_construction_site(possible_recipes: Vec<RecipeId>) -> Self {
+        Self::new(possible_recipes, true)
+    }
+
+    pub fn new_crafter(possible_recipes: Vec<RecipeId>) -> Self {
+        Self::new(possible_recipes, false)
     }
 
     pub fn set_recipe(&mut self, recipe: RecipeId) {
@@ -112,14 +106,11 @@ pub fn update_crafters(
                             commands.entity(parent.get()).with_children(|c| {
                                 let mut ec = c.spawn((
                                     Building,
-                                    HandleLoaderBundle {
-                                        loader: SpriteLoader {
-                                            texture_path: building.sprite_path(),
-                                            ..default()
-                                        },
-                                        transform: *transform,
+                                    SpriteLoader {
+                                        texture_path: building.sprite_path(),
                                         ..default()
                                     },
+                                    *transform,
                                 ));
 
                                 (building.on_build)(&mut ec);

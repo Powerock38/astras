@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use rand::prelude::*;
 
-use crate::{universe::SHIP_Z, HandleLoaderBundle, SpriteLoader};
+use crate::{universe::SHIP_Z, SpriteLoader};
 
 const WORM_Z: f32 = SHIP_Z - 2.0;
 const WORM_Z_DELTA: f32 = 0.001;
@@ -52,14 +52,11 @@ pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
             seed: rng.gen(),
             wiggle_amplitude,
         },
-        HandleLoaderBundle {
-            loader: SpriteLoader {
-                texture_path: "sprites/worm_head.png".to_string(),
-                color,
-            },
-            transform,
-            ..default()
+        SpriteLoader {
+            texture_path: "sprites/worm_head.png".to_string(),
+            color,
         },
+        transform,
     ))
     .with_children(|c| {
         for n_segment in 0..length {
@@ -71,14 +68,11 @@ pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
 
             c.spawn((
                 WormSegment,
-                HandleLoaderBundle {
-                    loader: SpriteLoader {
-                        texture_path: "sprites/worm_segment.png".to_string(),
-                        color,
-                    },
-                    transform,
-                    ..default()
+                SpriteLoader {
+                    texture_path: "sprites/worm_segment.png".to_string(),
+                    color,
                 },
+                transform,
             ));
         }
     });

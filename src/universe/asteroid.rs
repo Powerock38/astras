@@ -12,27 +12,19 @@ use bevy::{
 use rand::prelude::*;
 
 use crate::{
-    handle_loader::{HandleLoaderBundle, MaterialLoader, MeshType},
+    handle_loader::{MaterialLoader, MeshType},
     items::{ElementOnAstre, ElementState, Inventory},
-    universe::{Astre, AstreBundle, Orbit},
+    universe::{Astre, Orbit},
 };
 
 const ASTEROID_MIN_RADIUS: f32 = 50.0;
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Astre, Orbit, MaterialLoader<AsteroidMaterial>)]
 pub struct Asteroid {
     initial_size: u32,
     rotation_speed: f32,
-}
-
-#[derive(Bundle)]
-pub struct AsteroidBundle {
-    name: Name,
-    asteroid: Asteroid,
-    astre_bundle: AstreBundle,
-    orbit: Orbit,
-    loader: HandleLoaderBundle<MaterialLoader<AsteroidMaterial>>,
 }
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
@@ -94,23 +86,21 @@ fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
         seed: rng.gen::<f32>() * 1000.,
     };
 
-    c.spawn(AsteroidBundle {
-        name: Name::new("Asteroid"),
-        asteroid: Asteroid {
+    c.spawn((
+        Name::new("Asteroid"),
+        Asteroid {
             initial_size,
             rotation_speed,
         },
-        orbit: Orbit::new(&mut rng),
-        astre_bundle: AstreBundle::new(avg_radius, 0.0, composition),
-        loader: HandleLoaderBundle {
-            loader: MaterialLoader {
-                material,
-                mesh_type: MeshType::RandomPolygon(seed_asteroid, avg_radius),
-            },
-            transform,
-            ..default()
+        Astre::new(avg_radius, 0.0),
+        Inventory::from(composition),
+        Orbit::new(&mut rng),
+        MaterialLoader {
+            material,
+            mesh_type: MeshType::RandomPolygon(seed_asteroid, avg_radius),
         },
-    });
+        transform,
+    ));
 }
 
 pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {

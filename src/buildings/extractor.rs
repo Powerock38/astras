@@ -7,15 +7,9 @@ use crate::{
     universe::Astre,
 };
 
-#[derive(Bundle)]
-pub struct ExtractorBundle {
-    extractor: Extractor,
-    inventory: Inventory,
-    logistic_provider: LogisticProvider,
-}
-
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Inventory, LogisticProvider(|| LogisticProvider::new(LogisticScope::Planet)))]
 pub struct Extractor {
     cooldown: Timer,
     amount_per_tick: u32,
@@ -23,56 +17,40 @@ pub struct Extractor {
     cached_item_ids: Option<Vec<ItemId>>,
 }
 
-impl ExtractorBundle {
+impl Extractor {
     pub fn new_solid() -> Self {
         Self {
-            extractor: Extractor {
-                element_state: ElementState::Solid,
-                cooldown: Timer::from_seconds(1., TimerMode::Repeating),
-                amount_per_tick: 100,
-                cached_item_ids: None,
-            },
-            inventory: Inventory::new(1000),
-            logistic_provider: LogisticProvider::new(LogisticScope::Planet),
+            element_state: ElementState::Solid,
+            cooldown: Timer::from_seconds(1., TimerMode::Repeating),
+            amount_per_tick: 100,
+            cached_item_ids: None,
         }
     }
 
     pub fn new_liquid() -> Self {
         Self {
-            extractor: Extractor {
-                element_state: ElementState::Liquid,
-                cooldown: Timer::from_seconds(1., TimerMode::Repeating),
-                amount_per_tick: 1000,
-                cached_item_ids: None,
-            },
-            inventory: Inventory::new(5000),
-            logistic_provider: LogisticProvider::new(LogisticScope::Planet),
+            element_state: ElementState::Liquid,
+            cooldown: Timer::from_seconds(1., TimerMode::Repeating),
+            amount_per_tick: 1000,
+            cached_item_ids: None,
         }
     }
 
     pub fn new_gas() -> Self {
         Self {
-            extractor: Extractor {
-                element_state: ElementState::Gas,
-                cooldown: Timer::from_seconds(1., TimerMode::Repeating),
-                amount_per_tick: 500,
-                cached_item_ids: None,
-            },
-            inventory: Inventory::new(10_000),
-            logistic_provider: LogisticProvider::new(LogisticScope::Planet),
+            element_state: ElementState::Gas,
+            cooldown: Timer::from_seconds(1., TimerMode::Repeating),
+            amount_per_tick: 500,
+            cached_item_ids: None,
         }
     }
 
     pub fn new_plasma() -> Self {
         Self {
-            extractor: Extractor {
-                element_state: ElementState::Plasma,
-                cooldown: Timer::from_seconds(1., TimerMode::Repeating),
-                amount_per_tick: 10,
-                cached_item_ids: None,
-            },
-            inventory: Inventory::new(100),
-            logistic_provider: LogisticProvider::new(LogisticScope::Planet),
+            element_state: ElementState::Plasma,
+            cooldown: Timer::from_seconds(1., TimerMode::Repeating),
+            amount_per_tick: 10,
+            cached_item_ids: None,
         }
     }
 }

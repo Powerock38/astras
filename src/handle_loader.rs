@@ -8,19 +8,10 @@ use crate::universe::random_polygon;
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Transform, Visibility)]
 pub struct SpriteLoader {
     pub texture_path: String,
     pub color: Color,
-}
-
-#[derive(Bundle, Default)]
-pub struct HandleLoaderBundle<HandleLoader: Component> {
-    pub loader: HandleLoader,
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
-    pub visibility: Visibility,
-    pub inherited_visibility: InheritedVisibility,
-    pub view_visibility: ViewVisibility,
 }
 
 pub fn scan_sprite_loaders(
@@ -42,6 +33,7 @@ pub fn scan_sprite_loaders(
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Transform, Visibility)]
 pub struct MaterialLoader<M: Material2d> {
     pub mesh_type: MeshType,
     pub material: M,

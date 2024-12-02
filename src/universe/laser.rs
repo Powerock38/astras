@@ -5,10 +5,11 @@ use bevy::{
 };
 use rand::Rng;
 
-use crate::{HandleLoaderBundle, MaterialLoader};
+use crate::MaterialLoader;
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(MaterialLoader<LaserMaterial>)]
 pub struct Laser {
     ttl: Timer,
 }
@@ -44,12 +45,6 @@ impl LaserMaterial {
             seed: rng.gen(),
         }
     }
-}
-
-#[derive(Bundle)]
-pub struct LaserBundle {
-    pub laser: Laser,
-    pub loader: HandleLoaderBundle<MaterialLoader<LaserMaterial>>,
 }
 
 pub fn update_lasers(

@@ -6,8 +6,8 @@ use crate::{
     data::ELEMENTS,
     items::Inventory,
     ui::NotificationEvent,
-    universe::{Astre, DockableOnAstre, Laser, LaserBundle, LaserMaterial},
-    HandleLoaderBundle, MaterialLoader, MeshType, SpriteLoader,
+    universe::{Astre, DockableOnAstre, Laser, LaserMaterial},
+    MaterialLoader, MeshType, SpriteLoader,
 };
 
 pub const SHIP_Z: f32 = 100.;
@@ -43,7 +43,6 @@ pub struct ShipSprite;
 pub fn build_ship(c: &mut ChildBuilder) {
     let position = Vec2::new(0., 0.);
 
-    // Ship is just a SpatialBundle
     c.spawn((
         Name::new("Ship"),
         Ship {
@@ -69,11 +68,8 @@ pub fn spawn_ship_sprite(mut commands: Commands, q_ship: Query<Entity, Added<Shi
         // Ship sprite as a child of ship, so we can rotate the sprite without rotating camera
         c.spawn((
             ShipSprite,
-            HandleLoaderBundle {
-                loader: SpriteLoader {
-                    texture_path: "sprites/ship.png".to_string(),
-                    ..default()
-                },
+            SpriteLoader {
+                texture_path: "sprites/ship.png".to_string(),
                 ..default()
             },
         ));
@@ -183,23 +179,18 @@ pub fn update_ship_mining(
                     let angle = relative_position.y.atan2(relative_position.x);
 
                     commands.entity(ship_entity).with_children(|c| {
-                        c.spawn(LaserBundle {
-                            laser: Laser::new(0.5),
-                            loader: HandleLoaderBundle {
-                                loader: MaterialLoader {
-                                    mesh_type: MeshType::Rectangle(
-                                        Vec2::ZERO,
-                                        Vec2::new(relative_position.length(), MINING_LASER_WIDTH),
-                                    ),
-                                    material: LaserMaterial::new(color),
-                                },
-                                transform: Transform::from_translation(
-                                    (-relative_position / 2.0).extend(-0.1),
-                                )
-                                .with_rotation(Quat::from_rotation_z(angle)),
-                                ..default()
+                        c.spawn((
+                            Laser::new(0.5),
+                            MaterialLoader {
+                                mesh_type: MeshType::Rectangle(
+                                    Vec2::ZERO,
+                                    Vec2::new(relative_position.length(), MINING_LASER_WIDTH),
+                                ),
+                                material: LaserMaterial::new(color),
                             },
-                        });
+                            Transform::from_translation((-relative_position / 2.0).extend(-0.1))
+                                .with_rotation(Quat::from_rotation_z(angle)),
+                        ));
                     });
 
                     let item = item_id.data();

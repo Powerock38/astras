@@ -9,26 +9,18 @@ use rand::prelude::*;
 
 use crate::{
     data::ELEMENTS,
-    items::{ElementOnAstre, ElementState},
-    universe::{AstreBundle, Orbit, Star},
-    HandleLoaderBundle, MaterialLoader, MeshType,
+    items::{ElementOnAstre, ElementState, Inventory},
+    universe::{Astre, Orbit, Star},
+    MaterialLoader, MeshType,
 };
 
 pub const NB_COLORS: usize = 3;
 
 pub type PlanetColors = [LinearRgba; NB_COLORS];
 
-#[derive(Bundle)]
-pub struct PlanetBundle {
-    name: Name,
-    planet: Planet,
-    astre_bundle: AstreBundle,
-    orbit: Orbit,
-    loader: HandleLoaderBundle<MaterialLoader<PlanetMaterial>>,
-}
-
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Astre, Orbit, MaterialLoader<PlanetMaterial>)]
 pub struct Planet;
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
@@ -127,20 +119,18 @@ pub fn build_planet(
         atmosphere_holes_threshold,
     };
 
-    c.spawn(PlanetBundle {
-        name: Name::new("Planet"),
-        planet: Planet,
-        orbit: Orbit::new(rng),
-        astre_bundle: AstreBundle::new(surface_radius, atmosphere_radius, composition),
-        loader: HandleLoaderBundle {
-            loader: MaterialLoader {
-                material,
-                mesh_type: MeshType::Circle(total_radius),
-            },
-            transform,
-            ..default()
+    c.spawn((
+        Name::new("Planet"),
+        Planet,
+        Orbit::new(rng),
+        Astre::new(surface_radius, atmosphere_radius),
+        Inventory::from(composition),
+        MaterialLoader {
+            material,
+            mesh_type: MeshType::Circle(total_radius),
         },
-    })
+        transform,
+    ))
     .with_children(|c| {
         build_planet_children(c, rng, surface_radius, orbit_distance, nb_children, z_value);
     });

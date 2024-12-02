@@ -5,7 +5,7 @@ use bevy::{color::palettes::css::*, prelude::*, utils::HashMap};
 use crate::{
     buildings::*,
     enum_map,
-    items::{Element, ElementState, Item, Recipe},
+    items::{Element, ElementState, Inventory, Item, Recipe},
 };
 
 enum_map! {
@@ -184,7 +184,7 @@ enum_map! {
             sprite_name: "quarry",
             location: PlacingLocation::Surface,
             on_build: |c| {
-                c.insert(ExtractorBundle::new_solid());
+                c.insert((Extractor::new_solid(), Inventory::new(1000)));
             },
         },
 
@@ -193,7 +193,7 @@ enum_map! {
             sprite_name: "quarry",
             location: PlacingLocation::Surface,
             on_build: |c| {
-                c.insert(ExtractorBundle::new_liquid());
+                c.insert((Extractor::new_liquid(), Inventory::new(5000)));
             },
         },
 
@@ -202,7 +202,7 @@ enum_map! {
             sprite_name: "quarry",
             location: PlacingLocation::Atmosphere,
             on_build: |c| {
-                c.insert(ExtractorBundle::new_gas());
+                c.insert((Extractor::new_gas(), Inventory::new(10_000)));
             },
         },
 
@@ -211,7 +211,7 @@ enum_map! {
             sprite_name: "quarry",
             location: PlacingLocation::SurfaceOrAtmosphere,
             on_build: |c| {
-                c.insert(ExtractorBundle::new_plasma());
+                c.insert((Extractor::new_plasma(), Inventory::new(500)));
             },
         },
 
@@ -220,7 +220,7 @@ enum_map! {
             sprite_name: "warehouse",
             location: PlacingLocation::Surface,
             on_build: |c| {
-                c.insert(WarehouseBundle::default());
+                c.insert((Warehouse, Inventory::new(100_000)));
             },
         },
 
@@ -229,7 +229,7 @@ enum_map! {
             sprite_name: "cargo_shuttle",
             location: PlacingLocation::SurfaceOrAtmosphere,
             on_build: |c| {
-                c.insert(LogisticFreightBundle::new_planet());
+                c.insert((LogisticFreight::new_planet(), Inventory::new(10_000)));
             },
         },
 
@@ -238,7 +238,7 @@ enum_map! {
             sprite_name: "spaceport",
             location: PlacingLocation::Atmosphere,
             on_build: |c| {
-                c.insert(SpaceportBundle::default());
+                c.insert((Spaceport, Inventory::new(1000)));
             },
         },
 
@@ -247,7 +247,7 @@ enum_map! {
             sprite_name: "cargo_shuttle",
             location: PlacingLocation::Atmosphere,
             on_build: |c| {
-                c.insert(LogisticFreightBundle::new_solar_system());
+                c.insert((LogisticFreight::new_solar_system(), Inventory::new(100_000)));
             },
         },
 
@@ -256,10 +256,10 @@ enum_map! {
             sprite_name: "foundry",
             location: PlacingLocation::Surface,
             on_build: |c| {
-                c.insert(CrafterBundle::new(vec![
+                c.insert((Crafter::new_crafter(vec![
                     RecipeId::SmeltElectroniteOre,
                     RecipeId::CraftPlasmaFuel,
-                ]));
+                ]), Inventory::new(100)));
             },
         },
 
@@ -268,10 +268,10 @@ enum_map! {
             sprite_name: "assembler",
             location: PlacingLocation::Surface,
             on_build: |c| {
-                c.insert(CrafterBundle::new(vec![
+                c.insert((Crafter::new_crafter(vec![
                     RecipeId::CraftComputingCore,
                     RecipeId::CargoShuttle,
-                ]));
+                ]), Inventory::new(100)));
             },
         },
     }

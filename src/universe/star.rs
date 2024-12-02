@@ -6,18 +6,10 @@ use bevy::{
 use rand::prelude::*;
 
 use crate::{
-    items::{ElementOnAstre, ElementState},
-    universe::{build_asteroid_belt, build_planet_children, AstreBundle},
-    HandleLoaderBundle, MaterialLoader, MeshType,
+    items::{ElementOnAstre, ElementState, Inventory},
+    universe::{build_asteroid_belt, build_planet_children, Astre},
+    MaterialLoader, MeshType,
 };
-
-#[derive(Bundle)]
-pub struct StarBundle {
-    name: Name,
-    star: Star,
-    astre_bundle: AstreBundle,
-    loader: HandleLoaderBundle<MaterialLoader<StarMaterial>>,
-}
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
 pub struct StarMaterial {
@@ -37,6 +29,7 @@ impl Material2d for StarMaterial {
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Astre, MaterialLoader<StarMaterial>)]
 pub struct Star;
 
 pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
@@ -72,19 +65,17 @@ pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
         rotation: rotation_direction * rotation_speed,
     };
 
-    c.spawn(StarBundle {
-        name: Name::new("Star"),
-        star: Star,
-        astre_bundle: AstreBundle::new(radius, 0., composition),
-        loader: HandleLoaderBundle {
-            loader: MaterialLoader {
-                material,
-                mesh_type: MeshType::Circle(radius),
-            },
-            transform,
-            ..default()
+    c.spawn((
+        Name::new("Star"),
+        Star,
+        Astre::new(radius, 0.),
+        Inventory::from(composition),
+        MaterialLoader {
+            material,
+            mesh_type: MeshType::Circle(radius),
         },
-    })
+        transform,
+    ))
     .with_children(|c| {
         build_planet_children(c, rng, radius, orbit_distance, nb_planets, 0);
 

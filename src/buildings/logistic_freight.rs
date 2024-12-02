@@ -9,44 +9,11 @@ const LOGISTIC_FREIGHTER_Z: f32 = 0.6;
 
 //TODO: implement Ship following (to move freighters manually)
 
-#[derive(Bundle)]
-pub struct LogisticFreightBundle {
-    logistic_freight: LogisticFreight,
-    inventory: Inventory,
-}
-
-impl LogisticFreightBundle {
-    pub fn new_planet() -> Self {
-        Self {
-            logistic_freight: LogisticFreight {
-                uuid: Uuid::new_v4(),
-                cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
-                max_amount_per_transfer: 100,
-                journey: None,
-                scope: LogisticScope::Planet,
-            },
-            inventory: Inventory::new(10_000),
-        }
-    }
-
-    pub fn new_solar_system() -> Self {
-        Self {
-            logistic_freight: LogisticFreight {
-                uuid: Uuid::new_v4(),
-                cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
-                max_amount_per_transfer: 100,
-                journey: None,
-                scope: LogisticScope::SolarSystem,
-            },
-            inventory: Inventory::new(100_000),
-        }
-    }
-}
-
 pub type LogisticJourneyWithTarget = (LogisticJourney, Option<Vec2>); // (journey, move_target)
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Inventory)]
 pub struct LogisticFreight {
     uuid: Uuid,
     cooldown: Timer,
@@ -56,6 +23,26 @@ pub struct LogisticFreight {
 }
 
 impl LogisticFreight {
+    pub fn new_planet() -> Self {
+        Self {
+            scope: LogisticScope::Planet,
+            uuid: Uuid::new_v4(),
+            cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
+            max_amount_per_transfer: 100,
+            journey: None,
+        }
+    }
+
+    pub fn new_solar_system() -> Self {
+        Self {
+            scope: LogisticScope::SolarSystem,
+            uuid: Uuid::new_v4(),
+            cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
+            max_amount_per_transfer: 100,
+            journey: None,
+        }
+    }
+
     #[inline]
     pub fn logistic_journey(&self) -> Option<&LogisticJourney> {
         self.journey.as_ref().map(|(journey, _)| journey)

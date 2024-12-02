@@ -1,32 +1,11 @@
 use bevy::prelude::*;
 use uuid::Uuid;
 
-use crate::{
-    items::{ElementOnAstre, Inventory},
-    universe::update_ship_mining,
-};
-
-#[derive(Bundle)]
-pub struct AstreBundle {
-    astre: Astre,
-    inventory: Inventory,
-}
-
-impl AstreBundle {
-    pub fn new(
-        surface_radius: f32,
-        atmosphere_radius: f32,
-        composition: Vec<ElementOnAstre>,
-    ) -> Self {
-        Self {
-            astre: Astre::new(surface_radius, atmosphere_radius),
-            inventory: Inventory::from(composition),
-        }
-    }
-}
+use crate::{items::Inventory, universe::update_ship_mining};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
+#[require(Inventory)]
 pub struct Astre {
     uuid: Uuid,
     surface_radius: f32,

@@ -5,7 +5,7 @@ use crate::{
     data::{BuildingId, RecipeId},
     items::{Inventory, RecipeOutputs},
     universe::{Asteroid, Astre, DockableOnAstre, SHIP_Z},
-    HandleLoaderBundle, SpriteLoader,
+    SpriteLoader,
 };
 
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
@@ -97,19 +97,16 @@ pub fn spawn_building(
 
                         // spawn the building at building_preview_transform
                         commands.spawn((
-                            HandleLoaderBundle {
-                                loader: SpriteLoader {
-                                    texture_path: format!("sprites/{}.png", building.sprite_name),
-                                    ..default()
-                                },
-                                transform: *building_preview_transform,
+                            SpriteLoader {
+                                texture_path: format!("sprites/{}.png", building.sprite_name),
                                 ..default()
                             },
+                            *building_preview_transform,
                             ConstructionSite {
                                 building: placing_building.0,
                             },
                             DockableOnAstre::instant_location(building.location),
-                            Crafter::new(vec![*recipe_id], true),
+                            Crafter::new_construction_site(vec![*recipe_id]),
                             Inventory::new(recipe_needed_space),
                         ));
 
@@ -128,18 +125,13 @@ pub fn spawn_building(
                 }
             } else {
                 // there is no building preview, spawn it
-                let transform = Transform::from_translation(world_position)
-                    .with_scale(Vec3::splat(BUILDING_SCALE));
-
                 commands.spawn((
-                    HandleLoaderBundle {
-                        loader: SpriteLoader {
-                            texture_path: format!("sprites/{}.png", building.sprite_name),
-                            color: Color::srgba(1., 1., 1., 0.5),
-                        },
-                        transform,
-                        ..default()
+                    SpriteLoader {
+                        texture_path: format!("sprites/{}.png", building.sprite_name),
+                        color: Color::srgba(1., 1., 1., 0.5),
                     },
+                    Transform::from_translation(world_position)
+                        .with_scale(Vec3::splat(BUILDING_SCALE)),
                     BuildingPreview,
                 ));
             }
