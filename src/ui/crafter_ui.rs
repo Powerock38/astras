@@ -4,7 +4,10 @@ use crate::{
     buildings::Crafter,
     data::{BuildingId, ItemId},
     items::RecipeOutputs,
-    ui::{build_item_ui, spawn_inventory_ui, HudWindow, HudWindowParent, UiButton},
+    ui::{
+        build_item_ui, spawn_building_header, spawn_inventory_ui, HudWindow, HudWindowParent,
+        UiButton,
+    },
 };
 
 pub fn scan_crafter_ui(mut commands: Commands, q_crafters: Query<Entity, Added<Crafter>>) {
@@ -13,7 +16,7 @@ pub fn scan_crafter_ui(mut commands: Commands, q_crafters: Query<Entity, Added<C
     }
 }
 
-pub fn spawn_crafter_ui(
+fn spawn_crafter_ui(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     window_parent: Single<Entity, With<HudWindowParent>>,
@@ -28,6 +31,9 @@ pub fn spawn_crafter_ui(
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
+                let name = if crafter.is_construction_site() { "Construction site" } else { "Crafter" };
+                spawn_building_header(c, entity, name);
+
                 if !crafter.is_construction_site() {
                     // List recipes
 

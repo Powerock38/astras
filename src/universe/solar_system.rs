@@ -10,10 +10,12 @@ pub struct SolarSystem {
 }
 
 impl SolarSystem {
+    #[inline]
     pub fn x(&self) -> i32 {
         self.position[0]
     }
 
+    #[inline]
     pub fn y(&self) -> i32 {
         self.position[1]
     }

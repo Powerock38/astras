@@ -11,7 +11,9 @@ use bevy::{
 use crate::{
     buildings::LogisticFreight,
     items::{LogisticProvider, LogisticScope},
-    ui::{spawn_inventory_ui, HudWindow, HudWindowDependent, HudWindowParent},
+    ui::{
+        spawn_building_header, spawn_inventory_ui, HudWindow, HudWindowDependent, HudWindowParent,
+    },
 };
 
 pub fn scan_logistic_freighter(
@@ -33,7 +35,7 @@ pub fn scan_logistic_freighter(
     }
 }
 
-pub fn spawn_cargo_shuttle_ui(
+fn spawn_cargo_shuttle_ui(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     window_parent: Single<Entity, With<HudWindowParent>>,
@@ -45,12 +47,14 @@ pub fn spawn_cargo_shuttle_ui(
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
+                spawn_building_header(c, entity, "Cargo Shuttle");
+
                 spawn_inventory_ui(c, entity);
             });
         });
 }
 
-pub fn spawn_interplanetary_freighter_ui(
+fn spawn_interplanetary_freighter_ui(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
@@ -115,6 +119,8 @@ pub fn spawn_interplanetary_freighter_ui(
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
+                spawn_building_header(c, entity, "Interplanetary Freighter");
+
                 // Provider minimap
 
                 if let Some(image_handle) = image_handle {

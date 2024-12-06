@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     buildings::Spaceport,
-    ui::{spawn_inventory_ui, HudWindow, HudWindowParent},
+    ui::{spawn_building_header, spawn_inventory_ui, HudWindow, HudWindowParent},
 };
 
 pub fn scan_spaceport_ui(mut commands: Commands, q_extractors: Query<Entity, Added<Spaceport>>) {
@@ -23,6 +23,8 @@ pub fn spawn_spaceport_ui(
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
+                spawn_building_header(c, entity, "Spaceport");
+
                 //TODO: UI to build LogisticRequest / LogisticProvider of each scope (Planet, SolarSystem)
 
                 spawn_inventory_ui(c, entity);

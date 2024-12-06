@@ -11,6 +11,7 @@ use crate::{
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
 const BUILDING_SCALE: f32 = 3.0;
 const PLACING_ZONES_COLOR: Color = Color::srgba(0.5, 0.8, 0.8, 0.5);
+const HIGHLIGHT_COLOR: Color = Color::srgb(0.0, 1.0, 1.0);
 
 #[derive(Resource, Debug)]
 pub struct PlacingBuilding(pub BuildingId);
@@ -38,18 +39,12 @@ pub enum PlacingLocation {
     SurfaceOrAtmosphere,
 }
 
-#[derive(Component, Reflect, Default)]
-#[reflect(Component)]
-pub struct ConstructionSite {
-    pub building: BuildingId,
-}
-
 #[derive(Component)]
 pub struct BuildingPreview;
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
-pub struct Building;
+pub struct BuildingHighlight;
 
 pub fn spawn_building(
     mut commands: Commands,
@@ -81,7 +76,7 @@ pub fn spawn_building(
             let left = mouse_input.just_pressed(MouseButton::Left);
             let right = mouse_input.just_pressed(MouseButton::Right);
 
-            // Place building
+            // Place construction site
             if left {
                 if let Some(recipe_id) =
                     RecipeId::ALL
@@ -95,16 +90,14 @@ pub fn spawn_building(
                 {
                     let recipe_needed_space = recipe_id.data().inputs_quantity();
 
-                    // spawn the building at building_preview_transform
+                    // spawn the construction site at building_preview_transform
                     commands.spawn((
                         SpriteLoader {
                             texture_path: format!("sprites/{}.png", building.sprite_name),
-                            ..default()
+                            color: Color::default().with_alpha(0.8),
                         },
                         *building_preview_transform,
-                        ConstructionSite {
-                            building: placing_building.0,
-                        },
+                        BuildingHighlight,
                         DockableOnAstre::instant_location(building.location),
                         Crafter::new_construction_site(vec![*recipe_id]),
                         Inventory::new(recipe_needed_space),
@@ -120,7 +113,7 @@ pub fn spawn_building(
 
             // Cancel placing building
             if right {
-                commands.entity(building_preview_entity).despawn();
+                commands.entity(building_preview_entity).despawn_recursive();
                 commands.remove_resource::<PlacingBuilding>();
             }
         } else {
@@ -128,7 +121,7 @@ pub fn spawn_building(
             commands.spawn((
                 SpriteLoader {
                     texture_path: format!("sprites/{}.png", building.sprite_name),
-                    color: Color::srgba(1., 1., 1., 0.5),
+                    color: Color::default().with_alpha(0.5),
                 },
                 Transform::from_translation(world_position).with_scale(Vec3::splat(BUILDING_SCALE)),
                 BuildingPreview,
@@ -166,5 +159,26 @@ pub fn draw_placing_zones(
                 PLACING_ZONES_COLOR,
             );
         }
+    }
+}
+
+pub fn add_highlight_selection(
+    mut commands: Commands,
+    query: Query<Entity, Added<BuildingHighlight>>,
+) {
+    for entity in &query {
+        commands
+            .entity(entity)
+            .observe(recolor_on::<Pointer<Over>>(HIGHLIGHT_COLOR))
+            .observe(recolor_on::<Pointer<Out>>(Color::default()));
+    }
+}
+
+fn recolor_on<E>(color: Color) -> impl Fn(Trigger<E>, Query<&mut Sprite>) {
+    move |ev, mut sprites| {
+        let Ok(mut sprite) = sprites.get_mut(ev.entity()) else {
+            return;
+        };
+        sprite.color = color.with_alpha(sprite.color.alpha());
     }
 }

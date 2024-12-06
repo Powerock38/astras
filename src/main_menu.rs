@@ -33,7 +33,7 @@ pub fn setup_main_menu(mut commands: Commands) {
         });
 }
 
-pub fn spawn_new_game(
+fn spawn_new_game(
     _trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,

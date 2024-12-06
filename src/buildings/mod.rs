@@ -32,11 +32,11 @@ impl Plugin for BuildingsPlugin {
                 update_extractors,
                 update_logistic_freights,
                 update_crafters,
+                add_highlight_selection,
             )
                 .in_set(SolarSystemSet),
         )
-        .register_type::<ConstructionSite>()
-        .register_type::<Building>()
+        .register_type::<BuildingHighlight>()
         .register_type::<LogisticFreight>()
         .register_type::<Spaceport>()
         .register_type::<Warehouse>()

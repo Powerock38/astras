@@ -32,10 +32,10 @@ impl Material2d for StarMaterial {
 #[require(Astre, MaterialLoader<StarMaterial>)]
 pub struct Star;
 
-pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
+pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) -> Entity {
     let transform = Transform::from_translation(position.extend(0.));
 
-    let radius = rng.gen_range((5000.)..10000.);
+    let radius = rng.gen_range((10_000.)..20_000.);
 
     let nb_planets = rng.gen_range(5..=15);
 
@@ -77,8 +77,10 @@ pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
         transform,
     ))
     .with_children(|c| {
+        let radius = radius / 2.;
         build_planet_children(c, rng, radius, orbit_distance, nb_planets, 0);
 
         build_asteroid_belt(c, rng);
-    });
+    })
+    .id()
 }

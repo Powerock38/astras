@@ -149,7 +149,7 @@ pub fn build_planet_children(
     z_value: u32,
 ) {
     for i in 0..nb_children {
-        let c_surface_radius = rng.gen_range((surface_radius * 0.1)..(surface_radius * 0.9));
+        let c_surface_radius = rng.gen_range((surface_radius * 0.1)..(surface_radius * 0.7));
 
         if c_surface_radius < 1000. {
             continue;

@@ -29,6 +29,9 @@ pub struct HudWindowDependent;
 )]
 pub struct HudWindow;
 
+#[derive(Event)]
+pub struct ClearUiEvent;
+
 pub fn setup_hud(mut commands: Commands, camera: Single<Entity, Added<MainCamera>>) {
     commands
         .spawn((
@@ -76,17 +79,12 @@ pub fn clear_ui_or_spawn_ship_ui(
     asset_server: Res<AssetServer>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     window_parent: Single<Entity, With<HudWindowParent>>,
-    q_window_dependents: Query<Entity, With<HudWindowDependent>>,
     q_children: Query<Entity, With<Children>>,
     ship: Single<Entity, With<Ship>>,
 ) {
     if keyboard_input.any_just_pressed([KeyCode::Escape, KeyCode::KeyE]) {
         if q_children.get(*window_parent).is_ok() {
-            commands.entity(*window_parent).despawn_descendants();
-
-            for entity in &q_window_dependents {
-                commands.entity(entity).despawn_recursive();
-            }
+            commands.trigger(ClearUiEvent);
         } else {
             // SPAWN SHIP UI
 
@@ -129,5 +127,18 @@ pub fn clear_ui_or_spawn_ship_ui(
                 });
             });
         }
+    }
+}
+
+pub fn clear_ui(
+    _trigger: Trigger<ClearUiEvent>,
+    mut commands: Commands,
+    window_parent: Single<Entity, With<HudWindowParent>>,
+    q_window_dependents: Query<Entity, With<HudWindowDependent>>,
+) {
+    commands.entity(*window_parent).despawn_descendants();
+
+    for entity in &q_window_dependents {
+        commands.entity(entity).despawn_recursive();
     }
 }

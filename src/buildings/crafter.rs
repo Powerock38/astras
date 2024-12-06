@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    buildings::Building,
+    buildings::BuildingHighlight,
     data::RecipeId,
     items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope},
     SpriteLoader,
@@ -105,7 +105,7 @@ pub fn update_crafters(
 
                             commands.entity(parent.get()).with_children(|c| {
                                 let mut ec = c.spawn((
-                                    Building,
+                                    BuildingHighlight,
                                     SpriteLoader {
                                         texture_path: building.sprite_path(),
                                         ..default()

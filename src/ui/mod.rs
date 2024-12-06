@@ -17,6 +17,9 @@ pub use save_load_ui::*;
 mod inventory_ui;
 pub use inventory_ui::*;
 
+mod building_ui;
+pub use building_ui::*;
+
 mod crafter_ui;
 pub use crafter_ui::*;
 
@@ -52,6 +55,7 @@ impl Plugin for UIPlugin {
                     .in_set(SolarSystemSet),
             ),
         )
+        .add_observer(clear_ui)
         .add_event::<NotificationEvent>();
     }
 }

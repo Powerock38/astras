@@ -125,7 +125,7 @@ pub fn update_ship(
 }
 
 pub fn update_ship_mining(
-    mut trigger: Trigger<Pointer<Down>>,
+    trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     placing_building: Option<Res<PlacingBuilding>>,
     q_ship: Single<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
@@ -139,8 +139,6 @@ pub fn update_ship_mining(
     }
 
     let astre_entity = trigger.entity();
-
-    trigger.propagate(true);
 
     // TODO ship.mining_cooldown.tick(time.delta()).finished() ; ship.mining_cooldown.reset();
 

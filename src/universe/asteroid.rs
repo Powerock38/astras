@@ -42,7 +42,7 @@ impl Material2d for AsteroidMaterial {
 }
 
 pub fn build_asteroid_belt(c: &mut ChildBuilder, rng: &mut StdRng) {
-    let radius: f32 = rng.gen_range(10_000.0..100_000.0);
+    let radius: f32 = rng.gen_range(30_000.0..100_000.0);
     let nb_asteroids = rng.gen_range(10..100);
 
     let radius_variation = rng.gen_range(100.0..radius * 0.2);
