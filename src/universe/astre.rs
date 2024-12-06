@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use uuid::Uuid;
 
 use crate::{items::Inventory, universe::update_ship_mining};
 
@@ -7,7 +6,6 @@ use crate::{items::Inventory, universe::update_ship_mining};
 #[reflect(Component)]
 #[require(Inventory)]
 pub struct Astre {
-    uuid: Uuid,
     surface_radius: f32,
     atmosphere_radius: f32,
 }
@@ -15,15 +13,9 @@ pub struct Astre {
 impl Astre {
     pub fn new(surface_radius: f32, atmosphere_radius: f32) -> Self {
         Self {
-            uuid: Uuid::new_v4(),
             surface_radius,
             atmosphere_radius,
         }
-    }
-
-    #[inline]
-    pub fn uuid(&self) -> Uuid {
-        self.uuid
     }
 
     #[inline]

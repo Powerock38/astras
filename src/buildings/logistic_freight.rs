@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use uuid::Uuid;
 
 use crate::items::{Inventory, LogisticJourney, LogisticProvider, LogisticRequest, LogisticScope};
 
@@ -15,7 +14,6 @@ pub type LogisticJourneyWithTarget = (LogisticJourney, Option<Vec2>); // (journe
 #[reflect(Component)]
 #[require(Inventory)]
 pub struct LogisticFreight {
-    uuid: Uuid,
     cooldown: Timer,
     max_amount_per_transfer: u32,
     journey: Option<LogisticJourneyWithTarget>,
@@ -26,7 +24,6 @@ impl LogisticFreight {
     pub fn new_planet() -> Self {
         Self {
             scope: LogisticScope::Planet,
-            uuid: Uuid::new_v4(),
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
             max_amount_per_transfer: 100,
             journey: None,
@@ -36,7 +33,6 @@ impl LogisticFreight {
     pub fn new_solar_system() -> Self {
         Self {
             scope: LogisticScope::SolarSystem,
-            uuid: Uuid::new_v4(),
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
             max_amount_per_transfer: 100,
             journey: None,
