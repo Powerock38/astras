@@ -20,9 +20,6 @@ const ZOOM_SPEED: f32 = 2.0;
 const SWITCH_TO_SOLAR_SYSTEM: f32 = 500.0;
 
 #[derive(Component)]
-pub struct UniverseMap;
-
-#[derive(Component)]
 pub struct UniverseMapCamera;
 
 pub fn spawn_universe_map(
@@ -40,7 +37,6 @@ pub fn spawn_universe_map(
         .spawn((
             Name::new("UniverseMap"),
             StateScoped(GameState::GameUniverseMap),
-            UniverseMap,
             Transform::from_scale(Vec3::splat(SOLAR_SYSTEMS_SCALE)),
             Visibility::default(),
         ))
@@ -67,7 +63,14 @@ pub fn spawn_universe_map(
                     );
 
                     let mut rng = StdRng::seed_from_u64(seed);
-                    build_star(c, &mut rng, position);
+                    let entity = build_star(c, &mut rng, position);
+
+                    // ugly way to add an observer
+                    c.enqueue_command(move |world: &mut World| {
+                        if let Ok(mut entity) = world.get_entity_mut(entity) {
+                            entity.observe(travel_to_solar_system);
+                        }
+                    });
 
                     if x == solar_system.x() && y == solar_system.y() {
                         c.spawn((
@@ -148,4 +151,10 @@ pub fn update_universe_map(
     camera_delta *= SOLAR_SYSTEMS_SPACING;
     transform.translation.x += camera_delta.x;
     transform.translation.y += camera_delta.y;
+}
+
+fn travel_to_solar_system(trigger: Trigger<Pointer<Click>>) {
+    println!("Travelling to solar system {:?}", trigger.entity());
+    // save current solar system
+    // load new solar system, generate if it doesn't exist
 }

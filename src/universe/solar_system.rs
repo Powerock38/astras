@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 
-use crate::universe::{build_ship, build_star, build_worm};
+use crate::{
+    universe::{build_ship, build_star, build_worm},
+    CurrentSolarSystemName,
+};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
@@ -19,6 +22,11 @@ impl SolarSystem {
     pub fn y(&self) -> i32 {
         self.position[1]
     }
+
+    #[inline]
+    pub fn name(&self) -> String {
+        format!("{},{}", self.x(), self.y())
+    }
 }
 
 pub fn solar_system_position_to_seed(position: [i32; 2]) -> u64 {
@@ -31,10 +39,14 @@ pub fn spawn_solar_system(commands: &mut Commands, position: [i32; 2]) {
     let seed = solar_system_position_to_seed(position);
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
 
+    let solar_system = SolarSystem { position };
+
+    commands.insert_resource(CurrentSolarSystemName(solar_system.name()));
+
     commands
         .spawn((
             Name::new("SolarSytem"),
-            SolarSystem { position },
+            solar_system,
             Transform::default(),
             Visibility::default(),
         ))

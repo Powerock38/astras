@@ -1,4 +1,8 @@
-use bevy::prelude::*;
+use bevy::{
+    input::common_conditions::input_just_pressed,
+    prelude::*,
+    remote::{http::RemoteHttpPlugin, RemotePlugin},
+};
 use buildings::BuildingsPlugin;
 use handle_loader::*;
 use items::ItemsPlugin;
@@ -23,12 +27,14 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(MeshPickingPlugin)
-        // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
-        // .add_plugins(bevy::diagnostic::LogDiagnosticsPlugin::default())
-        // .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
+        // .add_plugins((bevy::diagnostic::LogDiagnosticsPlugin::default(), bevy::diagnostic::FrameTimeDiagnosticsPlugin))
+        .add_plugins((
+            RemotePlugin::default(),
+            RemoteHttpPlugin::default().with_header("Access-Control-Allow-Origin", "*"),
+        ))
         .insert_resource(ClearColor(Color::BLACK))
-        .register_type::<SaveName>()
         .register_type::<SpriteLoader>()
+        .register_type::<CurrentSolarSystemName>()
         .add_plugins((UniversePlugin, UIPlugin, ItemsPlugin, BuildingsPlugin))
         .configure_sets(
             Update,
@@ -48,12 +54,19 @@ fn main() {
         .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
         .add_systems(
             Update,
-            (
-                load_solar_system,
-                finish_load_solar_system.after(load_solar_system),
-                (save_solar_system, save_key_shortcut, scan_sprite_loaders).in_set(GameSet),
-            ),
+            ((
+                scan_sprite_loaders,
+                (|mut commands: Commands| {
+                    commands.trigger(SaveShip);
+                    commands.trigger(SaveSolarSystem);
+                })
+                .run_if(input_just_pressed(KeyCode::KeyL)),
+            )
+                .in_set(GameSet),),
         )
+        .add_observer(save_ship)
+        .add_observer(save_solar_system)
+        .add_observer(load_universe)
         .init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
         .run();

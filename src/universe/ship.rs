@@ -105,7 +105,7 @@ pub fn update_ship(
 
     ship.speed += (acceleration * time.delta_secs()).clamp_length_max(max_speed);
 
-    if dockable.is_docked() {
+    if dockable.on_astre() {
         ship.speed *= 0.99;
     }
 

@@ -1,4 +1,4 @@
-use bevy::{ecs::entity::MapEntities, prelude::*};
+use bevy::prelude::*;
 
 use crate::{
     buildings::PlacingLocation,
@@ -8,18 +8,10 @@ use crate::{
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct DockableOnAstre {
-    on_astre: Option<Entity>,
+    on_astre: bool,
     instant_or_despawn: bool,
     location: PlacingLocation,
     adjust_z: bool,
-}
-
-impl MapEntities for DockableOnAstre {
-    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
-        if let Some(entity) = &mut self.on_astre {
-            *entity = entity_mapper.map_entity(*entity);
-        }
-    }
 }
 
 impl DockableOnAstre {
@@ -32,8 +24,8 @@ impl DockableOnAstre {
         }
     }
 
-    pub fn is_docked(&self) -> bool {
-        self.on_astre.is_some()
+    pub fn on_astre(&self) -> bool {
+        self.on_astre
     }
 }
 
@@ -41,8 +33,9 @@ pub fn update_dockable_on_astre(
     mut commands: Commands,
     q_solar_system: Single<(Entity, &GlobalTransform), With<SolarSystem>>,
     mut q_dockable: Query<(
-        &mut DockableOnAstre,
         Entity,
+        &mut DockableOnAstre,
+        Option<&Parent>,
         &mut Transform,
         &GlobalTransform,
     )>,
@@ -53,7 +46,9 @@ pub fn update_dockable_on_astre(
 ) {
     let (entity_solar_system, solar_system_global_transform) = q_solar_system.into_inner();
 
-    for (mut dockable, entity_dockable, mut transform, global_transform) in &mut q_dockable {
+    for (entity_dockable, mut dockable, dockable_parent, mut transform, global_transform) in
+        &mut q_dockable
+    {
         let mut on_astre_option: Option<(Entity, &GlobalTransform, f32)> = None;
 
         for (entity_astre, astre, astre_global_transform) in &q_astres {
@@ -88,9 +83,11 @@ pub fn update_dockable_on_astre(
         // Found an astre to dock on
         if let Some((entity_astre, astre_global_transform, _)) = on_astre_option {
             // If already docked on this astre, skip
-            if let Some(entity_on_astre) = dockable.on_astre {
-                if entity_on_astre == entity_astre {
-                    continue;
+            if dockable.on_astre {
+                if let Some(dockable_parent) = dockable_parent {
+                    if dockable_parent.get() == entity_astre {
+                        continue;
+                    }
                 }
             }
 
@@ -102,7 +99,7 @@ pub fn update_dockable_on_astre(
             commands.entity(entity_dockable).set_parent(entity_astre);
 
             // Dock
-            dockable.on_astre = Some(entity_astre);
+            dockable.on_astre = true;
 
             // If dockable is instant_or_despawn and we found an astre, remove the component
             if dockable.instant_or_despawn {
@@ -120,7 +117,7 @@ pub fn update_dockable_on_astre(
                 continue;
             }
 
-            if dockable.on_astre.is_some() {
+            if dockable.on_astre {
                 // Entity left astre, goes in referential of solar system
 
                 *transform = global_transform.reparented_to(solar_system_global_transform);
@@ -131,7 +128,7 @@ pub fn update_dockable_on_astre(
                     .entity(entity_dockable)
                     .set_parent(entity_solar_system);
 
-                dockable.on_astre = None;
+                dockable.on_astre = false;
 
                 println!("Undocking {entity_dockable:?}!");
             }

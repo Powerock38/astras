@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     ui::{HudWindow, HudWindowParent, UiButton},
-    LoadGame, SAVE_DIR, SAVE_FILE_EXTENSION,
+    LoadUniverse, SAVES_DIR,
 };
 
 pub fn spawn_save_ui(
@@ -23,30 +23,28 @@ pub fn spawn_save_ui(
 }
 
 pub fn build_load_ui(c: &mut ChildBuilder) {
-    if let Ok(save_files) = std::fs::read_dir(SAVE_DIR).map(|dir| {
+    if let Ok(universes_names) = std::fs::read_dir(format!("assets/{SAVES_DIR}")).map(|dir| {
         dir.filter_map(|entry| {
             entry.ok().and_then(|entry| {
-                entry.file_name().into_string().ok().and_then(|file_name| {
-                    if file_name.ends_with(SAVE_FILE_EXTENSION) {
-                        Some(file_name.replacen(&format!(".{SAVE_FILE_EXTENSION}"), "", 1))
-                    } else {
-                        None
-                    }
-                })
+                entry
+                    .file_type()
+                    .ok()
+                    .filter(std::fs::FileType::is_dir)
+                    .and_then(|_| entry.file_name().into_string().ok())
             })
         })
         .collect::<Vec<_>>()
     }) {
-        for save_file in save_files {
+        for universe_name in universes_names {
             let callback = {
-                let save_file = save_file.clone();
+                let universe_name = universe_name.clone();
                 move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
-                    commands.insert_resource(LoadGame(save_file.clone()));
+                    commands.trigger(LoadUniverse(universe_name.clone()));
                 }
             };
 
             c.spawn(UiButton).observe(callback).with_children(|c| {
-                c.spawn(Text::new(save_file));
+                c.spawn(Text::new(universe_name));
             });
         }
     }

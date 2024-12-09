@@ -4,7 +4,7 @@ use rand::Rng;
 use crate::{
     ui::{build_load_ui, UiButton},
     universe::spawn_solar_system,
-    GameState, SaveName,
+    GameState, UniverseName,
 };
 
 pub fn setup_main_menu(mut commands: Commands) {
@@ -45,10 +45,8 @@ fn spawn_new_game(
         rand::thread_rng().gen::<i32>(),
     ];
 
-    commands.insert_resource(SaveName(format!(
-        "{},{}",
-        solar_system_position[0], solar_system_position[1]
-    )));
+    let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_millis();
+    commands.insert_resource(UniverseName(format!("universe_{timestamp}")));
 
     spawn_solar_system(&mut commands, solar_system_position);
 
