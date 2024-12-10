@@ -9,8 +9,8 @@ use bevy::{
 use crate::{
     ui::Hud,
     universe::{
-        AsteroidMaterial, BackgroundMaterial, LaserMaterial, PlanetMaterial, Ship, SolarSystem,
-        StarMaterial,
+        AsteroidMaterial, BackgroundMaterial, DockableOnAstre, LaserMaterial, PlanetMaterial, Ship,
+        SolarSystem, StarMaterial,
     },
     GameState,
 };
@@ -27,10 +27,10 @@ pub struct UniverseName(pub String);
 pub struct CurrentSolarSystemName(pub String);
 
 #[derive(Event)]
-pub struct SaveSolarSystem;
+pub struct SaveShip;
 
 #[derive(Event)]
-pub struct SaveShip;
+pub struct SaveSolarSystem;
 
 #[derive(Event)]
 pub struct LoadUniverse(pub String);
@@ -59,10 +59,38 @@ fn write_scene_file(serialized: Result<String, bevy::scene::ron::Error>, path: S
 
 pub fn save_ship(
     _trigger: Trigger<SaveShip>,
+    mut commands: Commands,
+    q_ship: Single<
+        (
+            Entity,
+            &mut Transform,
+            &GlobalTransform,
+            &mut DockableOnAstre,
+        ),
+        With<Ship>,
+    >,
+) {
+    let (ship_entity, mut transform, global_transform, mut dockable_on_astre) = q_ship.into_inner();
+
+    // Remove the ship from its parent to save it at the root of the scene
+
+    *transform = global_transform.reparented_to(&GlobalTransform::default());
+    dockable_on_astre.on_astre = false;
+    commands
+        .entity(ship_entity)
+        .observe(save_ship_inner)
+        .remove_parent();
+}
+
+pub fn save_ship_inner(
+    trigger: Trigger<OnRemove, Parent>,
+    mut commands: Commands,
     universe_name: Res<UniverseName>,
-    ship_entity: Single<Entity, With<Ship>>,
     world: &World,
 ) {
+    commands.entity(trigger.observer()).despawn();
+
+    let ship_entity = trigger.entity();
     let universe_name = universe_name.0.clone();
 
     println!("Saving ship in universe {universe_name}");
@@ -78,7 +106,7 @@ pub fn save_ship(
         .deny_component::<Sprite>()
         .deny_component::<Children>()
         .deny_component::<Parent>()
-        .extract_entity(*ship_entity)
+        .extract_entity(ship_entity)
         .extract_resources()
         .build();
 
@@ -128,27 +156,23 @@ pub fn save_solar_system(
         .remove_empty_entities()
         .build();
 
-    // FIXME: ship entity id is still present in a Children component : Crashes when saving a not-new save
-
     write_scene_file(
         scene.serialize(&type_registry),
         format!("assets/{SAVES_DIR}/{universe_name}/{solar_system_name}.{SAVE_EXTENSION}"),
     );
 }
 
-// Load universe = load ship => retrieve current solar system position => load solar system
+// Load universe = load ship => which inserts CurrentSolarSystemName => load solar system
 pub fn load_universe(
     trigger: Trigger<LoadUniverse>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     hud: Option<Single<Entity, With<Hud>>>,
     solar_system: Option<Single<Entity, With<SolarSystem>>>,
-    q_scenes: Query<Entity, With<DynamicSceneRoot>>,
+    mut scene_spawner: ResMut<SceneSpawner>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
-    let universe_name = trigger.0.clone();
-    println!("Loading universe {universe_name}");
-
-    commands.insert_resource(UniverseName(universe_name.clone()));
+    next_state.set(GameState::LoadingSave);
 
     // Remove the current SolarSystem
     if let Some(solar_system) = solar_system {
@@ -160,56 +184,49 @@ pub fn load_universe(
         commands.entity(*hud).despawn_recursive();
     }
 
-    // Remove all DynamicSceneRoot (see FIXME below)
-    for scene in &q_scenes {
-        commands.entity(scene).despawn_recursive();
-    }
+    commands.remove_resource::<CurrentSolarSystemName>();
 
-    commands
-        .spawn(DynamicSceneRoot(asset_server.load(format!(
-            "{SAVES_DIR}/{universe_name}/{SHIP_SAVE_FILENAME}.{SAVE_EXTENSION}",
-        ))))
-        .observe(finish_loading_ship);
+    let universe_name = trigger.0.clone();
+    println!("Loading universe {universe_name}");
+
+    commands.insert_resource(UniverseName(universe_name.clone()));
+
+    scene_spawner.spawn_dynamic(asset_server.load(format!(
+        "{SAVES_DIR}/{universe_name}/{SHIP_SAVE_FILENAME}.{SAVE_EXTENSION}",
+    )));
+
+    println!("Loading ship save");
 }
 
-fn finish_loading_ship(
-    _trigger: Trigger<OnAdd, Children>,
-    mut commands: Commands,
+pub fn load_solar_system(
     asset_server: Res<AssetServer>,
-    ship: Single<(Entity, &mut Transform), (Added<Ship>, With<Parent>)>,
     universe_name: Res<UniverseName>,
     current_solar_system_name: Res<CurrentSolarSystemName>,
+    mut scene_spawner: ResMut<SceneSpawner>,
 ) {
-    let (ship, mut transform) = ship.into_inner();
+    if current_solar_system_name.is_added() {
+        println!("Loaded ship save");
 
-    transform.translation.x = 0.0;
-    transform.translation.y = 0.0;
+        let universe_name = universe_name.0.clone();
+        let current_solar_system_name = current_solar_system_name.0.clone();
 
-    commands.entity(ship).remove_parent();
-    //FIXME dynamicscene is still present, despawning it removes everything
-
-    println!("Loaded ship save");
-
-    let universe_name = universe_name.0.clone();
-    let current_solar_system_name = current_solar_system_name.0.clone();
-
-    commands
-        .spawn(DynamicSceneRoot(asset_server.load(format!(
+        scene_spawner.spawn_dynamic(asset_server.load(format!(
             "{SAVES_DIR}/{universe_name}/{current_solar_system_name}.{SAVE_EXTENSION}",
-        ))))
-        .observe(finish_loading_solar_system);
+        )));
+
+        println!("Loading solar system save");
+    }
 }
 
-fn finish_loading_solar_system(
-    _trigger: Trigger<OnAdd, Children>,
+pub fn finish_load_solar_system(
     mut commands: Commands,
+    solar_system: Single<Entity, Added<SolarSystem>>,
+    ship_entity: Single<Entity, With<Ship>>,
     mut next_state: ResMut<NextState<GameState>>,
-    solar_system: Single<Entity, (Added<SolarSystem>, With<Parent>)>,
 ) {
-    commands.entity(*solar_system).remove_parent();
-    //FIXME dynamicscene is still present, despawning it removes everything
-
     println!("Loaded solar system save");
+
+    commands.entity(*ship_entity).set_parent(*solar_system);
 
     next_state.set(GameState::GameSolarSystem);
 }

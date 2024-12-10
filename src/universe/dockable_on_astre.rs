@@ -8,7 +8,7 @@ use crate::{
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct DockableOnAstre {
-    on_astre: bool,
+    pub on_astre: bool,
     instant_or_despawn: bool,
     location: PlacingLocation,
     adjust_z: bool,
@@ -22,10 +22,6 @@ impl DockableOnAstre {
             adjust_z: true,
             ..default()
         }
-    }
-
-    pub fn on_astre(&self) -> bool {
-        self.on_astre
     }
 }
 

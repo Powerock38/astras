@@ -40,6 +40,7 @@ fn main() {
             Update,
             (
                 MainMenuSet.run_if(in_state(GameState::MainMenu)),
+                LoadingSaveSet.run_if(in_state(GameState::LoadingSave)),
                 GameSet.run_if(
                     in_state(GameState::GameSolarSystem).or(in_state(GameState::GameUniverseMap)),
                 ),
@@ -54,15 +55,22 @@ fn main() {
         .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
         .add_systems(
             Update,
-            ((
-                scan_sprite_loaders,
-                (|mut commands: Commands| {
-                    commands.trigger(SaveShip);
-                    commands.trigger(SaveSolarSystem);
-                })
-                .run_if(input_just_pressed(KeyCode::KeyL)),
-            )
-                .in_set(GameSet),),
+            (
+                (
+                    load_solar_system,
+                    finish_load_solar_system.after(load_solar_system),
+                )
+                    .in_set(LoadingSaveSet),
+                (
+                    scan_sprite_loaders,
+                    (|mut commands: Commands| {
+                        commands.trigger(SaveShip);
+                        commands.trigger(SaveSolarSystem);
+                    })
+                    .run_if(input_just_pressed(KeyCode::KeyL)),
+                )
+                    .in_set(GameSet),
+            ),
         )
         .add_observer(save_ship)
         .add_observer(save_solar_system)
