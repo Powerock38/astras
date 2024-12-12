@@ -1,6 +1,7 @@
 use std::{fs::File, io::Write, path::Path};
 
 use bevy::{
+    ecs::system::SystemState,
     prelude::*,
     render::camera::{CameraMainTextureUsages, CameraRenderGraph},
     tasks::IoTaskPool,
@@ -27,13 +28,112 @@ pub struct UniverseName(pub String);
 pub struct CurrentSolarSystemName(pub String);
 
 #[derive(Event)]
-pub struct SaveShip;
-
-#[derive(Event)]
-pub struct SaveSolarSystem;
-
-#[derive(Event)]
 pub struct LoadUniverse(pub String);
+
+pub struct SaveUniverse;
+
+impl Command for SaveUniverse {
+    fn apply(self, world: &mut World) {
+        let mut system_state: SystemState<(
+            Commands,
+            Single<
+                (
+                    Entity,
+                    &mut Transform,
+                    &GlobalTransform,
+                    &mut DockableOnAstre,
+                ),
+                With<Ship>,
+            >,
+            Single<(Entity, &SolarSystem), With<SolarSystem>>,
+            Query<&Children, Without<Ship>>, // Filter out the Ship children (sprite, camera)
+        )> = SystemState::new(world);
+
+        let (mut commands, q_ship, q_solar_system, q_children) = system_state.get_mut(world);
+
+        let (ship_entity, mut transform, global_transform, mut dockable_on_astre) =
+            q_ship.into_inner();
+
+        let (solar_system_entity, solar_system) = q_solar_system.into_inner();
+        let solar_system_name = solar_system.name();
+
+        let children_to_save = q_children
+            .iter_descendants(solar_system_entity)
+            .filter(|e| *e != ship_entity)
+            .collect::<Vec<_>>();
+
+        // Remove the ship from its parent to save it at the root of the scene
+        *transform = global_transform.reparented_to(&GlobalTransform::default());
+        dockable_on_astre.on_astre = false;
+        commands.entity(ship_entity).remove_parent();
+
+        system_state.apply(world);
+
+        // Save ship
+        let universe_name = world.resource::<UniverseName>().0.clone();
+
+        println!("Saving ship in universe {universe_name}");
+
+        {
+            let type_registry_arc = &**world.resource::<AppTypeRegistry>();
+            let type_registry = type_registry_arc.read();
+
+            let scene = DynamicSceneBuilder::from_world(world)
+                .deny_all_resources()
+                .allow_resource::<CurrentSolarSystemName>()
+                .allow_all_components()
+                .deny_component::<Mesh2d>()
+                .deny_component::<Sprite>()
+                .deny_component::<Children>()
+                .deny_component::<Parent>()
+                .extract_entity(ship_entity)
+                .extract_resources()
+                .build();
+
+            write_scene_file(
+                scene.serialize(&type_registry),
+                format!("assets/{SAVES_DIR}/{universe_name}/{SHIP_SAVE_FILENAME}.{SAVE_EXTENSION}"),
+            );
+        }
+
+        // Save the SolarSystem
+
+        println!("Saving solar system {solar_system_name} in universe {universe_name}");
+
+        {
+            let type_registry_arc = &**world.resource::<AppTypeRegistry>();
+            let type_registry = type_registry_arc.read();
+
+            let scene = DynamicSceneBuilder::from_world(world)
+                .deny_all_resources()
+                .allow_all_components()
+                .deny_component::<CameraRenderGraph>()
+                .deny_component::<CameraMainTextureUsages>()
+                .deny_component::<MeshMaterial2d<PlanetMaterial>>()
+                .deny_component::<MeshMaterial2d<StarMaterial>>()
+                .deny_component::<MeshMaterial2d<AsteroidMaterial>>()
+                .deny_component::<MeshMaterial2d<LaserMaterial>>()
+                .deny_component::<MeshMaterial2d<BackgroundMaterial>>()
+                .deny_component::<Mesh2d>()
+                .deny_component::<Sprite>()
+                .extract_resources()
+                .extract_entity(solar_system_entity)
+                .extract_entities(children_to_save.iter().copied())
+                .remove_empty_entities()
+                .build();
+
+            write_scene_file(
+                scene.serialize(&type_registry),
+                format!("assets/{SAVES_DIR}/{universe_name}/{solar_system_name}.{SAVE_EXTENSION}"),
+            );
+        }
+
+        // Re-parent the ship to the SolarSystem (ignoring GlobalTransform because it's 0,0,0)
+        world
+            .entity_mut(ship_entity)
+            .set_parent(solar_system_entity);
+    }
+}
 
 fn write_scene_file(serialized: Result<String, bevy::scene::ron::Error>, path: String) {
     match serialized {
@@ -55,111 +155,6 @@ fn write_scene_file(serialized: Result<String, bevy::scene::ron::Error>, path: S
             eprintln!("Error while serializing the scene: {e:?}");
         }
     }
-}
-
-pub fn save_ship(
-    _trigger: Trigger<SaveShip>,
-    mut commands: Commands,
-    q_ship: Single<
-        (
-            Entity,
-            &mut Transform,
-            &GlobalTransform,
-            &mut DockableOnAstre,
-        ),
-        With<Ship>,
-    >,
-) {
-    let (ship_entity, mut transform, global_transform, mut dockable_on_astre) = q_ship.into_inner();
-
-    // Remove the ship from its parent to save it at the root of the scene
-
-    *transform = global_transform.reparented_to(&GlobalTransform::default());
-    dockable_on_astre.on_astre = false;
-    commands
-        .entity(ship_entity)
-        .observe(save_ship_inner)
-        .remove_parent();
-}
-
-pub fn save_ship_inner(
-    trigger: Trigger<OnRemove, Parent>,
-    mut commands: Commands,
-    universe_name: Res<UniverseName>,
-    world: &World,
-) {
-    commands.entity(trigger.observer()).despawn();
-
-    let ship_entity = trigger.entity();
-    let universe_name = universe_name.0.clone();
-
-    println!("Saving ship in universe {universe_name}");
-
-    let type_registry_arc = &**world.resource::<AppTypeRegistry>();
-    let type_registry = type_registry_arc.read();
-
-    let scene = DynamicSceneBuilder::from_world(world)
-        .deny_all_resources()
-        .allow_resource::<CurrentSolarSystemName>()
-        .allow_all_components()
-        .deny_component::<Mesh2d>()
-        .deny_component::<Sprite>()
-        .deny_component::<Children>()
-        .deny_component::<Parent>()
-        .extract_entity(ship_entity)
-        .extract_resources()
-        .build();
-
-    write_scene_file(
-        scene.serialize(&type_registry),
-        format!("assets/{SAVES_DIR}/{universe_name}/{SHIP_SAVE_FILENAME}.{SAVE_EXTENSION}"),
-    );
-}
-
-pub fn save_solar_system(
-    _trigger: Trigger<SaveSolarSystem>,
-    universe_name: Res<UniverseName>,
-    q_solar_system: Single<(Entity, &SolarSystem)>,
-    ship_entity: Single<Entity, With<Ship>>, // Filter out the Ship entity
-    q_children: Query<&Children, Without<Ship>>, // Filter out the Ship children (sprite, camera)
-    world: &World,
-) {
-    let universe_name = universe_name.0.clone();
-
-    let (solar_system_entity, solar_system) = q_solar_system.into_inner();
-    let solar_system_name = solar_system.name();
-
-    println!("Saving solar system {solar_system_name} in universe {universe_name}");
-
-    let type_registry_arc = &**world.resource::<AppTypeRegistry>();
-    let type_registry = type_registry_arc.read();
-
-    let scene = DynamicSceneBuilder::from_world(world)
-        .deny_all_resources()
-        .allow_all_components()
-        .deny_component::<CameraRenderGraph>()
-        .deny_component::<CameraMainTextureUsages>()
-        .deny_component::<MeshMaterial2d<PlanetMaterial>>()
-        .deny_component::<MeshMaterial2d<StarMaterial>>()
-        .deny_component::<MeshMaterial2d<AsteroidMaterial>>()
-        .deny_component::<MeshMaterial2d<LaserMaterial>>()
-        .deny_component::<MeshMaterial2d<BackgroundMaterial>>()
-        .deny_component::<Mesh2d>()
-        .deny_component::<Sprite>()
-        .extract_resources()
-        .extract_entity(solar_system_entity)
-        .extract_entities(
-            q_children
-                .iter_descendants(solar_system_entity)
-                .filter(|e| *e != *ship_entity),
-        )
-        .remove_empty_entities()
-        .build();
-
-    write_scene_file(
-        scene.serialize(&type_registry),
-        format!("assets/{SAVES_DIR}/{universe_name}/{solar_system_name}.{SAVE_EXTENSION}"),
-    );
 }
 
 // Load universe = load ship => which inserts CurrentSolarSystemName => load solar system

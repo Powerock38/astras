@@ -64,16 +64,13 @@ fn main() {
                 (
                     scan_sprite_loaders,
                     (|mut commands: Commands| {
-                        commands.trigger(SaveShip);
-                        commands.trigger(SaveSolarSystem);
+                        commands.queue(SaveUniverse);
                     })
                     .run_if(input_just_pressed(KeyCode::KeyL)),
                 )
                     .in_set(GameSet),
             ),
         )
-        .add_observer(save_ship)
-        .add_observer(save_solar_system)
         .add_observer(load_universe)
         .init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
