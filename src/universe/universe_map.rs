@@ -4,9 +4,10 @@ use bevy::{
 };
 use rand::prelude::*;
 
+use super::ActiveSolarSystem;
 use crate::{
-    universe::{build_star, solar_system_position_to_seed, MainCamera, SolarSystem},
-    GameState,
+    universe::{build_star, spawn_solar_system, MainCamera, Ship, SolarSystem},
+    GameState, SaveUniverse,
 };
 
 const OBSERVABLE_UNIVERSE_RADIUS: i32 = 5;
@@ -25,11 +26,11 @@ pub struct UniverseMapCamera;
 pub fn spawn_universe_map(
     mut commands: Commands,
     mut main_camera: Single<&mut Camera, With<MainCamera>>,
-    q_solar_system: Single<(&SolarSystem, &mut Visibility)>,
+    q_solar_system: Single<(&SolarSystem, &mut Visibility), With<ActiveSolarSystem>>,
 ) {
     main_camera.is_active = false;
 
-    let (solar_system, mut solar_system_visibility) = q_solar_system.into_inner();
+    let (current_solar_system, mut solar_system_visibility) = q_solar_system.into_inner();
 
     *solar_system_visibility = Visibility::Hidden;
 
@@ -41,21 +42,24 @@ pub fn spawn_universe_map(
             Visibility::default(),
         ))
         .with_children(|c| {
-            let x_min = solar_system.x() - OBSERVABLE_UNIVERSE_RADIUS / 2;
-            let x_max = solar_system.x() + OBSERVABLE_UNIVERSE_RADIUS / 2;
-            let y_min = solar_system.y() - OBSERVABLE_UNIVERSE_RADIUS / 2;
-            let y_max = solar_system.y() + OBSERVABLE_UNIVERSE_RADIUS / 2;
+            let x_min = current_solar_system.x() - OBSERVABLE_UNIVERSE_RADIUS / 2;
+            let x_max = current_solar_system.x() + OBSERVABLE_UNIVERSE_RADIUS / 2;
+            let y_min = current_solar_system.y() - OBSERVABLE_UNIVERSE_RADIUS / 2;
+            let y_max = current_solar_system.y() + OBSERVABLE_UNIVERSE_RADIUS / 2;
 
             for x in x_min..=x_max {
                 for y in y_min..=y_max {
-                    let seed = solar_system_position_to_seed([x, y]);
+                    let position = [x, y];
+
+                    let solar_system = SolarSystem { position };
+                    let seed = solar_system.seed();
 
                     let mut rng = StdRng::seed_from_u64(seed);
 
                     let x_offset = rng.gen_range(-POSITION_MAX_OFFSET..POSITION_MAX_OFFSET);
                     let y_offset = rng.gen_range(-POSITION_MAX_OFFSET..POSITION_MAX_OFFSET);
 
-                    let position = Vec2::new(
+                    let map_position = Vec2::new(
                         ((x - x_min) as f32 - (x_max - x_min) as f32 / 2.) * SOLAR_SYSTEMS_SPACING
                             + x_offset,
                         ((y - y_min) as f32 - (y_max - y_min) as f32 / 2.) * SOLAR_SYSTEMS_SPACING
@@ -63,16 +67,20 @@ pub fn spawn_universe_map(
                     );
 
                     let mut rng = StdRng::seed_from_u64(seed);
-                    let entity = build_star(c, &mut rng, position);
+                    let entity = build_star(c, &mut rng, map_position);
 
                     // ugly way to add an observer
                     c.enqueue_command(move |world: &mut World| {
                         if let Ok(mut entity) = world.get_entity_mut(entity) {
-                            entity.observe(travel_to_solar_system);
+                            entity.observe(
+                                move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                                    commands.trigger(TravelToSolarSystem(position));
+                                },
+                            );
                         }
                     });
 
-                    if x == solar_system.x() && y == solar_system.y() {
+                    if x == current_solar_system.x() && y == current_solar_system.y() {
                         c.spawn((
                             Name::new("UniverseMapCamera"),
                             UniverseMapCamera,
@@ -87,7 +95,7 @@ pub fn spawn_universe_map(
                                 far: 1000.0,
                                 ..OrthographicProjection::default_2d()
                             },
-                            Transform::from_translation(position.extend(0.)),
+                            Transform::from_translation(map_position.extend(0.)),
                         ));
                     }
                 }
@@ -96,10 +104,10 @@ pub fn spawn_universe_map(
 }
 
 pub fn clean_universe_map(
-    solar_system_visibility: Single<&mut Visibility, With<SolarSystem>>,
+    solar_system_visibility: Single<&mut Visibility, With<ActiveSolarSystem>>,
     mut main_camera: Single<&mut Camera, With<MainCamera>>,
 ) {
-    *(solar_system_visibility.into_inner()) = Visibility::Inherited;
+    *(solar_system_visibility.into_inner()) = Visibility::Visible;
     main_camera.is_active = true;
 }
 
@@ -153,8 +161,56 @@ pub fn update_universe_map(
     transform.translation.y += camera_delta.y;
 }
 
-fn travel_to_solar_system(trigger: Trigger<Pointer<Click>>) {
-    println!("Travelling to solar system {:?}", trigger.entity());
-    // save current solar system
-    // load new solar system, generate if it doesn't exist
+#[derive(Event)]
+pub struct TravelToSolarSystem(pub [i32; 2]);
+
+pub fn travel_to_solar_system(
+    trigger: Trigger<TravelToSolarSystem>,
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+    mut set: ParamSet<(
+        Single<(Entity, &mut Visibility), With<ActiveSolarSystem>>,
+        Query<(
+            Entity,
+            &SolarSystem,
+            &mut Visibility,
+            Option<&ActiveSolarSystem>,
+        )>,
+    )>,
+    ship_entity: Single<Entity, With<Ship>>,
+) {
+    println!("Travelling to solar system at {:?}", trigger.0);
+
+    // save game just in case
+    commands.queue(SaveUniverse);
+
+    let solar_system_position = trigger.0;
+
+    let (active_entity, mut active_solar_system_visibility) = set.p0().into_inner();
+    *active_solar_system_visibility = Visibility::Hidden;
+    commands.entity(active_entity).remove::<ActiveSolarSystem>();
+
+    // un-hide new solar system, generate it if it doesn't exist
+    let solar_system_entity = {
+        if let Some((solar_system_entity, _, mut visibility, _)) = set
+            .p1()
+            .iter_mut()
+            .find(|(_, s, _, _)| s.position == solar_system_position)
+        {
+            *visibility = Visibility::Visible;
+            solar_system_entity
+        } else {
+            spawn_solar_system(&mut commands, solar_system_position)
+        }
+    };
+
+    commands
+        .entity(solar_system_entity)
+        .insert(ActiveSolarSystem);
+
+    commands
+        .entity(*ship_entity)
+        .set_parent_in_place(solar_system_entity);
+
+    next_state.set(GameState::GameSolarSystem);
 }

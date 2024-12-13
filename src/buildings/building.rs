@@ -133,11 +133,11 @@ pub fn spawn_building(
 pub fn draw_placing_zones(
     mut gizmos: Gizmos,
     placing_building: Res<PlacingBuilding>,
-    q_astres: Query<(&Astre, &GlobalTransform), Without<Asteroid>>,
+    q_astres: Query<(&Astre, &GlobalTransform, &InheritedVisibility), Without<Asteroid>>,
 ) {
     let location = placing_building.0.data().location;
 
-    for (astre, global_transform) in &q_astres {
+    for (astre, global_transform, _) in q_astres.iter().filter(|(_, _, v)| v.get()) {
         if matches!(
             location,
             PlacingLocation::Surface | PlacingLocation::SurfaceOrAtmosphere

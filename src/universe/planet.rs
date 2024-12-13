@@ -10,7 +10,7 @@ use rand::prelude::*;
 use crate::{
     data::ELEMENTS,
     items::{ElementOnAstre, ElementState, Inventory},
-    universe::{Astre, Orbit, Star},
+    universe::{Astre, Orbit},
     MaterialLoader, MeshType,
 };
 
@@ -185,13 +185,12 @@ pub fn build_planet_children(
 pub fn update_planet_shadows(
     mut materials: ResMut<Assets<PlanetMaterial>>,
     q_planets: Query<(&MeshMaterial2d<PlanetMaterial>, &GlobalTransform)>,
-    star_global_transform: Single<&GlobalTransform, With<Star>>, //TODO maybe support multiple stars
 ) {
     for (planet_material_handle, global_transform) in &q_planets {
         // Update shadow angle
         let material = materials.get_mut(planet_material_handle).unwrap();
 
-        let star_position = star_global_transform.translation().truncate();
+        let star_position = Vec2::ZERO; // works well for now
         let planet_position = global_transform.translation().truncate();
         let delta = star_position - planet_position;
 

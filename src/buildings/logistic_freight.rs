@@ -94,6 +94,7 @@ pub fn update_logistic_freights(
         ),
         (Without<LogisticRequest>, Without<LogisticFreight>),
     >,
+    q_parent: Query<&Parent>,
 ) {
     for (freight_entity, mut freight, parent, mut transform, mut inventory) in
         &mut q_logistic_freights
@@ -205,13 +206,21 @@ pub fn update_logistic_freights(
 
                 let mut requesters = q_requesters
                     .iter_mut()
-                    .filter(|(_, logistic_request, requester_parent, ..)| {
-                        &freight.scope == logistic_request.scope()
-                            && match freight.scope {
-                                LogisticScope::Planet => requester_parent.get() == parent.get(),
-                                LogisticScope::SolarSystem => true,
-                            }
-                    })
+                    .filter(
+                        |(requester_entity, logistic_request, requester_parent, ..)| {
+                            &freight.scope == logistic_request.scope()
+                                && match freight.scope {
+                                    LogisticScope::Planet => requester_parent.get() == parent.get(),
+                                    LogisticScope::SolarSystem => {
+                                        q_parent.iter_ancestors(freight_entity).any(|p| {
+                                            q_parent
+                                                .iter_ancestors(*requester_entity)
+                                                .any(|p2| p == p2)
+                                        })
+                                    }
+                                }
+                        },
+                    )
                     .collect::<Vec<_>>();
 
                 requesters
@@ -236,7 +245,11 @@ pub fn update_logistic_freights(
                         let in_scope = &freight.scope == logistic_provider.scope()
                             && match freight.scope {
                                 LogisticScope::Planet => provider_parent.get() == parent.get(),
-                                LogisticScope::SolarSystem => true,
+                                LogisticScope::SolarSystem => {
+                                    q_parent.iter_ancestors(freight_entity).any(|p| {
+                                        q_parent.iter_ancestors(provider_entity).any(|p2| p == p2)
+                                    })
+                                }
                             };
 
                         if in_scope {

@@ -34,13 +34,15 @@ fn main() {
         ))
         .insert_resource(ClearColor(Color::BLACK))
         .register_type::<SpriteLoader>()
-        .register_type::<CurrentSolarSystemName>()
         .add_plugins((UniversePlugin, UIPlugin, ItemsPlugin, BuildingsPlugin))
+        .configure_sets(
+            PreUpdate,
+            (SolarSystemSet.run_if(in_state(GameState::GameSolarSystem)),),
+        )
         .configure_sets(
             Update,
             (
                 MainMenuSet.run_if(in_state(GameState::MainMenu)),
-                LoadingSaveSet.run_if(in_state(GameState::LoadingSave)),
                 GameSet.run_if(
                     in_state(GameState::GameSolarSystem).or(in_state(GameState::GameUniverseMap)),
                 ),
@@ -55,21 +57,14 @@ fn main() {
         .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
         .add_systems(
             Update,
-            (
-                (
-                    load_solar_system,
-                    finish_load_solar_system.after(load_solar_system),
-                )
-                    .in_set(LoadingSaveSet),
-                (
-                    scan_sprite_loaders,
-                    (|mut commands: Commands| {
-                        commands.queue(SaveUniverse);
-                    })
-                    .run_if(input_just_pressed(KeyCode::KeyL)),
-                )
-                    .in_set(GameSet),
-            ),
+            ((
+                scan_sprite_loaders,
+                (|mut commands: Commands| {
+                    commands.queue(SaveUniverse);
+                })
+                .run_if(input_just_pressed(KeyCode::KeyL)),
+            )
+                .in_set(GameSet),),
         )
         .add_observer(load_universe)
         .init_state::<GameState>()

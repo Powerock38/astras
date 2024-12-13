@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
+use super::ActiveSolarSystem;
 use crate::{
     buildings::PlacingLocation,
-    universe::{Asteroid, Astre, SolarSystem},
+    universe::{Asteroid, Astre},
 };
 
 #[derive(Component, Reflect, Default)]
@@ -27,7 +28,7 @@ impl DockableOnAstre {
 
 pub fn update_dockable_on_astre(
     mut commands: Commands,
-    q_solar_system: Single<(Entity, &GlobalTransform), With<SolarSystem>>,
+    q_solar_system: Single<(Entity, &GlobalTransform), With<ActiveSolarSystem>>,
     mut q_dockable: Query<(
         Entity,
         &mut DockableOnAstre,
@@ -36,7 +37,7 @@ pub fn update_dockable_on_astre(
         &GlobalTransform,
     )>,
     q_astres: Query<
-        (Entity, &Astre, &GlobalTransform),
+        (Entity, &Astre, &GlobalTransform, &InheritedVisibility),
         (Without<DockableOnAstre>, Without<Asteroid>),
     >,
 ) {
@@ -47,7 +48,9 @@ pub fn update_dockable_on_astre(
     {
         let mut on_astre_option: Option<(Entity, &GlobalTransform, f32)> = None;
 
-        for (entity_astre, astre, astre_global_transform) in &q_astres {
+        for (entity_astre, astre, astre_global_transform, _) in
+            q_astres.iter().filter(|(_, _, _, v)| v.get())
+        {
             let distance = global_transform.translation().truncate()
                 - astre_global_transform.translation().truncate();
             let distance = distance.length();

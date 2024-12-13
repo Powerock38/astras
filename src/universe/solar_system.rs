@@ -1,15 +1,12 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 
-use crate::{
-    universe::{build_ship, build_star, build_worm},
-    CurrentSolarSystemName,
-};
+use crate::universe::{build_star, build_worm};
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
 pub struct SolarSystem {
-    position: [i32; 2],
+    pub position: [i32; 2],
 }
 
 impl SolarSystem {
@@ -23,32 +20,23 @@ impl SolarSystem {
         self.position[1]
     }
 
-    #[inline]
-    pub fn name(&self) -> String {
-        format!("{},{}", self.x(), self.y())
+    pub fn seed(&self) -> u64 {
+        let (x, y) = (self.position[0] as u64, self.position[1] as u64);
+        let prime = 2_976_221_071;
+        ((x.wrapping_mul(prime)).wrapping_add(y)) ^ 0x0005_DEEC_E66D
     }
 }
 
-pub fn solar_system_position_to_seed(position: [i32; 2]) -> u64 {
-    let (x, y) = (position[0] as u64, position[1] as u64);
-    let prime: u64 = 2_976_221_071;
-    ((x.wrapping_mul(prime)).wrapping_add(y)) ^ 0x0005_DEEC_E66D
-}
-
-pub fn spawn_solar_system(commands: &mut Commands, position: [i32; 2]) {
-    let seed = solar_system_position_to_seed(position);
-    let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
-
+pub fn spawn_solar_system(commands: &mut Commands, position: [i32; 2]) -> Entity {
     let solar_system = SolarSystem { position };
-
-    commands.insert_resource(CurrentSolarSystemName(solar_system.name()));
+    let mut rng: StdRng = SeedableRng::seed_from_u64(solar_system.seed());
 
     commands
         .spawn((
             Name::new("SolarSytem"),
             solar_system,
             Transform::default(),
-            Visibility::default(),
+            Visibility::Visible,
         ))
         .with_children(|c| {
             build_star(c, &mut rng, Vec2::ZERO);
@@ -66,7 +54,26 @@ pub fn spawn_solar_system(commands: &mut Commands, position: [i32; 2]) {
                 build_worm(c, &mut rng, worm_position);
             }
         })
-        .with_children(|c| {
-            build_ship(c);
-        });
+        .id()
+}
+
+#[derive(Component)]
+pub struct ActiveSolarSystem;
+
+pub fn set_active_solar_system(
+    mut commands: Commands,
+    q_active_solar_system: Query<Entity, With<ActiveSolarSystem>>,
+    query: Query<(Entity, &InheritedVisibility), With<SolarSystem>>,
+) {
+    for active_entity in &q_active_solar_system {
+        commands.entity(active_entity).remove::<ActiveSolarSystem>();
+    }
+
+    let entity = query
+        .iter()
+        .find(|(_, v)| v.get())
+        .map(|(entity, _)| entity)
+        .unwrap();
+
+    commands.entity(entity).insert(ActiveSolarSystem);
 }

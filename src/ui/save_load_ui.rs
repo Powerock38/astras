@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     ui::{HudWindow, HudWindowParent, UiButton},
-    LoadUniverse, SAVES_DIR,
+    LoadUniverse, SAVES_DIR, SAVE_EXTENSION,
 };
 
 pub fn spawn_save_ui(
@@ -26,11 +26,13 @@ pub fn build_load_ui(c: &mut ChildBuilder) {
     if let Ok(universes_names) = std::fs::read_dir(format!("assets/{SAVES_DIR}")).map(|dir| {
         dir.filter_map(|entry| {
             entry.ok().and_then(|entry| {
-                entry
-                    .file_type()
-                    .ok()
-                    .filter(std::fs::FileType::is_dir)
-                    .and_then(|_| entry.file_name().into_string().ok())
+                entry.file_name().into_string().ok().and_then(|file_name| {
+                    if file_name.ends_with(SAVE_EXTENSION) {
+                        Some(file_name.replacen(&format!(".{SAVE_EXTENSION}"), "", 1))
+                    } else {
+                        None
+                    }
+                })
             })
         })
         .collect::<Vec<_>>()
