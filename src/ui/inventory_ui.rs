@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     data::{ItemId, ELEMENTS},
-    items::{Inventory, LogisticRequest},
+    items::{ElementState, Inventory, LogisticRequest},
     ui::UiButton,
     universe::{Ship, SHIP_ACTION_RANGE},
 };
@@ -32,6 +32,7 @@ pub fn spawn_inventory_ui(c: &mut ChildBuilder, entity: Entity) {
 
 pub fn update_inventory_ui(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     q_inventories: Query<(&Inventory, Option<&LogisticRequest>, Option<&Ship>)>,
     mut q_inventory_ui: Query<(Entity, &mut InventoryUI)>,
     q_change_detection: Query<Entity, Or<(Changed<Inventory>, Changed<LogisticRequest>)>>,
@@ -90,10 +91,10 @@ pub fn update_inventory_ui(
                             item_transfer_callback(*id, *quantity, inventory_ui.entity, false);
 
                         c.spawn(UiButton).observe(callback).with_children(|c| {
-                            build_item_ui(c, *id, *quantity);
+                            build_item_ui(c, &asset_server, *id, *quantity);
                         });
                     } else {
-                        build_item_ui(c, *id, *quantity);
+                        build_item_ui(c, &asset_server, *id, *quantity);
                     }
                 }
             });
@@ -122,7 +123,7 @@ pub fn update_inventory_ui(
                             item_transfer_callback(*id, *quantity, inventory_ui.entity, true);
 
                         c.spawn(UiButton).observe(callback).with_children(|c| {
-                            build_item_ui(c, *id, *quantity);
+                            build_item_ui(c, &asset_server, *id, *quantity);
                         });
                     }
                 });
@@ -131,7 +132,12 @@ pub fn update_inventory_ui(
     }
 }
 
-pub fn build_item_ui(c: &mut ChildBuilder, id: ItemId, quantity: u32) {
+pub fn build_item_ui(
+    c: &mut ChildBuilder,
+    asset_server: &Res<AssetServer>,
+    id: ItemId,
+    quantity: u32,
+) {
     let item = id.data();
 
     c.spawn(Node {
@@ -141,7 +147,21 @@ pub fn build_item_ui(c: &mut ChildBuilder, id: ItemId, quantity: u32) {
         ..default()
     })
     .with_children(|c| {
-        let color = ELEMENTS.get(&id).map_or(Color::WHITE.into(), |e| e.color);
+        let (color, icon) = ELEMENTS
+            .get(&id)
+            .map_or((Color::WHITE.into(), "item"), |e| {
+                (
+                    e.color,
+                    match e.state {
+                        ElementState::Solid => "solid",
+                        ElementState::Liquid => "liquid",
+                        ElementState::Gas => "gas",
+                        ElementState::Plasma => "plasma",
+                    },
+                )
+            });
+
+        let icon = asset_server.load(format!("icons/{icon}.png"));
 
         c.spawn((
             Node {
@@ -150,6 +170,7 @@ pub fn build_item_ui(c: &mut ChildBuilder, id: ItemId, quantity: u32) {
                 ..default()
             },
             BackgroundColor(color.into()),
+            ImageNode::new(icon),
         ));
 
         c.spawn(Node {

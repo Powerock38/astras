@@ -20,6 +20,9 @@ pub use crafter::*;
 mod spaceport;
 pub use spaceport::*;
 
+mod interstellar_gate;
+pub use interstellar_gate::*;
+
 pub struct BuildingsPlugin;
 
 impl Plugin for BuildingsPlugin {
@@ -41,6 +44,7 @@ impl Plugin for BuildingsPlugin {
         .register_type::<Spaceport>()
         .register_type::<Warehouse>()
         .register_type::<Extractor>()
+        .register_type::<InterstellarGate>()
         .register_type::<Crafter>();
     }
 }

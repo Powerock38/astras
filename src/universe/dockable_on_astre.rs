@@ -58,11 +58,15 @@ pub fn update_dockable_on_astre(
             let can_dock = match dockable.location {
                 PlacingLocation::Surface => distance < astre.surface_radius(),
                 PlacingLocation::Atmosphere => {
-                    distance < astre.surface_radius() + astre.atmosphere_radius()
-                        && distance > astre.surface_radius()
+                    distance < astre.atmosphere_radius() && distance > astre.surface_radius()
                 }
-                PlacingLocation::SurfaceOrAtmosphere => {
-                    distance < astre.surface_radius() + astre.atmosphere_radius()
+                PlacingLocation::SurfaceOrAtmosphere => distance < astre.atmosphere_radius(),
+                PlacingLocation::CloseOrbit => {
+                    println!(
+                        "distance: {distance}, close_orbit_radius: {}",
+                        astre.close_orbit_radius()
+                    );
+                    distance < astre.close_orbit_radius() && distance > astre.atmosphere_radius()
                 }
             };
 

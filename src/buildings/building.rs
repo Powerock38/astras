@@ -37,6 +37,7 @@ pub enum PlacingLocation {
     Atmosphere,
     #[default]
     SurfaceOrAtmosphere,
+    CloseOrbit,
 }
 
 #[derive(Component)]
@@ -149,13 +150,23 @@ pub fn draw_placing_zones(
             );
         }
 
-        if matches!(
-            location,
-            PlacingLocation::Atmosphere | PlacingLocation::SurfaceOrAtmosphere
-        ) {
+        if astre.has_atmosphere()
+            && matches!(
+                location,
+                PlacingLocation::Atmosphere | PlacingLocation::SurfaceOrAtmosphere
+            )
+        {
             gizmos.circle_2d(
                 global_transform.translation().truncate(),
-                astre.surface_radius() + astre.atmosphere_radius(),
+                astre.atmosphere_radius(),
+                PLACING_ZONES_COLOR,
+            );
+        }
+
+        if matches!(location, PlacingLocation::CloseOrbit) {
+            gizmos.circle_2d(
+                global_transform.translation().truncate(),
+                astre.close_orbit_radius(),
                 PLACING_ZONES_COLOR,
             );
         }

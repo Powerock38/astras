@@ -14,6 +14,9 @@ pub use notification::*;
 mod save_load_ui;
 pub use save_load_ui::*;
 
+mod ship_ui;
+pub use ship_ui::*;
+
 mod inventory_ui;
 pub use inventory_ui::*;
 

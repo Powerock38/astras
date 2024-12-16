@@ -39,6 +39,8 @@ pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) -> Ent
 
     let nb_planets = rng.gen_range(5..=15);
 
+    let close_orbit = radius * 0.5;
+
     let orbit_distance = radius * 2.;
 
     let number_of_elements = rng.gen_range(1..=3);
@@ -68,7 +70,7 @@ pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) -> Ent
     c.spawn((
         Name::new("Star"),
         Star,
-        Astre::new(radius, 0.),
+        Astre::new(radius, 0., close_orbit),
         Inventory::from(composition),
         MaterialLoader {
             material,

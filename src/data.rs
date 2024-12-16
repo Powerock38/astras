@@ -174,6 +174,12 @@ enum_map! {
             BuildingId::Assembler,
             1.,
         ),
+
+        InterstellarGate = Recipe::new_building(
+            &[],
+            BuildingId::InterstellarGate,
+            1.,
+        ),
     }
 }
 
@@ -236,7 +242,7 @@ enum_map! {
         Spaceport = BuildingData {
             name: "Spaceport",
             sprite_name: "spaceport",
-            location: PlacingLocation::Atmosphere,
+            location: PlacingLocation::CloseOrbit,
             on_build: |c| {
                 c.insert((Spaceport, Inventory::new(1000)));
             },
@@ -245,7 +251,7 @@ enum_map! {
         InterplanetaryFreighter = BuildingData {
             name: "Interplanetary Freighter",
             sprite_name: "cargo_shuttle",
-            location: PlacingLocation::Atmosphere,
+            location: PlacingLocation::CloseOrbit,
             on_build: |c| {
                 c.insert((LogisticFreight::new_solar_system(), Inventory::new(100_000)));
             },
@@ -272,6 +278,15 @@ enum_map! {
                     RecipeId::CraftComputingCore,
                     RecipeId::CargoShuttle,
                 ]), Inventory::new(100)));
+            },
+        },
+
+        InterstellarGate = BuildingData {
+            name: "Interstellar Gate",
+            sprite_name: "interstellar_gate",
+            location: PlacingLocation::CloseOrbit,
+            on_build: |c| {
+                c.insert(InterstellarGate);
             },
         },
     }

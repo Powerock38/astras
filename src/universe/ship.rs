@@ -4,7 +4,7 @@ use rand::prelude::SliceRandom;
 use crate::{
     buildings::PlacingBuilding,
     data::ELEMENTS,
-    items::Inventory,
+    items::{ElementState, Inventory},
     ui::NotificationEvent,
     universe::{Astre, DockableOnAstre, Laser, LaserMaterial},
     MaterialLoader, MeshType, SpriteLoader,
@@ -125,13 +125,15 @@ pub fn update_ship(
 }
 
 pub fn update_ship_mining(
-    trigger: Trigger<Pointer<Click>>,
+    mut trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     placing_building: Option<Res<PlacingBuilding>>,
     q_ship: Single<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
-    mut q_astres: Query<&mut Inventory, (With<Astre>, Without<Ship>)>,
+    mut q_astres: Query<(&Astre, &mut Inventory, &GlobalTransform), Without<Ship>>,
     mut ev_notif: EventWriter<NotificationEvent>,
 ) {
+    trigger.propagate(false);
+
     let (ship_entity, ship, transform, mut inventory) = q_ship.into_inner();
 
     if placing_building.is_some() {
@@ -142,14 +144,30 @@ pub fn update_ship_mining(
 
     // TODO ship.mining_cooldown.tick(time.delta()).finished() ; ship.mining_cooldown.reset();
 
-    if let Ok(mut astre_inventory) = q_astres.get_mut(astre_entity) {
+    if let Ok((astre, mut astre_inventory, astre_global_transform)) = q_astres.get_mut(astre_entity)
+    {
         if let Some(position) = trigger.hit.position {
             let position = position.truncate();
             let ship_position = transform.translation().truncate();
+            let astre_position = astre_global_transform.translation().truncate();
 
-            if position.distance(ship_position) < SHIP_ACTION_RANGE {
+            if position.distance(astre_position) < astre.atmosphere_radius()
+                && position.distance(ship_position) < SHIP_ACTION_RANGE
+            {
+                let atmosphere_mining = position.distance(astre_position) > astre.surface_radius();
+
+                let item_ids = astre_inventory
+                    .all_ids()
+                    .iter()
+                    .filter(|id| {
+                        ELEMENTS
+                            .get(*id)
+                            .is_some_and(|e| !atmosphere_mining || e.state == ElementState::Gas)
+                    })
+                    .copied()
+                    .collect::<Vec<_>>();
+
                 let mut rng = rand::thread_rng();
-                let item_ids = astre_inventory.all_ids();
                 let random_item_id =
                     item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(*id));
 

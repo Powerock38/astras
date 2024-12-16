@@ -92,7 +92,7 @@ fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
             initial_size,
             rotation_speed,
         },
-        Astre::new(avg_radius, 0.0),
+        Astre::new(avg_radius, 0.0, 0.0),
         Inventory::from(composition),
         Orbit::new(&mut rng),
         MaterialLoader {

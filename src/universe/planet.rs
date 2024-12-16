@@ -58,17 +58,18 @@ impl Material2d for PlanetMaterial {
 pub fn build_planet(
     c: &mut ChildBuilder,
     rng: &mut StdRng,
-    surface_radius: f32,
-    atmosphere_radius: f32,
+    surface: f32,
+    atmosphere: f32,
+    close_orbit: f32,
     position: Vec2,
     nb_children: u32,
     z_value: u32,
 ) {
-    let total_radius = atmosphere_radius + surface_radius;
+    let planet_radius = surface + atmosphere;
 
     let transform = Transform::from_translation(position.extend(z_value as f32));
 
-    let orbit_distance = total_radius * 10.0;
+    let orbit_distance = planet_radius * 10.0;
 
     let nb_surface_elements = rng.gen_range(1..=ELEMENTS.len()) as u32;
     let max_quantity_surface_elements = rng.gen_range(1_000..=1_000_000);
@@ -115,7 +116,7 @@ pub fn build_planet(
         seed: rng.gen::<f32>() * 1000.,
         colors,
         noise_scale: rng.gen_range(1.0..10.0),
-        planet_radius_normalized: surface_radius / total_radius,
+        planet_radius_normalized: surface / planet_radius,
         shadow_angle: 0.0,
         atmosphere_density,
         atmosphere_color,
@@ -127,41 +128,45 @@ pub fn build_planet(
         Name::new("Planet"),
         Planet,
         Orbit::new(rng),
-        Astre::new(surface_radius, atmosphere_radius),
+        Astre::new(surface, atmosphere, close_orbit),
         Inventory::from(composition),
         MaterialLoader {
             material,
-            mesh_type: MeshType::Circle(total_radius),
+            mesh_type: MeshType::Circle(planet_radius),
         },
         transform,
     ))
     .with_children(|c| {
-        build_planet_children(c, rng, surface_radius, orbit_distance, nb_children, z_value);
+        build_planet_children(c, rng, surface, orbit_distance, nb_children, z_value);
     });
 }
 
 pub fn build_planet_children(
     c: &mut ChildBuilder,
     rng: &mut StdRng,
-    surface_radius: f32,
+    surface: f32,
     mut orbit_distance: f32,
     nb_children: u32,
     z_value: u32,
 ) {
     for i in 0..nb_children {
-        let c_surface_radius = rng.gen_range((surface_radius * 0.1)..(surface_radius * 0.7));
+        let c_surface = rng.gen_range((surface * 0.1)..(surface * 0.7));
 
-        if c_surface_radius < 1000. {
+        if c_surface < 1000. {
             continue;
         }
 
-        let c_atmosphere_radius = rng.gen_range((c_surface_radius * 0.1)..(c_surface_radius * 0.5));
+        let c_atmosphere = rng.gen_range((c_surface * 0.3)..c_surface);
+
+        let planet_radius = c_surface + c_atmosphere;
+
+        let c_close_orbit = rng.gen_range((planet_radius * 0.5)..=(planet_radius * 0.8));
 
         let c_nb_children = rng.gen_range(0..=(0.1 * nb_children as f32) as u32);
 
         let c_angle = (i as f32 / nb_children as f32) * 2. * PI;
 
-        orbit_distance += c_surface_radius + c_atmosphere_radius;
+        orbit_distance += c_surface + c_atmosphere + c_close_orbit;
 
         let position = Vec2::new(
             orbit_distance * c_angle.cos(),
@@ -171,14 +176,15 @@ pub fn build_planet_children(
         build_planet(
             c,
             rng,
-            c_surface_radius,
-            c_atmosphere_radius,
+            c_surface,
+            c_atmosphere,
+            c_close_orbit,
             position,
             c_nb_children,
             z_value + i + 1,
         );
 
-        orbit_distance += rng.gen_range((c_atmosphere_radius * 0.2)..=(c_atmosphere_radius * 1.5));
+        orbit_distance += rng.gen_range((c_atmosphere * 0.2)..=(c_atmosphere * 1.5));
     }
 }
 

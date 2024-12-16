@@ -19,9 +19,9 @@ pub fn scan_crafter_ui(mut commands: Commands, q_crafters: Query<Entity, Added<C
 fn spawn_crafter_ui(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     window_parent: Single<Entity, With<HudWindowParent>>,
     q_crafter: Query<&Crafter>,
-    asset_server: Res<AssetServer>,
 ) {
     let entity = trigger.entity();
     let crafter = q_crafter.get(entity).unwrap();
@@ -84,7 +84,7 @@ fn spawn_crafter_ui(
                                         .with_children(
                                             |c| match recipe.outputs() {
                                                 RecipeOutputs::Items(outputs) => {
-                                                    build_item_list_ui(c, outputs);
+                                                    build_item_list_ui(c, &asset_server, outputs);
                                                 }
                                                 RecipeOutputs::Building(id) => {
                                                     build_building_ui(c, id, &asset_server);
@@ -106,7 +106,7 @@ fn spawn_crafter_ui(
                                                     },
                                                 ));
 
-                                                build_item_list_ui(c, recipe.inputs());
+                                                build_item_list_ui(c, &asset_server, recipe.inputs());
                                             },
                                         );
                                     });
@@ -121,7 +121,11 @@ fn spawn_crafter_ui(
         });
 }
 
-fn build_item_list_ui(c: &mut ChildBuilder, items: &[(ItemId, u32)]) {
+fn build_item_list_ui(
+    c: &mut ChildBuilder,
+    asset_server: &Res<AssetServer>,
+    items: &[(ItemId, u32)],
+) {
     for (i, (id, quantity)) in items.iter().enumerate() {
         if i != 0 {
             c.spawn((
@@ -133,7 +137,7 @@ fn build_item_list_ui(c: &mut ChildBuilder, items: &[(ItemId, u32)]) {
             ));
         }
 
-        build_item_ui(c, *id, *quantity);
+        build_item_ui(c, asset_server, *id, *quantity);
     }
 }
 
