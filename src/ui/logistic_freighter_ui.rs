@@ -11,9 +11,7 @@ use bevy::{
 use crate::{
     buildings::LogisticFreight,
     items::{LogisticProvider, LogisticScope},
-    ui::{
-        spawn_building_header, spawn_inventory_ui, HudWindow, HudWindowDependent, HudWindowParent,
-    },
+    ui::{spawn_building_header, HudWindow, HudWindowDependent, HudWindowParent, InventoryUI},
 };
 
 pub fn scan_logistic_freighter(
@@ -47,9 +45,9 @@ fn spawn_cargo_shuttle_ui(
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
-                spawn_building_header(c, entity, "Cargo Shuttle");
+                spawn_building_header(c, "Cargo Shuttle");
 
-                spawn_inventory_ui(c, entity);
+                c.spawn(InventoryUI::new(entity));
             });
         });
 }
@@ -119,7 +117,7 @@ fn spawn_interplanetary_freighter_ui(
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
-                spawn_building_header(c, entity, "Interplanetary Freighter");
+                spawn_building_header(c, "Interplanetary Freighter");
 
                 // Provider minimap
 
@@ -136,7 +134,7 @@ fn spawn_interplanetary_freighter_ui(
                 }
 
                 // Inventory
-                spawn_inventory_ui(c, entity);
+                c.spawn(InventoryUI::new(entity));
             });
         });
 }

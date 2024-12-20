@@ -1,54 +1,78 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 
 use crate::{
     data::{ItemId, ELEMENTS},
-    items::{ElementState, Inventory, LogisticRequest},
-    ui::UiButton,
+    items::{ElementState, Inventory, LogisticProvider, LogisticRequest, LogisticScope},
+    ui::{HudWindow, HudWindowParent, UiButton},
     universe::{Ship, SHIP_ACTION_RANGE},
 };
 
 #[derive(Component)]
+#[require(Node(|| Node {
+    width: Val::Percent(100.0),
+    height: Val::Percent(100.0),
+    align_items: AlignItems::Start,
+    justify_content: JustifyContent::SpaceBetween,
+    flex_direction: FlexDirection::Row,
+    ..default()
+}))]
 pub struct InventoryUI {
     entity: Entity,
     just_added: bool,
+    edit_logistic: bool,
 }
 
-pub fn spawn_inventory_ui(c: &mut ChildBuilder, entity: Entity) {
-    c.spawn((
-        InventoryUI {
+impl InventoryUI {
+    pub fn new(entity: Entity) -> Self {
+        Self {
             entity,
             just_added: true,
-        },
-        Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            align_items: AlignItems::Start,
-            justify_content: JustifyContent::SpaceBetween,
-            flex_direction: FlexDirection::Row,
-            ..default()
-        },
-    ));
+            edit_logistic: false,
+        }
+    }
+
+    pub fn with_edit_logistic(mut self) -> Self {
+        self.edit_logistic = true;
+        self
+    }
 }
 
 pub fn update_inventory_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    q_inventories: Query<(&Inventory, Option<&LogisticRequest>, Option<&Ship>)>,
+    q_inventories: Query<(
+        &Inventory,
+        Option<&LogisticRequest>,
+        Option<&LogisticProvider>,
+        Option<&Ship>,
+    )>,
     mut q_inventory_ui: Query<(Entity, &mut InventoryUI)>,
-    q_change_detection: Query<Entity, Or<(Changed<Inventory>, Changed<LogisticRequest>)>>,
-    mut q_removal_detection: RemovedComponents<LogisticRequest>,
+    q_change_detection: Query<
+        Entity,
+        Or<(
+            Changed<Inventory>,
+            Changed<LogisticRequest>,
+            Changed<LogisticProvider>,
+        )>,
+    >,
+    mut removed_request: RemovedComponents<LogisticRequest>,
+    mut removed_provider: RemovedComponents<LogisticProvider>,
 ) {
     for (ui_entity, mut inventory_ui) in &mut q_inventory_ui {
+        let entity = inventory_ui.entity;
+
         if !inventory_ui.just_added
-            && q_change_detection.get(inventory_ui.entity).is_err()
-            && !q_removal_detection.read().any(|e| e == inventory_ui.entity)
+            && q_change_detection.get(entity).is_err()
+            && !removed_request.read().any(|e| e == entity)
+            && !removed_provider.read().any(|e| e == entity)
         {
             continue;
         }
 
         inventory_ui.just_added = false;
 
-        let Ok((inventory, logistic_request, ship)) = q_inventories.get(inventory_ui.entity) else {
+        let Ok((inventory, logistic_request, logistic_provider, ship)) = q_inventories.get(entity)
+        else {
             continue;
         };
 
@@ -87,8 +111,7 @@ pub fn update_inventory_ui(
 
                 for (id, quantity) in inventory.items() {
                     if ship.is_none() {
-                        let callback =
-                            item_transfer_callback(*id, *quantity, inventory_ui.entity, false);
+                        let callback = item_transfer_callback(*id, *quantity, entity, false);
 
                         c.spawn(UiButton).observe(callback).with_children(|c| {
                             build_item_ui(c, &asset_server, *id, *quantity);
@@ -111,7 +134,10 @@ pub fn update_inventory_ui(
                 })
                 .with_children(|c| {
                     c.spawn((
-                        Text::new("Currently requesting:"),
+                        Text::new(format!(
+                            "Currently requesting from {}:",
+                            logistic_request.scope()
+                        )),
                         TextFont {
                             font_size: 24.0,
                             ..default()
@@ -119,8 +145,7 @@ pub fn update_inventory_ui(
                     ));
 
                     for (id, quantity) in logistic_request.items() {
-                        let callback =
-                            item_transfer_callback(*id, *quantity, inventory_ui.entity, true);
+                        let callback = item_transfer_callback(*id, *quantity, entity, true);
 
                         c.spawn(UiButton).observe(callback).with_children(|c| {
                             build_item_ui(c, &asset_server, *id, *quantity);
@@ -128,8 +153,89 @@ pub fn update_inventory_ui(
                     }
                 });
             }
+
+            if inventory_ui.edit_logistic {
+                if let Some(logistic_provider) = logistic_provider {
+                    // Display Provider, +click to remove
+                    c.spawn(UiButton)
+                        .with_child(Text::new(format!(
+                            "Currently exporting to the {}",
+                            logistic_provider.scope()
+                        )))
+                        .observe(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
+                            commands.entity(entity).remove::<LogisticProvider>();
+                        });
+
+                    // Build Logistic Request
+                    let request_scope = logistic_provider.scope().opposite();
+                    build_logistic_request_ui(c, entity, request_scope);
+                } else {
+                    // Set Provider (one option for each scope)
+                    for scope in [LogisticScope::Planet, LogisticScope::SolarSystem] {
+                        c.spawn(UiButton)
+                            .with_child(Text::new(format!("Export to {scope}")))
+                            .observe(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
+                                commands.entity(entity).insert(LogisticProvider::new(scope));
+                            });
+                    }
+                }
+            }
         });
     }
+}
+
+pub fn build_logistic_request_ui(c: &mut ChildBuilder, entity: Entity, scope: LogisticScope) {
+    c.spawn(UiButton)
+        .with_child(Text::new("Change Request"))
+        .observe(
+            move |_: Trigger<Pointer<Click>>,
+                  mut commands: Commands,
+                  asset_server: Res<AssetServer>,
+                  window_parent: Single<Entity, With<HudWindowParent>>| {
+                commands.entity(*window_parent).with_children(|c| {
+                    let mut ec = c.spawn(HudWindow);
+                    let logistic_request_window_entity = ec.id();
+                    ec.with_children(|c| {
+                        c.spawn(UiButton).with_child(Text::new("Close")).observe(
+                            move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
+                                commands
+                                    .entity(logistic_request_window_entity)
+                                    .despawn_recursive();
+                            },
+                        );
+
+                        for id in ItemId::ALL {
+                            c.spawn(UiButton)
+                                .observe(
+                                    move |trigger: Trigger<Pointer<Click>>,
+                                          mut commands: Commands,
+                                          mut query: Query<Option<&mut LogisticRequest>>| {
+                                        let remove = trigger.button == PointerButton::Secondary;
+
+                                        if let Some(mut request) =
+                                            query.get_mut(entity).ok().flatten()
+                                        {
+                                            if remove {
+                                                request.remove_item(*id, 1);
+                                            } else {
+                                                request.add_item(*id, 1);
+                                            }
+                                        } else if !remove {
+                                            let mut request =
+                                                LogisticRequest::new(HashMap::new(), scope);
+                                            request.add_item(*id, 1);
+                                            commands.entity(entity).insert(request);
+                                        }
+                                    },
+                                )
+                                .with_children(|c| {
+                                    build_item_ui(c, &asset_server, *id, 0);
+                                });
+                        }
+                    });
+                });
+            },
+        );
 }
 
 pub fn build_item_ui(
@@ -180,7 +286,11 @@ pub fn build_item_ui(
         })
         .with_children(|c| {
             c.spawn((
-                Text::new(format!("{} (x{})", item.name, quantity)),
+                if quantity > 0 {
+                    Text::new(format!("{} (x{quantity})", item.name))
+                } else {
+                    Text::new(item.name)
+                },
                 TextFont {
                     font_size: 18.0,
                     ..default()

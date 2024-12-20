@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     buildings::Extractor,
-    ui::{spawn_building_header, spawn_inventory_ui, HudWindow, HudWindowParent},
+    ui::{spawn_building_header, HudWindow, HudWindowParent, InventoryUI},
 };
 
 pub fn scan_extractor_ui(mut commands: Commands, q_extractors: Query<Entity, Added<Extractor>>) {
@@ -23,9 +23,9 @@ fn spawn_extractor_ui(
         .despawn_descendants()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
-                spawn_building_header(c, entity, "Element Extractor");
+                spawn_building_header(c, "Element Extractor");
 
-                spawn_inventory_ui(c, entity);
+                c.spawn(InventoryUI::new(entity));
             });
         });
 }

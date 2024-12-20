@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::ActiveSolarSystem;
 use crate::{
-    buildings::PlacingLocation,
+    buildings::LocationOnAstre,
     universe::{Asteroid, Astre},
 };
 
@@ -11,12 +11,12 @@ use crate::{
 pub struct DockableOnAstre {
     pub on_astre: bool,
     instant_or_despawn: bool,
-    location: PlacingLocation,
+    location: LocationOnAstre,
     adjust_z: bool,
 }
 
 impl DockableOnAstre {
-    pub fn instant_location(location: PlacingLocation) -> Self {
+    pub fn instant_location(location: LocationOnAstre) -> Self {
         Self {
             instant_or_despawn: true,
             location,
@@ -56,18 +56,15 @@ pub fn update_dockable_on_astre(
             let distance = distance.length();
 
             let can_dock = match dockable.location {
-                PlacingLocation::Surface => distance < astre.surface_radius(),
-                PlacingLocation::Atmosphere => {
+                LocationOnAstre::Surface => distance < astre.surface_radius(),
+                LocationOnAstre::Atmosphere => {
                     distance < astre.atmosphere_radius() && distance > astre.surface_radius()
                 }
-                PlacingLocation::SurfaceOrAtmosphere => distance < astre.atmosphere_radius(),
-                PlacingLocation::CloseOrbit => {
-                    println!(
-                        "distance: {distance}, close_orbit_radius: {}",
-                        astre.close_orbit_radius()
-                    );
+                LocationOnAstre::SurfaceOrAtmosphere => distance < astre.atmosphere_radius(),
+                LocationOnAstre::CloseOrbit => {
                     distance < astre.close_orbit_radius() && distance > astre.atmosphere_radius()
                 }
+                LocationOnAstre::Anywhere => distance < astre.close_orbit_radius(),
             };
 
             if can_dock {

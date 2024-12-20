@@ -6,6 +6,7 @@ use crate::{
     buildings::*,
     enum_map,
     items::{Element, ElementState, Inventory, Item, Recipe},
+    universe::DockableOnAstre,
 };
 
 enum_map! {
@@ -146,7 +147,7 @@ enum_map! {
         ),
 
         CargoShuttle = Recipe::new_building(
-            &[(ItemId::Astrium, 10), (ItemId::ComputingCore, 3), (ItemId::PlasmaFuel, 5)],
+            &[/*(ItemId::Astrium, 10), (ItemId::ComputingCore, 3), (ItemId::PlasmaFuel, 5)*/],
             BuildingId::CargoShuttle,
             3.,
         ),
@@ -188,7 +189,7 @@ enum_map! {
         Quarry = BuildingData {
             name: "Quarry",
             sprite_name: "quarry",
-            location: PlacingLocation::Surface,
+            location: LocationOnAstre::Surface,
             on_build: |c| {
                 c.insert((Extractor::new_solid(), Inventory::new(1000)));
             },
@@ -197,7 +198,7 @@ enum_map! {
         LiquidExtractor = BuildingData {
             name: "Liquid Extractor",
             sprite_name: "quarry",
-            location: PlacingLocation::Surface,
+            location: LocationOnAstre::Surface,
             on_build: |c| {
                 c.insert((Extractor::new_liquid(), Inventory::new(5000)));
             },
@@ -206,7 +207,7 @@ enum_map! {
         AtmosphereHarvester = BuildingData {
             name: "Atmosphere Harvester",
             sprite_name: "quarry",
-            location: PlacingLocation::Atmosphere,
+            location: LocationOnAstre::Atmosphere,
             on_build: |c| {
                 c.insert((Extractor::new_gas(), Inventory::new(10_000)));
             },
@@ -215,7 +216,7 @@ enum_map! {
         PlasmaCatalyser = BuildingData {
             name: "Plasma Catalyser",
             sprite_name: "quarry",
-            location: PlacingLocation::SurfaceOrAtmosphere,
+            location: LocationOnAstre::SurfaceOrAtmosphere,
             on_build: |c| {
                 c.insert((Extractor::new_plasma(), Inventory::new(500)));
             },
@@ -224,7 +225,7 @@ enum_map! {
         Warehouse = BuildingData {
             name: "Warehouse",
             sprite_name: "warehouse",
-            location: PlacingLocation::Surface,
+            location: LocationOnAstre::Surface,
             on_build: |c| {
                 c.insert((Warehouse, Inventory::new(100_000)));
             },
@@ -233,7 +234,7 @@ enum_map! {
         CargoShuttle = BuildingData {
             name: "Cargo Shuttle",
             sprite_name: "cargo_shuttle",
-            location: PlacingLocation::SurfaceOrAtmosphere,
+            location: LocationOnAstre::SurfaceOrAtmosphere,
             on_build: |c| {
                 c.insert((LogisticFreight::new_planet(), Inventory::new(10_000)));
             },
@@ -242,7 +243,7 @@ enum_map! {
         Spaceport = BuildingData {
             name: "Spaceport",
             sprite_name: "spaceport",
-            location: PlacingLocation::CloseOrbit,
+            location: LocationOnAstre::CloseOrbit,
             on_build: |c| {
                 c.insert((Spaceport, Inventory::new(1000)));
             },
@@ -251,16 +252,16 @@ enum_map! {
         InterplanetaryFreighter = BuildingData {
             name: "Interplanetary Freighter",
             sprite_name: "cargo_shuttle",
-            location: PlacingLocation::CloseOrbit,
+            location: LocationOnAstre::CloseOrbit,
             on_build: |c| {
-                c.insert((LogisticFreight::new_solar_system(), Inventory::new(100_000)));
+                c.insert((LogisticFreight::new_solar_system(), Inventory::new(100_000), DockableOnAstre::default()));
             },
         },
 
         Foundry = BuildingData {
             name: "Foundry",
             sprite_name: "foundry",
-            location: PlacingLocation::Surface,
+            location: LocationOnAstre::Surface,
             on_build: |c| {
                 c.insert((Crafter::new_crafter(vec![
                     RecipeId::SmeltElectroniteOre,
@@ -272,7 +273,7 @@ enum_map! {
         Assembler = BuildingData {
             name: "Assembler",
             sprite_name: "assembler",
-            location: PlacingLocation::Surface,
+            location: LocationOnAstre::Surface,
             on_build: |c| {
                 c.insert((Crafter::new_crafter(vec![
                     RecipeId::CraftComputingCore,
@@ -284,7 +285,7 @@ enum_map! {
         InterstellarGate = BuildingData {
             name: "Interstellar Gate",
             sprite_name: "interstellar_gate",
-            location: PlacingLocation::CloseOrbit,
+            location: LocationOnAstre::CloseOrbit,
             on_build: |c| {
                 c.insert(InterstellarGate);
             },

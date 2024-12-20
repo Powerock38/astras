@@ -18,6 +18,7 @@ pub struct HudWindowDependent;
         height: Val::Percent(100.),
         flex_direction: FlexDirection::Column,
         padding: UiRect::all(Val::Px(10.)),
+        margin: UiRect::all(Val::Px(5.)),
         ..default()
     }),
     BackgroundColor(|| BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.5)))

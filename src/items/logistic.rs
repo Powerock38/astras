@@ -1,13 +1,34 @@
 use bevy::{ecs::entity::MapEntities, prelude::*};
 use uuid::Uuid;
 
-use crate::items::{Inventory, ItemMap};
+use crate::{
+    data::ItemId,
+    items::{Inventory, ItemMap},
+};
 
-#[derive(PartialEq, Eq, Reflect, Default, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Reflect, Default, Debug)]
 pub enum LogisticScope {
     #[default]
     Planet,
     SolarSystem,
+}
+
+impl LogisticScope {
+    pub fn opposite(self) -> Self {
+        match self {
+            LogisticScope::Planet => LogisticScope::SolarSystem,
+            LogisticScope::SolarSystem => LogisticScope::Planet,
+        }
+    }
+}
+
+impl std::fmt::Display for LogisticScope {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LogisticScope::Planet => write!(f, "Planet"),
+            LogisticScope::SolarSystem => write!(f, "Solar System"),
+        }
+    }
 }
 
 #[derive(Component, Reflect, Default, Debug)]
@@ -38,17 +59,6 @@ impl LogisticRequest {
     }
 
     #[inline]
-    pub fn items(&self) -> &ItemMap {
-        &self.items
-    }
-
-    #[inline]
-    pub fn set_items(&mut self, items: ItemMap) {
-        self.id = Uuid::new_v4();
-        self.items = items;
-    }
-
-    #[inline]
     pub fn id(&self) -> Uuid {
         self.id
     }
@@ -56,6 +66,33 @@ impl LogisticRequest {
     #[inline]
     pub fn scope(&self) -> &LogisticScope {
         &self.scope
+    }
+
+    #[inline]
+    pub fn items(&self) -> &ItemMap {
+        &self.items
+    }
+
+    pub fn set_items(&mut self, items: ItemMap) {
+        self.id = Uuid::new_v4();
+        self.items = items;
+    }
+
+    pub fn add_item(&mut self, id: ItemId, quantity: u32) {
+        if let Some(item) = self.items.get_mut(&id) {
+            *item += quantity;
+        } else {
+            self.items.insert(id, quantity);
+        }
+    }
+
+    pub fn remove_item(&mut self, id: ItemId, quantity: u32) {
+        if let Some(item) = self.items.get_mut(&id) {
+            *item -= quantity;
+            if *item == 0 {
+                self.items.remove(&id);
+            }
+        }
     }
 
     pub fn compute_fulfillment_percentage(&self, provider_inventory: &Inventory) -> u32 {
@@ -116,6 +153,8 @@ impl MapEntities for LogisticJourney {
 
 impl LogisticJourney {
     pub fn new(request_id: Uuid, provider: Entity, requester: Entity) -> Self {
+        assert_ne!(provider, requester);
+
         Self {
             request_id,
             provider,

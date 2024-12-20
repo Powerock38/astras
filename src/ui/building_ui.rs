@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::ui::{ClearUiEvent, UiButton};
 
-pub fn spawn_building_header(c: &mut ChildBuilder, entity: Entity, name: &str) {
+pub fn spawn_building_header(c: &mut ChildBuilder, name: &str) {
     c.spawn((
         Node {
             align_items: AlignItems::Center,
@@ -24,15 +24,10 @@ pub fn spawn_building_header(c: &mut ChildBuilder, entity: Entity, name: &str) {
             },
         ));
 
-        c.spawn(UiButton)
-            .observe(
-                move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
-                    commands.trigger(ClearUiEvent);
-                    commands.entity(entity).despawn_recursive();
-                },
-            )
-            .with_children(|c| {
-                c.spawn(Text::new("X"));
-            });
+        c.spawn(UiButton).with_child(Text::new("X")).observe(
+            move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                commands.trigger(ClearUiEvent);
+            },
+        );
     });
 }

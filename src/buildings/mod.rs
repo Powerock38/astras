@@ -34,11 +34,15 @@ impl Plugin for BuildingsPlugin {
                 draw_placing_zones,
                 update_extractors,
                 update_logistic_freights,
+                update_logistic_freights_movement.after(update_logistic_freights),
                 update_crafters,
                 add_highlight_selection,
             )
                 .in_set(SolarSystemSet),
         )
+        .add_observer(observe_unregister_freight)
+        .add_observer(observe_freight_inventory_transfer)
+        .add_observer(observe_register_freight)
         .register_type::<BuildingHighlight>()
         .register_type::<LogisticFreight>()
         .register_type::<Spaceport>()

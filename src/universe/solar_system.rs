@@ -69,11 +69,14 @@ pub fn set_active_solar_system(
         commands.entity(active_entity).remove::<ActiveSolarSystem>();
     }
 
-    let entity = query
+    let Some(entity) = query
         .iter()
         .find(|(_, v)| v.get())
         .map(|(entity, _)| entity)
-        .unwrap();
+    else {
+        error!("No visible solar system found");
+        return;
+    };
 
     commands.entity(entity).insert(ActiveSolarSystem);
 }

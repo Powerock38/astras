@@ -46,7 +46,7 @@ impl Inventory {
         )
     }
 
-    // Best-effort item transfer
+    // Best-effort item transfer. Returns the quantity actually transferred.
     pub fn transfer_to(&mut self, other: &mut Inventory, id: ItemId, max_quantity: u32) -> u32 {
         if let Some(item_quantity) = self.items.get_mut(&id) {
             // Adjust quantity if self doesn't have enough quantity

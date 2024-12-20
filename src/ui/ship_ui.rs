@@ -3,9 +3,7 @@ use bevy::prelude::*;
 use crate::{
     buildings::PlacingBuilding,
     data::BuildingId,
-    ui::{
-        build_building_ui, spawn_inventory_ui, ClearUiEvent, HudWindow, HudWindowParent, UiButton,
-    },
+    ui::{build_building_ui, ClearUiEvent, HudWindow, HudWindowParent, InventoryUI, UiButton},
     universe::Ship,
 };
 
@@ -35,7 +33,7 @@ pub fn clear_ui_or_spawn_ship_ui(
                         ..default()
                     })
                     .with_children(|c| {
-                        spawn_inventory_ui(c, *ship);
+                        c.spawn(InventoryUI::new(*ship));
 
                         c.spawn(Node {
                             width: Val::Percent(50.0),

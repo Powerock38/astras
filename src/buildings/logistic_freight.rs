@@ -1,14 +1,16 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 
-use crate::items::{Inventory, LogisticJourney, LogisticProvider, LogisticRequest, LogisticScope};
+use crate::items::{
+    Inventory, ItemMap, LogisticJourney, LogisticProvider, LogisticRequest, LogisticScope,
+};
 
-const RANGE: f32 = 10.0;
+const RANGE: f32 = 100.0;
 const SPEED: f32 = 1000.0;
 const LOGISTIC_FREIGHTER_Z: f32 = 0.6;
 
 //TODO: implement Ship following (to move freighters manually)
 
-pub type LogisticJourneyWithTarget = (LogisticJourney, Option<Vec2>); // (journey, move_target)
+pub type LogisticJourneyWithTarget = (LogisticJourney, Option<Entity>); // (journey, target)
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
@@ -63,107 +65,75 @@ journey
 
     => if logistic_freight inventory CAN partially fullfill requester's request, go to requester
     => give items
+
+all the mut logic is splitted in observers, in order to avoid conflicting queries / paramset borrowing issues
 */
 
 pub fn update_logistic_freights(
     time: Res<Time>,
-    mut q_logistic_freights: Query<(
+    mut commands: Commands,
+    mut q_logistic_freights: Query<
+        (
+            Entity,
+            &mut LogisticFreight,
+            &Parent,
+            &GlobalTransform,
+            &Inventory,
+        ),
+        (Without<LogisticRequest>, Without<LogisticProvider>),
+    >,
+    q_requesters: Query<(Entity, &LogisticRequest, &Parent, &GlobalTransform)>,
+    q_providers: Query<(
         Entity,
-        &mut LogisticFreight,
+        &LogisticProvider,
         &Parent,
-        &mut Transform,
-        &mut Inventory,
+        &GlobalTransform,
+        &Inventory,
     )>,
-    mut q_requesters: Query<
-        (
-            Entity,
-            &mut LogisticRequest,
-            &Parent,
-            &Transform,
-            &mut Inventory,
-        ),
-        Without<LogisticFreight>,
-    >,
-    mut q_providers: Query<
-        (
-            Entity,
-            &mut LogisticProvider,
-            &Parent,
-            &Transform,
-            &mut Inventory,
-        ),
-        (Without<LogisticRequest>, Without<LogisticFreight>),
-    >,
     q_parent: Query<&Parent>,
 ) {
-    for (freight_entity, mut freight, parent, mut transform, mut inventory) in
-        &mut q_logistic_freights
-    {
+    for (freight_entity, mut freight, parent, transform, inventory) in &mut q_logistic_freights {
         if freight.cooldown.tick(time.delta()).finished() {
             // If we already have a journey
             if let Some((journey, move_target)) = &mut freight.journey {
-                if let Ok((_, logistic_request, _, requester_transform, mut requester_inventory)) =
-                    q_requesters.get_mut(journey.requester())
+                if let Ok((requester_entity, logistic_request, _, requester_transform)) =
+                    q_requesters.get(journey.requester())
                 {
-                    let mut unregister_freight = false;
-
                     if logistic_request.id() == journey.request_id() {
                         println!("{journey:?} {logistic_request:?}");
 
-                        if logistic_request.compute_fulfillment_percentage(&inventory) > 0 {
+                        if logistic_request.compute_fulfillment_percentage(inventory) > 0 {
                             // If freight inventory can (partially) fullfill requester's request, go to requester
-                            let target = requester_transform.translation.truncate();
-                            *move_target = Some(target);
+                            *move_target = Some(requester_entity);
 
-                            if is_target_reached(&transform, target) {
+                            if is_target_reached(transform, requester_transform) {
                                 // transfer request's items to requester
                                 *move_target = None;
 
-                                // Try transfering some items
-                                for (item_id, &quantity) in logistic_request.items() {
-                                    let q = inventory.transfer_to(
-                                        &mut requester_inventory,
-                                        *item_id,
-                                        quantity.min(freight.max_amount_per_transfer),
-                                    );
-
-                                    if q != 0 {
-                                        println!("Transferred {q} {item_id:?}");
-                                        return; // wait for next tick
-                                    }
-                                }
-
-                                // We didn't transfer any items (didn't reach return above), unregister freight
-                                unregister_freight = true;
+                                commands.trigger(FreightInventoryTransfer {
+                                    items: logistic_request.items().clone(),
+                                    freight: freight_entity,
+                                    provider_or_requester: journey.requester(),
+                                    is_provider: false,
+                                });
                             }
                         } else {
                             // If freight inventory can't fullfill requester's request, go to provider
-                            if let Ok((_, _, _, provider_transform, mut provider_inventory)) =
-                                q_providers.get_mut(journey.provider())
+                            if let Ok((provider_entity, _, _, provider_transform, _)) =
+                                q_providers.get(journey.provider())
                             {
-                                let target = provider_transform.translation.truncate();
-                                *move_target = Some(target);
+                                *move_target = Some(provider_entity);
 
-                                if is_target_reached(&transform, target) {
+                                if is_target_reached(transform, provider_transform) {
                                     // transfer request's items from provider
                                     *move_target = None;
 
-                                    // Try transfering some items
-                                    for (item_id, &quantity) in logistic_request.items() {
-                                        let q = provider_inventory.transfer_to(
-                                            &mut inventory,
-                                            *item_id,
-                                            quantity.min(freight.max_amount_per_transfer),
-                                        );
-
-                                        if q != 0 {
-                                            println!("Transferred {q} {item_id:?}");
-                                            return; // wait for next tick
-                                        }
-                                    }
-
-                                    // We didn't transfer any items (didn't reach return above), unregister freight
-                                    unregister_freight = true;
+                                    commands.trigger(FreightInventoryTransfer {
+                                        items: logistic_request.items().clone(),
+                                        freight: freight_entity,
+                                        provider_or_requester: journey.provider(),
+                                        is_provider: true,
+                                    });
                                 }
                             } else {
                                 // Provider doesn't exist anymore
@@ -174,25 +144,7 @@ pub fn update_logistic_freights(
                     } else {
                         // Request changed
                         println!("Request changed");
-                        unregister_freight = true;
-                    }
-
-                    if unregister_freight {
-                        if let Some((journey, _)) = freight.journey.take() {
-                            if let Ok((_, mut logistic_request, _, _, _)) =
-                                q_requesters.get_mut(journey.requester())
-                            {
-                                logistic_request.freights.retain(|&f| f != freight_entity);
-                            }
-
-                            if let Ok((_, mut logistic_provider, _, _, _)) =
-                                q_providers.get_mut(journey.provider())
-                            {
-                                logistic_provider.freights.retain(|&f| f != freight_entity);
-                            }
-
-                            freight.journey = None;
-                        }
+                        commands.trigger(UnregisterFreight(freight_entity));
                     }
                 } else {
                     // Journey requester doesn't exist anymore
@@ -205,18 +157,20 @@ pub fn update_logistic_freights(
                 // Search for requesters in the same scope, prioritizing the one with the least freights
 
                 let mut requesters = q_requesters
-                    .iter_mut()
+                    .iter()
                     .filter(
                         |(requester_entity, logistic_request, requester_parent, ..)| {
                             &freight.scope == logistic_request.scope()
                                 && match freight.scope {
                                     LogisticScope::Planet => requester_parent.get() == parent.get(),
                                     LogisticScope::SolarSystem => {
-                                        q_parent.iter_ancestors(freight_entity).any(|p| {
-                                            q_parent
-                                                .iter_ancestors(*requester_entity)
-                                                .any(|p2| p == p2)
-                                        })
+                                        let freight_ancestors = q_parent
+                                            .iter_ancestors(freight_entity)
+                                            .collect::<HashSet<_>>();
+
+                                        q_parent
+                                            .iter_ancestors(*requester_entity)
+                                            .any(|p| freight_ancestors.contains(&p))
                                     }
                                 }
                         },
@@ -226,7 +180,7 @@ pub fn update_logistic_freights(
                 requesters
                     .sort_by(|(_, a, ..), (_, b, ..)| a.freights.len().cmp(&b.freights.len()));
 
-                for (requester_entity, mut logistic_request, ..) in requesters {
+                for (requester_entity, logistic_request, ..) in requesters {
                     // Search for a compatible provider in the same scope,
                     // with the minimum number of freights
                     // and the best fulfillment score for the request
@@ -240,21 +194,29 @@ pub fn update_logistic_freights(
                         provider_parent,
                         _,
                         provider_inventory,
-                    ) in &mut q_providers
+                    ) in &q_providers
                     {
+                        if provider_entity == requester_entity {
+                            continue;
+                        }
+
                         let in_scope = &freight.scope == logistic_provider.scope()
                             && match freight.scope {
                                 LogisticScope::Planet => provider_parent.get() == parent.get(),
                                 LogisticScope::SolarSystem => {
-                                    q_parent.iter_ancestors(freight_entity).any(|p| {
-                                        q_parent.iter_ancestors(provider_entity).any(|p2| p == p2)
-                                    })
+                                    let freight_ancestors = q_parent
+                                        .iter_ancestors(freight_entity)
+                                        .collect::<HashSet<_>>();
+
+                                    q_parent
+                                        .iter_ancestors(provider_entity)
+                                        .any(|p| freight_ancestors.contains(&p))
                                 }
                             };
 
                         if in_scope {
-                            let fulfillment_score = logistic_request
-                                .compute_fulfillment_percentage(&provider_inventory);
+                            let fulfillment_score =
+                                logistic_request.compute_fulfillment_percentage(provider_inventory);
 
                             if fulfillment_score > best_provider_fulfillment_score
                                 || (fulfillment_score == best_provider_fulfillment_score
@@ -262,7 +224,7 @@ pub fn update_logistic_freights(
                             {
                                 best_provider_fulfillment_score = fulfillment_score;
                                 best_provider_nb_freights = logistic_provider.freights.len();
-                                provider = Some((provider_entity, logistic_provider));
+                                provider = Some(provider_entity);
                             }
                         }
                     }
@@ -272,28 +234,38 @@ pub fn update_logistic_freights(
                     );
 
                     // If we found a provider, set the journey and register freight in LogisticRequest and LogisticProvider
-                    if let Some((provider_entity, mut logistic_provider)) = provider {
-                        logistic_request.freights.push(freight_entity);
-                        logistic_provider.freights.push(freight_entity);
-
-                        freight.journey = Some((
-                            LogisticJourney::new(
-                                logistic_request.id(),
-                                provider_entity,
-                                requester_entity,
-                            ),
-                            None,
-                        ));
+                    if let Some(provider_entity) = provider {
+                        commands.trigger(RegisterFreight {
+                            freight: freight_entity,
+                            requester: requester_entity,
+                            provider: provider_entity,
+                        });
 
                         break;
                     }
                 }
             }
         }
+    }
+}
 
+pub fn update_logistic_freights_movement(
+    time: Res<Time>,
+    q_global_transforms: Query<&GlobalTransform>,
+    mut q_logistic_freights: Query<(&LogisticFreight, &Parent, &mut Transform)>,
+) {
+    for (freight, parent, mut transform) in &mut q_logistic_freights {
         // Move towards target
         if let Some((_, Some(target))) = &freight.journey {
-            let direction = *target - transform.translation.truncate();
+            let target_global_transform = q_global_transforms.get(*target).unwrap();
+            let parent_global_transform = q_global_transforms.get(parent.get()).unwrap();
+
+            let target = target_global_transform
+                .reparented_to(parent_global_transform)
+                .translation
+                .truncate();
+
+            let direction = target - transform.translation.truncate();
             let distance = direction.length();
 
             if distance >= RANGE {
@@ -307,6 +279,7 @@ pub fn update_logistic_freights(
                 } else {
                     transform.translation.x = target.x;
                     transform.translation.y = target.y;
+                    println!("Target reached {target:?}");
                 }
 
                 transform.translation.z = LOGISTIC_FREIGHTER_Z;
@@ -320,37 +293,109 @@ pub fn update_logistic_freights(
     }
 }
 
-fn is_target_reached(transform: &Transform, target: Vec2) -> bool {
-    (transform.translation.truncate() - target).length() < RANGE
+fn is_target_reached(a: &GlobalTransform, b: &GlobalTransform) -> bool {
+    (a.translation().truncate() - b.translation().truncate()).length() < RANGE
 }
 
-/*
-pub fn update_registered_freights(
-    mut q_logistic_freights: Query<(Entity, &mut LogisticFreight)>,
-    mut p_logistic: ParamSet<(Query<&mut LogisticRequest>, Query<&mut LogisticProvider>)>,
+#[derive(Event)]
+pub struct RegisterFreight {
+    freight: Entity,
+    requester: Entity,
+    provider: Entity,
+}
+
+pub fn observe_register_freight(
+    trigger: Trigger<RegisterFreight>,
+    mut q_logistic_freights: Query<
+        &mut LogisticFreight,
+        (Without<LogisticRequest>, Without<LogisticProvider>),
+    >,
+    mut paramset: ParamSet<(Query<&mut LogisticRequest>, Query<&mut LogisticProvider>)>,
 ) {
-    for mut logistic_request in &mut p_logistic.p0() {
-        logistic_request.freights.clear();
+    let mut freight = q_logistic_freights.get_mut(trigger.freight).unwrap();
+
+    {
+        let mut q_logistic_provider = paramset.p1();
+        let mut logistic_provider = q_logistic_provider.get_mut(trigger.provider).unwrap();
+        logistic_provider.freights.push(trigger.freight);
     }
 
-    for mut logistic_provider in &mut p_logistic.p1() {
-        logistic_provider.freights.clear();
+    let mut q_logistic_request = paramset.p0();
+    let mut logistic_request = q_logistic_request.get_mut(trigger.requester).unwrap();
+    logistic_request.freights.push(trigger.freight);
+
+    freight.journey = Some((
+        LogisticJourney::new(logistic_request.id(), trigger.provider, trigger.requester),
+        None,
+    ));
+}
+
+#[derive(Event)]
+pub struct UnregisterFreight(Entity);
+
+pub fn observe_unregister_freight(
+    trigger: Trigger<UnregisterFreight>,
+    mut q_logistic_freights: Query<
+        &mut LogisticFreight,
+        (Without<LogisticRequest>, Without<LogisticProvider>),
+    >,
+    mut paramset: ParamSet<(Query<&mut LogisticRequest>, Query<&mut LogisticProvider>)>,
+) {
+    let freight_entity = trigger.0;
+    let mut freight = q_logistic_freights.get_mut(freight_entity).unwrap();
+
+    if let Some((journey, _)) = freight.journey.take() {
+        if let Ok(mut logistic_request) = paramset.p0().get_mut(journey.requester()) {
+            logistic_request.freights.retain(|&f| f != freight_entity);
+        }
+
+        if let Ok(mut logistic_provider) = paramset.p1().get_mut(journey.provider()) {
+            logistic_provider.freights.retain(|&f| f != freight_entity);
+        }
+
+        freight.journey = None;
     }
+}
 
-    for (entity, mut freight) in &mut q_logistic_freights {
-        if let Some((journey, _)) = freight.journey {
-            if let Ok(mut requester) = p_logistic.p0().get_mut(journey.requester()) {
-                requester.freights.push(entity);
-            } else {
-                freight.journey = None;
-            }
+#[derive(Event)]
+pub struct FreightInventoryTransfer {
+    items: ItemMap,
+    freight: Entity,
+    provider_or_requester: Entity,
+    is_provider: bool, // true = from provider to freight, false = from freight to requester
+}
 
-            if let Ok(mut provider) = p_logistic.p1().get_mut(journey.provider()) {
-                provider.freights.push(entity);
-            } else {
-                freight.journey = None;
-            }
+pub fn observe_freight_inventory_transfer(
+    trigger: Trigger<FreightInventoryTransfer>,
+    mut commands: Commands,
+    mut q_freight: Query<(&LogisticFreight, &mut Inventory)>,
+    mut q_providers_or_requesters: Query<&mut Inventory, Without<LogisticFreight>>,
+) {
+    let (freight, freight_inventory) = q_freight.get_mut(trigger.freight).unwrap();
+    let other_inventory = q_providers_or_requesters
+        .get_mut(trigger.provider_or_requester)
+        .unwrap();
+
+    let (mut from, mut to) = if trigger.is_provider {
+        (other_inventory, freight_inventory)
+    } else {
+        (freight_inventory, other_inventory)
+    };
+
+    // Try transfering some items
+    for (&item_id, &quantity) in &trigger.items {
+        let q = from.transfer_to(
+            &mut to,
+            item_id,
+            quantity.min(freight.max_amount_per_transfer),
+        );
+
+        if q != 0 {
+            println!("Transferred {q} {item_id:?}");
+            return;
         }
     }
+
+    // We didn't transfer any items (didn't reach return above), unregister freight
+    commands.trigger(UnregisterFreight(trigger.freight));
 }
-*/

@@ -20,7 +20,7 @@ pub struct PlacingBuilding(pub BuildingId);
 pub struct BuildingData {
     pub name: &'static str,
     pub sprite_name: &'static str,
-    pub location: PlacingLocation,
+    pub location: LocationOnAstre,
     pub on_build: fn(&mut EntityCommands),
 }
 
@@ -32,12 +32,13 @@ impl BuildingData {
 }
 
 #[derive(Clone, Copy, Reflect, Default, Debug)]
-pub enum PlacingLocation {
+pub enum LocationOnAstre {
     Surface,
     Atmosphere,
-    #[default]
     SurfaceOrAtmosphere,
     CloseOrbit,
+    #[default]
+    Anywhere,
 }
 
 #[derive(Component)]
@@ -141,7 +142,7 @@ pub fn draw_placing_zones(
     for (astre, global_transform, _) in q_astres.iter().filter(|(_, _, v)| v.get()) {
         if matches!(
             location,
-            PlacingLocation::Surface | PlacingLocation::SurfaceOrAtmosphere
+            LocationOnAstre::Surface | LocationOnAstre::SurfaceOrAtmosphere
         ) {
             gizmos.circle_2d(
                 global_transform.translation().truncate(),
@@ -153,7 +154,7 @@ pub fn draw_placing_zones(
         if astre.has_atmosphere()
             && matches!(
                 location,
-                PlacingLocation::Atmosphere | PlacingLocation::SurfaceOrAtmosphere
+                LocationOnAstre::Atmosphere | LocationOnAstre::SurfaceOrAtmosphere
             )
         {
             gizmos.circle_2d(
@@ -163,7 +164,21 @@ pub fn draw_placing_zones(
             );
         }
 
-        if matches!(location, PlacingLocation::CloseOrbit) {
+        if matches!(location, LocationOnAstre::CloseOrbit) {
+            gizmos.circle_2d(
+                global_transform.translation().truncate(),
+                astre.close_orbit_radius(),
+                PLACING_ZONES_COLOR,
+            );
+
+            gizmos.circle_2d(
+                global_transform.translation().truncate(),
+                astre.atmosphere_radius(),
+                PLACING_ZONES_COLOR,
+            );
+        }
+
+        if matches!(location, LocationOnAstre::Anywhere) {
             gizmos.circle_2d(
                 global_transform.translation().truncate(),
                 astre.close_orbit_radius(),
