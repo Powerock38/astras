@@ -1,4 +1,7 @@
-use bevy::{ecs::entity::MapEntities, prelude::*};
+use bevy::{
+    ecs::{entity::MapEntities, reflect::ReflectMapEntities},
+    prelude::*,
+};
 use uuid::Uuid;
 
 use crate::{
@@ -32,7 +35,7 @@ impl std::fmt::Display for LogisticScope {
 }
 
 #[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
+#[reflect(Component, Default, MapEntities)]
 pub struct LogisticRequest {
     id: Uuid,
     items: ItemMap,
@@ -109,7 +112,7 @@ impl LogisticRequest {
 
 // If a building has a LogisticProvider component, its Inventory component will be used to fulfill LogisticRequests
 #[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
+#[reflect(Component, Default, MapEntities)]
 pub struct LogisticProvider {
     scope: LogisticScope,
     pub freights: Vec<Entity>,
@@ -138,6 +141,7 @@ impl LogisticProvider {
 }
 
 #[derive(Reflect, Debug, Clone, Copy)]
+#[reflect(MapEntities)]
 pub struct LogisticJourney {
     request_id: Uuid,
     provider: Entity,

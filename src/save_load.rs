@@ -47,7 +47,7 @@ impl Command for SaveUniverse {
 
         let universe_name = world.resource::<UniverseName>().0.clone();
 
-        println!("Saving universe {universe_name}");
+        info!("Saving universe {universe_name}");
 
         let type_registry_arc = &**world.resource::<AppTypeRegistry>();
         let type_registry = type_registry_arc.read();
@@ -87,7 +87,7 @@ impl Command for SaveUniverse {
                     .detach();
             }
             Err(e) => {
-                eprintln!("Error while serializing the scene: {e:?}");
+                error!("Error while serializing the scene: {e:?}");
             }
         }
     }
@@ -113,14 +113,13 @@ pub fn load_universe(
     }
 
     let universe_name = trigger.0.clone();
-    println!("Loading universe {universe_name}");
 
     commands.insert_resource(UniverseName(universe_name.clone()));
 
     scene_spawner
         .spawn_dynamic(asset_server.load(format!("{SAVES_DIR}/{universe_name}.{SAVE_EXTENSION}")));
 
-    println!("Loading universe");
+    info!("Loading {universe_name}");
 
     next_state.set(GameState::GameSolarSystem);
 }

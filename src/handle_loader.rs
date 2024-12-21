@@ -7,7 +7,7 @@ use crate::universe::random_polygon;
 // SPRITE LOADER
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(Transform, Visibility)]
 pub struct SpriteLoader {
     pub texture_path: String,
@@ -32,9 +32,9 @@ pub fn scan_sprite_loaders(
 // MATERIAL LOADER
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(Transform, Visibility)]
-pub struct MaterialLoader<M: Material2d> {
+pub struct MaterialLoader<M: Material2d + Default> {
     pub mesh_type: MeshType,
     pub material: M,
 }
@@ -58,7 +58,7 @@ pub fn scan_material_loaders<M>(
     mut meshes: ResMut<Assets<Mesh>>,
     query: Query<(Entity, &MaterialLoader<M>), Added<MaterialLoader<M>>>,
 ) where
-    M: Material2d,
+    M: Material2d + Default,
 {
     for (entity, material_loader) in &query {
         let mesh = match material_loader.mesh_type {

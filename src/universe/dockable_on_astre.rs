@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct DockableOnAstre {
     pub on_astre: bool,
     instant_or_despawn: bool,
@@ -103,16 +103,16 @@ pub fn update_dockable_on_astre(
 
             // If dockable is instant_or_despawn and we found an astre, remove the component
             if dockable.instant_or_despawn {
-                println!("Docking forever {entity_dockable:?} on astre {entity_astre:?}!");
+                debug!("Docking forever {entity_dockable:?} on astre {entity_astre:?}!");
                 commands.entity(entity_dockable).remove::<DockableOnAstre>();
                 continue;
             }
 
-            println!("Docking {entity_dockable:?} on astre {entity_astre:?}!");
+            debug!("Docking {entity_dockable:?} on astre {entity_astre:?}!");
         } else {
             // If dockable is instant_or_despawn and we didn't find an astre, remove the Entity
             if dockable.instant_or_despawn {
-                println!("Despawning {entity_dockable:?}!");
+                debug!("Despawning {entity_dockable:?}!");
                 commands.entity(entity_dockable).despawn();
                 continue;
             }
@@ -130,7 +130,7 @@ pub fn update_dockable_on_astre(
 
                 dockable.on_astre = false;
 
-                println!("Undocking {entity_dockable:?}!");
+                debug!("Undocking {entity_dockable:?}!");
             }
         }
     }

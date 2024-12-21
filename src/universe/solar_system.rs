@@ -4,7 +4,7 @@ use rand::prelude::*;
 use crate::universe::{build_star, build_worm};
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct SolarSystem {
     pub position: [i32; 2],
 }

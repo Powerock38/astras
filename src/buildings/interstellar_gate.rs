@@ -1,5 +1,5 @@
 use bevy::prelude::*;
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct InterstellarGate;

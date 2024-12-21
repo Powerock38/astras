@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{items::Inventory, universe::update_ship_mining};
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(Inventory)]
 pub struct Astre {
     surface: f32,

@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(Inventory)] //FIXME: crafting can be blocked if inventory is full of requested items (and recipe outputs more than inputs)
 pub struct Crafter {
     recipe: Option<CrafterRecipe>,
@@ -97,7 +97,7 @@ pub fn update_crafters(
 
                         // SPAWN BUILDING if output is a building
                         if let Some(building) = building_output.map(|b| b.data()) {
-                            println!("Crafted building: {}", building.name);
+                            debug!("Crafted building: {}", building.name);
 
                             if crafter.is_construction_site {
                                 commands.entity(entity).despawn_recursive();
@@ -123,11 +123,11 @@ pub fn update_crafters(
                 CanCraftResult::MissingInputs(missing_inputs) => {
                     if let Some(mut logistic_request) = logistic_request {
                         if logistic_request.items() != &missing_inputs {
-                            println!("Changed missing inputs: {missing_inputs:?}");
+                            debug!("Changed missing inputs: {missing_inputs:?}");
                             logistic_request.set_items(missing_inputs);
                         }
                     } else {
-                        println!("New missing inputs: {missing_inputs:?}");
+                        debug!("New missing inputs: {missing_inputs:?}");
                         commands
                             .entity(entity)
                             .insert(LogisticRequest::new(missing_inputs, LogisticScope::Planet));

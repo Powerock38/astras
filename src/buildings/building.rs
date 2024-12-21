@@ -45,7 +45,7 @@ pub enum LocationOnAstre {
 pub struct BuildingPreview;
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct BuildingHighlight;
 
 pub fn spawn_building(
@@ -109,7 +109,7 @@ pub fn spawn_building(
 
                     commands.remove_resource::<PlacingBuilding>();
                 } else {
-                    println!("WARNING: Building {:?} has no recipe", placing_building.0);
+                    error!("Building {:?} has no recipe", placing_building.0);
                 }
             }
 

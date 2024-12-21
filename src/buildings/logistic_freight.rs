@@ -1,25 +1,38 @@
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{
+    ecs::{entity::MapEntities, reflect::ReflectMapEntities},
+    prelude::*,
+    utils::HashSet,
+};
 
 use crate::items::{
     Inventory, ItemMap, LogisticJourney, LogisticProvider, LogisticRequest, LogisticScope,
 };
 
 const RANGE: f32 = 100.0;
-const SPEED: f32 = 1000.0;
 const LOGISTIC_FREIGHTER_Z: f32 = 0.6;
 
 //TODO: implement Ship following (to move freighters manually)
 
-pub type LogisticJourneyWithTarget = (LogisticJourney, Option<Entity>); // (journey, target)
-
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default, MapEntities)]
 #[require(Inventory)]
 pub struct LogisticFreight {
     cooldown: Timer,
     max_amount_per_transfer: u32,
-    journey: Option<LogisticJourneyWithTarget>,
+    journey: Option<(LogisticJourney, Option<Entity>)>, // (journey, target)
     scope: LogisticScope,
+    speed: f32,
+}
+
+impl MapEntities for LogisticFreight {
+    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
+        if let Some((journey, target)) = &mut self.journey {
+            journey.map_entities(entity_mapper);
+            if let Some(target) = target {
+                *target = entity_mapper.map_entity(*target);
+            }
+        }
+    }
 }
 
 impl LogisticFreight {
@@ -29,6 +42,7 @@ impl LogisticFreight {
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
             max_amount_per_transfer: 100,
             journey: None,
+            speed: 1000.0,
         }
     }
 
@@ -38,6 +52,7 @@ impl LogisticFreight {
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
             max_amount_per_transfer: 100,
             journey: None,
+            speed: 10000.0,
         }
     }
 
@@ -100,7 +115,7 @@ pub fn update_logistic_freights(
                     q_requesters.get(journey.requester())
                 {
                     if logistic_request.id() == journey.request_id() {
-                        println!("{journey:?} {logistic_request:?}");
+                        debug!("{journey:?} {logistic_request:?}");
 
                         if logistic_request.compute_fulfillment_percentage(inventory) > 0 {
                             // If freight inventory can (partially) fullfill requester's request, go to requester
@@ -137,18 +152,18 @@ pub fn update_logistic_freights(
                                 }
                             } else {
                                 // Provider doesn't exist anymore
-                                println!("Provider {:?} doesn't exist anymore", journey.provider());
+                                debug!("Provider {:?} doesn't exist anymore", journey.provider());
                                 freight.journey = None;
                             }
                         }
                     } else {
                         // Request changed
-                        println!("Request changed");
+                        debug!("Request changed");
                         commands.trigger(UnregisterFreight(freight_entity));
                     }
                 } else {
                     // Journey requester doesn't exist anymore
-                    println!("Requester {:?} doesn't exist anymore", journey.requester());
+                    debug!("Requester {:?} doesn't exist anymore", journey.requester());
                     freight.journey = None;
                 }
             } else {
@@ -229,7 +244,7 @@ pub fn update_logistic_freights(
                         }
                     }
 
-                    println!(
+                    debug!(
                         "Request {logistic_request:?} for {requester_entity:?} | Provider: {provider:?}"
                     );
 
@@ -257,8 +272,13 @@ pub fn update_logistic_freights_movement(
     for (freight, parent, mut transform) in &mut q_logistic_freights {
         // Move towards target
         if let Some((_, Some(target))) = &freight.journey {
-            let target_global_transform = q_global_transforms.get(*target).unwrap();
-            let parent_global_transform = q_global_transforms.get(parent.get()).unwrap();
+            let Ok(target_global_transform) = q_global_transforms.get(*target) else {
+                continue;
+            };
+
+            let Ok(parent_global_transform) = q_global_transforms.get(parent.get()) else {
+                continue;
+            };
 
             let target = target_global_transform
                 .reparented_to(parent_global_transform)
@@ -270,7 +290,7 @@ pub fn update_logistic_freights_movement(
 
             if distance >= RANGE {
                 let direction = direction / distance;
-                let velocity = direction * SPEED;
+                let velocity = direction * freight.speed;
                 let distance_per_tick = velocity * time.delta_secs();
 
                 if distance_per_tick.length() < distance {
@@ -279,7 +299,7 @@ pub fn update_logistic_freights_movement(
                 } else {
                     transform.translation.x = target.x;
                     transform.translation.y = target.y;
-                    println!("Target reached {target:?}");
+                    debug!("Target reached {target:?}");
                 }
 
                 transform.translation.z = LOGISTIC_FREIGHTER_Z;
@@ -391,7 +411,7 @@ pub fn observe_freight_inventory_transfer(
         );
 
         if q != 0 {
-            println!("Transferred {q} {item_id:?}");
+            debug!("Transferred {q} {item_id:?}");
             return;
         }
     }

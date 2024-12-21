@@ -8,7 +8,7 @@ use rand::Rng;
 use crate::MaterialLoader;
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(MaterialLoader<LaserMaterial>)]
 pub struct Laser {
     ttl: Timer,

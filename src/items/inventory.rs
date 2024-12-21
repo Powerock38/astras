@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct Inventory {
     items: ItemMap,
     size: u32, // 0 = infinite

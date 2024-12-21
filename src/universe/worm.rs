@@ -11,7 +11,7 @@ const SEGMENT_WIDTH: f32 = 80.;
 const HEAD_WIDTH: f32 = 160.;
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct Worm {
     length: u32,
     speed: f32,
@@ -22,7 +22,7 @@ pub struct Worm {
 }
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct WormSegment;
 
 pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {

@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(Inventory, LogisticProvider(|| LogisticProvider::new(LogisticScope::Planet)))]
 pub struct Extractor {
     cooldown: Timer,

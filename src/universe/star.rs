@@ -28,7 +28,7 @@ impl Material2d for StarMaterial {
 }
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(Astre, MaterialLoader<StarMaterial>)]
 pub struct Star;
 

@@ -19,7 +19,7 @@ pub const NB_COLORS: usize = 3;
 pub type PlanetColors = [LinearRgba; NB_COLORS];
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(Astre, Orbit, MaterialLoader<PlanetMaterial>)]
 pub struct Planet;
 

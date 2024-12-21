@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use rand::prelude::*;
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct Orbit {
     speed: f32,
 }

@@ -179,7 +179,7 @@ pub fn travel_to_solar_system(
     )>,
     ship_entity: Single<Entity, With<Ship>>,
 ) {
-    println!("Travelling to solar system at {:?}", trigger.0);
+    info!("Travelling to solar system at {:?}", trigger.0);
 
     // save game just in case
     commands.queue(SaveUniverse);

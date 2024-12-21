@@ -21,7 +21,7 @@ const MINING_AMOUNT_PER_TICK: u32 = 10;
 const MINING_LASER_WIDTH: f32 = 100.;
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 pub struct Ship {
     speed: Vec2,
     max_speed: f32,

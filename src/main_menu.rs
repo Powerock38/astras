@@ -38,7 +38,7 @@ fn spawn_new_game(
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    println!("New game");
+    info!("New game");
 
     let solar_system_position = [
         rand::thread_rng().gen::<i32>(),

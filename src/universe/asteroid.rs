@@ -20,7 +20,7 @@ use crate::{
 const ASTEROID_MIN_RADIUS: f32 = 50.0;
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component)]
+#[reflect(Component, Default)]
 #[require(Astre, Orbit, MaterialLoader<AsteroidMaterial>)]
 pub struct Asteroid {
     initial_size: u32,
