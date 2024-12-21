@@ -8,7 +8,7 @@ use bevy::{
 };
 
 use crate::{
-    ui::Hud,
+    ui::{Hud, NotificationEvent},
     universe::{
         AsteroidMaterial, BackgroundMaterial, LaserMaterial, PlanetMaterial, Ship, SolarSystem,
         StarMaterial,
@@ -48,6 +48,9 @@ impl Command for SaveUniverse {
         let universe_name = world.resource::<UniverseName>().0.clone();
 
         info!("Saving universe {universe_name}");
+        world.trigger(NotificationEvent(format!(
+            "Saving universe {universe_name}"
+        )));
 
         let type_registry_arc = &**world.resource::<AppTypeRegistry>();
         let type_registry = type_registry_arc.read();

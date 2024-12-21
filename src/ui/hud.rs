@@ -63,6 +63,7 @@ pub fn setup_hud(mut commands: Commands, camera: Single<Entity, Added<MainCamera
                     bottom: Val::Px(5.0),
                     right: Val::Px(5.0),
                     flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::FlexEnd,
                     ..default()
                 },
                 PickingBehavior::IGNORE,

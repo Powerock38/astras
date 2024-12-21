@@ -130,7 +130,6 @@ pub fn update_ship_mining(
     placing_building: Option<Res<PlacingBuilding>>,
     q_ship: Single<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
     mut q_astres: Query<(&Astre, &mut Inventory, &GlobalTransform), Without<Ship>>,
-    mut ev_notif: EventWriter<NotificationEvent>,
 ) {
     trigger.propagate(false);
 
@@ -203,7 +202,7 @@ pub fn update_ship_mining(
 
                     let item = item_id.data();
 
-                    ev_notif.send(NotificationEvent(format!(
+                    commands.trigger(NotificationEvent(format!(
                         "Mined {} (x{quantity})",
                         item.name
                     )));

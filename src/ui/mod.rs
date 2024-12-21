@@ -52,13 +52,12 @@ impl Plugin for UIPlugin {
                     scan_extractor_ui,
                     scan_spaceport_ui,
                     scan_logistic_freighter,
-                    read_notification_events,
                     update_notifications,
                 )
                     .in_set(SolarSystemSet),
             ),
         )
         .add_observer(clear_ui)
-        .add_event::<NotificationEvent>();
+        .add_observer(observe_notifications);
     }
 }

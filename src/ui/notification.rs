@@ -14,25 +14,23 @@ pub struct Notification {
     pub timer: Timer,
 }
 
-pub fn read_notification_events(
+pub fn observe_notifications(
+    trigger: Trigger<NotificationEvent>,
     mut commands: Commands,
-    mut notification_events: EventReader<NotificationEvent>,
     zone: Single<Entity, With<NotificationZone>>,
 ) {
-    for event in notification_events.read() {
-        commands.entity(*zone).with_children(|c| {
-            c.spawn((
-                Text::new(event.0.clone()),
-                TextFont {
-                    font_size: NOTIFICATION_SIZE,
-                    ..default()
-                },
-                Notification {
-                    timer: Timer::from_seconds(NOTIFICATION_TIMER, TimerMode::Once),
-                },
-            ));
-        });
-    }
+    commands.entity(*zone).with_children(|c| {
+        c.spawn((
+            Text::new(trigger.0.clone()),
+            TextFont {
+                font_size: NOTIFICATION_SIZE,
+                ..default()
+            },
+            Notification {
+                timer: Timer::from_seconds(NOTIFICATION_TIMER, TimerMode::Once),
+            },
+        ));
+    });
 }
 
 pub fn update_notifications(

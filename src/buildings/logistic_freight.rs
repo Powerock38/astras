@@ -52,7 +52,7 @@ impl LogisticFreight {
             cooldown: Timer::from_seconds(1.0, TimerMode::Repeating),
             max_amount_per_transfer: 100,
             journey: None,
-            speed: 10000.0,
+            speed: 5000.0,
         }
     }
 
