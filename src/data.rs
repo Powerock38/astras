@@ -67,11 +67,11 @@ enum_map! {
 
 pub static ELEMENTS: LazyLock<HashMap<ItemId, Element>> = LazyLock::new(|| {
     HashMap::from([
-        // Atmosphere
+        // Gases
         (ItemId::Aer, Element::new(ANTIQUE_WHITE, ElementState::Gas)),
-        // Oceans
+        // Liquids
         (ItemId::Aqua, Element::new(BLUE, ElementState::Liquid)),
-        // Rocks
+        // Solids
         (ItemId::Terra, Element::new(MAROON, ElementState::Solid)),
         (ItemId::Astrium, Element::new(SILVER, ElementState::Solid)),
         (
@@ -82,7 +82,7 @@ pub static ELEMENTS: LazyLock<HashMap<ItemId, Element>> = LazyLock::new(|| {
             ItemId::QuarkCrystal,
             Element::new(FUCHSIA, ElementState::Solid),
         ),
-        // Stars
+        // Plasmas
         (
             ItemId::Photonite,
             Element::new(YELLOW, ElementState::Plasma),

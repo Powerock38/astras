@@ -28,17 +28,17 @@ pub struct PlanetMaterial {
     #[uniform(0)]
     pub seed: f32,
     #[uniform(0)]
-    pub colors: PlanetColors,
+    pub surface_colors: PlanetColors,
     #[uniform(0)]
     pub noise_scale: f32,
     #[uniform(0)]
-    pub planet_radius_normalized: f32,
+    pub surface_ratio: f32,
     #[uniform(0)]
     pub shadow_angle: f32,
     #[uniform(0)]
     pub atmosphere_density: f32,
     #[uniform(0)]
-    pub atmosphere_color: LinearRgba,
+    pub atmosphere_colors: PlanetColors,
     #[uniform(0)]
     pub atmosphere_speed: f32,
     #[uniform(0)]
@@ -58,68 +58,102 @@ impl Material2d for PlanetMaterial {
 pub fn build_planet(
     c: &mut ChildBuilder,
     rng: &mut StdRng,
-    surface: f32,
-    atmosphere: f32,
-    close_orbit: f32,
+    parent_radius: f32,
     position: Vec2,
     nb_children: u32,
     z_value: u32,
-) {
+) -> f32 {
+    enum PlanetType {
+        Classic,
+        Airless,
+        Gas,
+    }
+
+    let planet_type = [PlanetType::Classic, PlanetType::Airless, PlanetType::Gas]
+        .choose(rng)
+        .unwrap();
+
+    let surface = match planet_type {
+        PlanetType::Gas => 0.0,
+        _ => {
+            let s = rng.gen_range((parent_radius * 0.1)..(parent_radius * 0.7));
+            if s < 1000. {
+                return 0.0;
+            }
+            s
+        }
+    };
+
+    let atmosphere = match planet_type {
+        PlanetType::Airless => 0.0,
+        PlanetType::Gas => {
+            let s = rng.gen_range((parent_radius * 0.3)..(parent_radius * 0.9));
+            if s < 1000. {
+                return 0.0;
+            }
+            s
+        }
+        PlanetType::Classic => rng.gen_range((surface * 0.3)..surface),
+    };
+
     let planet_radius = surface + atmosphere;
 
-    let transform = Transform::from_translation(position.extend(z_value as f32));
+    let close_orbit = rng.gen_range((planet_radius * 0.5)..=(planet_radius * 0.8));
 
-    let orbit_distance = planet_radius * 10.0;
+    let planet_total_radius = planet_radius + close_orbit;
 
-    let nb_surface_elements = rng.gen_range(1..=ELEMENTS.len()) as u32;
-    let max_quantity_surface_elements = rng.gen_range(1_000..=1_000_000);
-    let mut composition = ElementOnAstre::random_elements(
-        rng,
-        nb_surface_elements,
-        max_quantity_surface_elements,
-        &[ElementState::Solid, ElementState::Liquid],
-    );
+    let surface_composition = match planet_type {
+        PlanetType::Gas => vec![],
+        _ => {
+            let nb_surface_elements = rng.gen_range(1..=ELEMENTS.len()) as u32;
+            let max_quantity_surface_elements = rng.gen_range(1_000..=1_000_000);
 
-    let no_atmosphere = rng.gen_bool(0.3);
-
-    let atmoshpere_composition = if no_atmosphere {
-        vec![]
-    } else {
-        let nb_atmosphere_elements = rng.gen_range(1..=5);
-        let max_quantity_atmosphere_elements = rng.gen_range(1_000..=100_000);
-
-        ElementOnAstre::random_elements(
-            rng,
-            nb_atmosphere_elements,
-            max_quantity_atmosphere_elements,
-            &[ElementState::Gas],
-        )
+            ElementOnAstre::random_elements(
+                rng,
+                nb_surface_elements,
+                max_quantity_surface_elements,
+                &[ElementState::Solid, ElementState::Liquid],
+            )
+        }
     };
 
-    let atmosphere_density = if no_atmosphere {
-        0.0
-    } else {
-        rng.gen_range(0.01..0.5)
+    let atmoshpere_composition = match planet_type {
+        PlanetType::Airless => vec![],
+        _ => {
+            let nb_atmosphere_elements = rng.gen_range(1..=5);
+            let max_quantity_atmosphere_elements = rng.gen_range(1_000..=100_000);
+
+            ElementOnAstre::random_elements(
+                rng,
+                nb_atmosphere_elements,
+                max_quantity_atmosphere_elements,
+                &[ElementState::Gas],
+            )
+        }
     };
 
-    let atmosphere_speed = rng.gen_range(0.01..0.5);
+    let atmosphere_density = match planet_type {
+        PlanetType::Airless => 0.0,
+        PlanetType::Gas => rng.gen_range(0.5..0.9),
+        PlanetType::Classic => rng.gen_range(0.01..0.3),
+    };
+
+    let atmosphere_speed = rng.gen_range(0.01..0.2);
 
     let atmosphere_holes_threshold = rng.gen_range(0..5) as f32 * 0.1;
 
-    let colors = ElementOnAstre::get_colors(&composition);
+    let surface_colors = ElementOnAstre::get_colors(&surface_composition);
 
-    let atmosphere_color = ElementOnAstre::get_color(&atmoshpere_composition);
-
-    composition.extend(atmoshpere_composition);
+    let atmosphere_colors = ElementOnAstre::get_colors(&atmoshpere_composition);
 
     let material = PlanetMaterial {
         seed: rng.gen::<f32>() * 1000.,
-        colors,
+        surface_colors,
         noise_scale: rng.gen_range(1.0..10.0),
-        planet_radius_normalized: surface / planet_radius,
+        surface_ratio: surface / planet_radius,
         shadow_angle: 0.0,
         atmosphere_density,
-        atmosphere_color,
+        atmosphere_colors,
         atmosphere_speed,
         atmosphere_holes_threshold,
     };
@@ -129,62 +163,54 @@ pub fn build_planet(
         Planet,
         Orbit::new(rng),
         Astre::new(surface, atmosphere, close_orbit),
-        Inventory::from(composition),
+        Inventory::from({
+            let mut composition = surface_composition;
+            composition.extend(atmoshpere_composition);
+            composition
+        }),
         MaterialLoader {
             material,
             mesh_type: MeshType::Circle(planet_radius),
         },
-        transform,
+        Transform::from_translation(position.extend(z_value as f32)),
     ))
     .with_children(|c| {
-        build_planet_children(c, rng, surface, orbit_distance, nb_children, z_value);
+        build_planet_children(
+            c,
+            rng,
+            planet_radius,
+            planet_total_radius * 3.0,
+            nb_children,
+            z_value,
+        );
     });
+
+    planet_total_radius
 }
 
 pub fn build_planet_children(
     c: &mut ChildBuilder,
     rng: &mut StdRng,
-    surface: f32,
-    mut orbit_distance: f32,
+    radius: f32,
+    orbit_distance: f32,
     nb_children: u32,
     z_value: u32,
 ) {
+    let mut orbit_distance = orbit_distance;
+
     for i in 0..nb_children {
-        let c_surface = rng.gen_range((surface * 0.1)..(surface * 0.7));
-
-        if c_surface < 1000. {
-            continue;
-        }
-
-        let c_atmosphere = rng.gen_range((c_surface * 0.3)..c_surface);
-
-        let planet_radius = c_surface + c_atmosphere;
-
-        let c_close_orbit = rng.gen_range((planet_radius * 0.5)..=(planet_radius * 0.8));
-
         let c_nb_children = rng.gen_range(0..=(0.1 * nb_children as f32) as u32);
 
         let c_angle = (i as f32 / nb_children as f32) * 2. * PI;
-
-        orbit_distance += c_surface + c_atmosphere + c_close_orbit;
 
         let position = Vec2::new(
             orbit_distance * c_angle.cos(),
             orbit_distance * c_angle.sin(),
         );
 
-        build_planet(
-            c,
-            rng,
-            c_surface,
-            c_atmosphere,
-            c_close_orbit,
-            position,
-            c_nb_children,
-            z_value + i + 1,
-        );
+        let r = build_planet(c, rng, radius, position, c_nb_children, z_value + i + 1);
 
-        orbit_distance += rng.gen_range((c_atmosphere * 0.2)..=(c_atmosphere * 1.5));
+        orbit_distance += r * 2.0;
     }
 }
 

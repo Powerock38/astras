@@ -77,6 +77,7 @@ impl Plugin for UniversePlugin {
                         update_worms,
                         update_lasers,
                         update_asteroids,
+                        reset_camera_viewport.run_if(input_just_pressed(KeyCode::KeyR)),
                     )
                         .in_set(SolarSystemSet),
                     (update_universe_map,).in_set(UniverseMapSet),

@@ -75,6 +75,10 @@ impl ElementOnAstre {
     }
 
     pub fn get_colors(elements: &[ElementOnAstre]) -> PlanetColors {
+        if elements.is_empty() {
+            return [Color::BLACK.into(); NB_COLORS];
+        }
+
         let mut elements = elements.to_vec();
         elements.sort_by_key(|e| e.quantity);
 

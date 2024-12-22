@@ -35,13 +35,13 @@ pub struct Star;
 pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) -> Entity {
     let transform = Transform::from_translation(position.extend(0.));
 
-    let radius = rng.gen_range((10_000.)..20_000.);
+    let radius = rng.gen_range((10_000.)..30_000.);
 
-    let nb_planets = rng.gen_range(5..=15);
+    let nb_planets = rng.gen_range(4..=15);
 
     let close_orbit = radius * 0.5;
 
-    let orbit_distance = radius * 2.;
+    let orbit_distance = radius * 3.;
 
     let number_of_elements = rng.gen_range(1..=3);
 

@@ -58,14 +58,11 @@ pub fn update_camera(
     mut ev_motion: EventReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     window: Single<&Window>,
-    q_projection: Single<
-        (&Camera, &GlobalTransform, &mut OrthographicProjection),
-        With<MainCamera>,
-    >,
+    q_camera: Single<(&Camera, &GlobalTransform, &mut OrthographicProjection), With<MainCamera>>,
     ship: Single<&Ship>,
     mut bg_transform: Single<&mut Transform, With<Background>>,
 ) {
-    let (camera, global_transform, mut projection) = q_projection.into_inner();
+    let (camera, global_transform, mut projection) = q_camera.into_inner();
 
     let scroll = ev_scroll.read().map(|scroll| scroll.y).sum::<f32>();
     projection.scale *= 1. - CAMERA_ZOOM_SPEED * scroll * time.delta_secs();
@@ -105,4 +102,9 @@ pub fn update_camera(
         * projection.scale
         * (1. + 2. * CAMERA_DOLLY_MAX_LENGTH)
         * 1.5;
+}
+
+pub fn reset_camera_viewport(q_projection: Single<&mut OrthographicProjection, With<MainCamera>>) {
+    let mut projection = q_projection.into_inner();
+    projection.viewport_origin = Vec2::new(0.5, 0.5);
 }
