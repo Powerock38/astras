@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::prelude::SliceRandom;
+use rand::seq::IndexedRandom;
 
 use crate::{
     buildings::PlacingBuilding,
@@ -166,7 +166,7 @@ pub fn update_ship_mining(
                     .copied()
                     .collect::<Vec<_>>();
 
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 let random_item_id =
                     item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(*id));
 

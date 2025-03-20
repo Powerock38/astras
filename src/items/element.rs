@@ -51,7 +51,7 @@ impl ElementOnAstre {
             .choose_multiple(&mut rng, n as usize)
             .iter()
             .map(|&element| {
-                let quantity = rng.gen_range(1..=max_quantity);
+                let quantity = rng.random_range(1..=max_quantity);
 
                 ElementOnAstre {
                     id: element,

@@ -40,10 +40,8 @@ fn spawn_new_game(
 ) {
     info!("New game");
 
-    let solar_system_position = [
-        rand::thread_rng().gen::<i32>(),
-        rand::thread_rng().gen::<i32>(),
-    ];
+    let mut rng = rand::rng();
+    let solar_system_position = [rng.random::<i32>(), rng.random::<i32>()];
 
     let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_millis();
     commands.insert_resource(UniverseName(format!("universe_{timestamp}")));

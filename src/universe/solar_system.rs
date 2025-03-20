@@ -47,8 +47,8 @@ pub fn spawn_solar_system(commands: &mut Commands, position: [i32; 2]) -> Entity
 
             for _ in 0..nb_worms {
                 let worm_position = Vec2::new(
-                    rng.gen_range(-radius..radius),
-                    rng.gen_range(-radius..radius),
+                    rng.random_range(-radius..radius),
+                    rng.random_range(-radius..radius),
                 );
 
                 build_worm(c, &mut rng, worm_position);

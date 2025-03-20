@@ -42,15 +42,15 @@ impl Material2d for AsteroidMaterial {
 }
 
 pub fn build_asteroid_belt(c: &mut ChildBuilder, rng: &mut StdRng) {
-    let radius: f32 = rng.gen_range(30_000.0..100_000.0);
-    let nb_asteroids = rng.gen_range(10..100);
+    let radius: f32 = rng.random_range(30_000.0..100_000.0);
+    let nb_asteroids = rng.random_range(10..100);
 
-    let radius_variation = rng.gen_range(100.0..radius * 0.2);
+    let radius_variation = rng.random_range(100.0..radius * 0.2);
 
     for i in 0..nb_asteroids {
         let angle = (i as f32 / nb_asteroids as f32) * 2. * PI;
 
-        let local_radius = rng.gen_range(radius - radius_variation..radius + radius_variation);
+        let local_radius = rng.random_range(radius - radius_variation..radius + radius_variation);
 
         let z = i as f32 / nb_asteroids as f32;
         let position = Vec3::new(local_radius * angle.cos(), local_radius * angle.sin(), z);
@@ -60,10 +60,10 @@ pub fn build_asteroid_belt(c: &mut ChildBuilder, rng: &mut StdRng) {
 }
 
 fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
-    let seed_asteroid = rng.gen::<u64>();
+    let seed_asteroid = rng.random::<u64>();
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed_asteroid);
 
-    let avg_radius = rng.gen_range(2.0 * ASTEROID_MIN_RADIUS..1000.0);
+    let avg_radius = rng.random_range(2.0 * ASTEROID_MIN_RADIUS..1000.0);
 
     let transform = Transform::from_translation(position);
 
@@ -79,11 +79,11 @@ fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
 
     let color = ElementOnAstre::get_color(&composition);
 
-    let rotation_speed = rng.gen_range(-0.2..0.2);
+    let rotation_speed = rng.random_range(-0.2..0.2);
 
     let material = AsteroidMaterial {
         color,
-        seed: rng.gen::<f32>() * 1000.,
+        seed: rng.random::<f32>() * 1000.,
     };
 
     c.spawn((
@@ -106,9 +106,9 @@ fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
 pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
 
-    let num_vertices = rng.gen_range(7..20);
-    let irregularity = rng.gen_range(0.0..1.0);
-    let spikiness = rng.gen_range(0.0..0.7);
+    let num_vertices = rng.random_range(7..20);
+    let irregularity = rng.random_range(0.0..1.0);
+    let spikiness = rng.random_range(0.0..0.7);
 
     let irregularity = irregularity * 2.0 * PI / (num_vertices as f32);
     let spikiness = spikiness * avg_radius;
@@ -119,7 +119,7 @@ pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {
     let upper = 2.0 * PI / (num_vertices as f32) + irregularity;
     let mut cumsum = 0.0;
     for _ in 0..num_vertices {
-        let angle = rng.gen_range(lower..upper);
+        let angle = rng.random_range(lower..upper);
         angle_steps.push(angle);
         cumsum += angle;
     }
@@ -132,10 +132,10 @@ pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {
 
     // now generate the points
     let mut points = Vec::new();
-    let mut angle = rng.gen_range(0.0..2.0 * PI);
+    let mut angle = rng.random_range(0.0..2.0 * PI);
     for _ in 0..num_vertices {
         let radius = rng
-            .gen_range((avg_radius - spikiness)..(avg_radius + spikiness))
+            .random_range((avg_radius - spikiness)..(avg_radius + spikiness))
             .max(0.0)
             .min(2.0 * avg_radius);
         let point = Vec2::new(radius * angle.cos(), radius * angle.sin());

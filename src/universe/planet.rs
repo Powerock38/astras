@@ -76,7 +76,7 @@ pub fn build_planet(
     let surface = match planet_type {
         PlanetType::Gas => 0.0,
         _ => {
-            let s = rng.gen_range((parent_radius * 0.1)..(parent_radius * 0.7));
+            let s = rng.random_range((parent_radius * 0.1)..(parent_radius * 0.7));
             if s < 1000. {
                 return 0.0;
             }
@@ -87,26 +87,26 @@ pub fn build_planet(
     let atmosphere = match planet_type {
         PlanetType::Airless => 0.0,
         PlanetType::Gas => {
-            let s = rng.gen_range((parent_radius * 0.3)..(parent_radius * 0.9));
+            let s = rng.random_range((parent_radius * 0.3)..(parent_radius * 0.9));
             if s < 1000. {
                 return 0.0;
             }
             s
         }
-        PlanetType::Classic => rng.gen_range((surface * 0.3)..surface),
+        PlanetType::Classic => rng.random_range((surface * 0.3)..surface),
     };
 
     let planet_radius = surface + atmosphere;
 
-    let close_orbit = rng.gen_range((planet_radius * 0.5)..=(planet_radius * 0.8));
+    let close_orbit = rng.random_range((planet_radius * 0.5)..=(planet_radius * 0.8));
 
     let planet_total_radius = planet_radius + close_orbit;
 
     let surface_composition = match planet_type {
         PlanetType::Gas => vec![],
         _ => {
-            let nb_surface_elements = rng.gen_range(1..=ELEMENTS.len()) as u32;
-            let max_quantity_surface_elements = rng.gen_range(1_000..=1_000_000);
+            let nb_surface_elements = rng.random_range(1..=ELEMENTS.len()) as u32;
+            let max_quantity_surface_elements = rng.random_range(1_000..=1_000_000);
 
             ElementOnAstre::random_elements(
                 rng,
@@ -120,8 +120,8 @@ pub fn build_planet(
     let atmoshpere_composition = match planet_type {
         PlanetType::Airless => vec![],
         _ => {
-            let nb_atmosphere_elements = rng.gen_range(1..=5);
-            let max_quantity_atmosphere_elements = rng.gen_range(1_000..=100_000);
+            let nb_atmosphere_elements = rng.random_range(1..=5);
+            let max_quantity_atmosphere_elements = rng.random_range(1_000..=100_000);
 
             ElementOnAstre::random_elements(
                 rng,
@@ -134,22 +134,22 @@ pub fn build_planet(
 
     let atmosphere_density = match planet_type {
         PlanetType::Airless => 0.0,
-        PlanetType::Gas => rng.gen_range(0.5..0.9),
-        PlanetType::Classic => rng.gen_range(0.01..0.3),
+        PlanetType::Gas => rng.random_range(0.5..0.9),
+        PlanetType::Classic => rng.random_range(0.01..0.3),
     };
 
-    let atmosphere_speed = rng.gen_range(0.01..0.2);
+    let atmosphere_speed = rng.random_range(0.01..0.2);
 
-    let atmosphere_holes_threshold = rng.gen_range(0..5) as f32 * 0.1;
+    let atmosphere_holes_threshold = rng.random_range(0..5) as f32 * 0.1;
 
     let surface_colors = ElementOnAstre::get_colors(&surface_composition);
 
     let atmosphere_colors = ElementOnAstre::get_colors(&atmoshpere_composition);
 
     let material = PlanetMaterial {
-        seed: rng.gen::<f32>() * 1000.,
+        seed: rng.random::<f32>() * 1000.,
         surface_colors,
-        noise_scale: rng.gen_range(1.0..10.0),
+        noise_scale: rng.random_range(1.0..10.0),
         surface_ratio: surface / planet_radius,
         shadow_angle: 0.0,
         atmosphere_density,
@@ -199,7 +199,7 @@ pub fn build_planet_children(
     let mut orbit_distance = orbit_distance;
 
     for i in 0..nb_children {
-        let c_nb_children = rng.gen_range(0..=(0.1 * nb_children as f32) as u32);
+        let c_nb_children = rng.random_range(0..=(0.1 * nb_children as f32) as u32);
 
         let c_angle = (i as f32 / nb_children as f32) * 2. * PI;
 

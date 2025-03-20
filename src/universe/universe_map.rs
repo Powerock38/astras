@@ -56,8 +56,8 @@ pub fn spawn_universe_map(
 
                     let mut rng = StdRng::seed_from_u64(seed);
 
-                    let x_offset = rng.gen_range(-POSITION_MAX_OFFSET..POSITION_MAX_OFFSET);
-                    let y_offset = rng.gen_range(-POSITION_MAX_OFFSET..POSITION_MAX_OFFSET);
+                    let x_offset = rng.random_range(-POSITION_MAX_OFFSET..POSITION_MAX_OFFSET);
+                    let y_offset = rng.random_range(-POSITION_MAX_OFFSET..POSITION_MAX_OFFSET);
 
                     let map_position = Vec2::new(
                         ((x - x_min) as f32 - (x_max - x_min) as f32 / 2.) * SOLAR_SYSTEMS_SPACING

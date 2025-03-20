@@ -32,7 +32,7 @@ pub fn build_background(
         Background,
         Mesh2d(meshes.add(Rectangle::default())),
         MeshMaterial2d(materials.add(BackgroundMaterial {
-            seed: rand::thread_rng().gen::<f32>() * 1000.,
+            seed: rand::rng().random::<f32>() * 1000.,
         })),
         Transform::from_translation(Vec3::new(0., 0., BACKGROUND_Z)),
     ));

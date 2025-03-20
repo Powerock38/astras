@@ -35,17 +35,17 @@ pub struct Star;
 pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) -> Entity {
     let transform = Transform::from_translation(position.extend(0.));
 
-    let radius = rng.gen_range((10_000.)..30_000.);
+    let radius = rng.random_range((10_000.)..30_000.);
 
-    let nb_planets = rng.gen_range(4..=15);
+    let nb_planets = rng.random_range(4..=15);
 
     let close_orbit = radius * 0.5;
 
     let orbit_distance = radius * 3.;
 
-    let number_of_elements = rng.gen_range(1..=3);
+    let number_of_elements = rng.random_range(1..=3);
 
-    let max_quantity = rng.gen_range(100_000..=100_000_000);
+    let max_quantity = rng.random_range(100_000..=100_000_000);
 
     let composition = ElementOnAstre::random_elements(
         rng,
@@ -57,13 +57,13 @@ pub fn build_star(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) -> Ent
     let color = ElementOnAstre::get_color(&composition);
 
     let rotation_direction =
-        Vec2::new(rng.gen_range(-1.0..=1.0), rng.gen_range(-1.0..=1.0)).normalize();
+        Vec2::new(rng.random_range(-1.0..=1.0), rng.random_range(-1.0..=1.0)).normalize();
 
-    let rotation_speed = rng.gen_range(0.001..=0.01);
+    let rotation_speed = rng.random_range(0.001..=0.01);
 
     let material = StarMaterial {
         color,
-        seed: rng.gen::<f32>() * 1000.,
+        seed: rng.random::<f32>() * 1000.,
         rotation: rotation_direction * rotation_speed,
     };
 

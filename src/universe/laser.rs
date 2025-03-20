@@ -42,11 +42,9 @@ impl Material2d for LaserMaterial {
 
 impl LaserMaterial {
     pub fn new(color: LinearRgba) -> Self {
-        let mut rng = rand::thread_rng();
-
         LaserMaterial {
             color,
-            seed: rng.gen(),
+            seed: rand::rng().random(),
         }
     }
 }

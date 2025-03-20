@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.15.0", features = ["bevy_remote"] }
-rand = "0.8.5"
-uuid = "1.11.0"
+bevy = { version = "0.15.3", features = ["bevy_remote"] }
+rand = "0.9.0"
+uuid = "*"
 
 [features]
 dev = ["bevy/dynamic_linking", "bevy/file_watcher"]

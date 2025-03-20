@@ -11,8 +11,8 @@ pub struct Orbit {
 
 impl Orbit {
     pub fn new(rng: &mut StdRng) -> Self {
-        let speed =
-            rng.gen_range((PI / 1000.)..=PI / 100.) * if rng.gen_bool(0.5) { 1. } else { -1. }; // * random direction
+        let speed = rng.random_range((PI / 1000.)..=PI / 100.)
+            * if rng.random_bool(0.5) { 1. } else { -1. }; // * random direction
         Self { speed }
     }
 }

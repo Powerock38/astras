@@ -26,16 +26,16 @@ pub struct Worm {
 pub struct WormSegment;
 
 pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
-    let size = rng.gen_range(1. ..=10.);
-    let length = rng.gen_range(5..=50);
-    let speed = rng.gen_range(100. ..=1000.);
-    let wiggle_amplitude = rng.gen_range(5. ..=15.);
-    let change_direction_every = rng.gen_range(0.1..=3.);
+    let size = rng.random_range(1. ..=10.);
+    let length = rng.random_range(5..=50);
+    let speed = rng.random_range(100. ..=1000.);
+    let wiggle_amplitude = rng.random_range(5. ..=15.);
+    let change_direction_every = rng.random_range(0.1..=3.);
 
     let color = Color::srgb(
-        rng.gen_range(0. ..=1.),
-        rng.gen_range(0. ..=1.),
-        rng.gen_range(0. ..=1.),
+        rng.random_range(0. ..=1.),
+        rng.random_range(0. ..=1.),
+        rng.random_range(0. ..=1.),
     );
 
     let transform =
@@ -49,7 +49,7 @@ pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
             speed,
             direction: Vec2::new(0., 0.),
             change_direction_cooldown: Timer::from_seconds(change_direction_every, TimerMode::Once),
-            seed: rng.gen(),
+            seed: rng.random(),
             wiggle_amplitude,
         },
         SpriteLoader {
@@ -86,7 +86,7 @@ pub fn update_worms(
     for (mut worm, mut transform, segments) in &mut q_worms {
         if worm.change_direction_cooldown.tick(time.delta()).finished() {
             let clamped_angle = PI / 1024.;
-            let add_angle = rand::thread_rng().gen_range(0.0..=clamped_angle) - clamped_angle;
+            let add_angle = rand::rng().random_range(0.0..=clamped_angle) - clamped_angle;
 
             transform.rotate(Quat::from_rotation_z(add_angle));
 

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::prelude::SliceRandom;
+use rand::seq::IndexedRandom;
 
 use crate::{
     data::{ItemId, ELEMENTS},
@@ -66,7 +66,7 @@ pub fn update_extractors(
         if extractor.cooldown.finished() && extractor_inventory.remaining_space() > 0 {
             let mut astre_inventory = q_astre_inventories.get_mut(parent.get()).unwrap();
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             if let Some(random_item_ids) = &extractor.cached_item_ids {
                 let random_item_id =
                     random_item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(*id));
