@@ -67,12 +67,12 @@ impl Plugin for UniversePlugin {
                 Update,
                 (
                     (
-                        spawn_camera,
-                        update_camera,
-                        spawn_ship_sprite,
+                        spawn_camera.param_warn_once(),
+                        update_camera.param_warn_once(),
+                        spawn_ship_sprite.param_warn_once(),
                         scan_astres,
                         update_orbits,
-                        update_ship,
+                        update_ship.param_warn_once(),
                         update_planet_shadows,
                         update_worms,
                         update_lasers,
@@ -99,8 +99,10 @@ impl Plugin for UniversePlugin {
             )
             .add_systems(
                 PostUpdate,
-                (update_dockable_on_astre.after(TransformSystem::TransformPropagate))
-                    .in_set(SolarSystemSet),
+                (update_dockable_on_astre
+                    .param_warn_once()
+                    .after(TransformSystem::TransformPropagate))
+                .in_set(SolarSystemSet),
             )
             .add_observer(travel_to_solar_system);
 

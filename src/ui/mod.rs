@@ -44,9 +44,9 @@ impl Plugin for UIPlugin {
             (
                 update_ui_buttons,
                 (
-                    setup_hud,
-                    clear_ui_or_spawn_ship_ui,
-                    spawn_save_ui,
+                    setup_hud.param_warn_once(),
+                    clear_ui_or_spawn_ship_ui.param_warn_once(),
+                    spawn_save_ui.param_warn_once(),
                     update_inventory_ui.after(clear_ui_or_spawn_ship_ui),
                     scan_crafter_ui,
                     scan_extractor_ui,

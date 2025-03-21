@@ -53,13 +53,17 @@ pub fn spawn_building(
     mouse_input: Res<ButtonInput<MouseButton>>,
     q_camera: Single<(&Camera, &GlobalTransform)>,
     window: Single<&Window, With<PrimaryWindow>>,
-    placing_building: Res<PlacingBuilding>,
+    placing_building: Option<Res<PlacingBuilding>>,
     q_building_preview: Option<Single<(Entity, &mut Transform), With<BuildingPreview>>>,
 ) {
     // Resource PlacingBuilding stores the building that is currently being placed
     let (camera, camera_transform) = *q_camera;
 
     let Some(cursor_position) = window.cursor_position() else {
+        return;
+    };
+
+    let Some(placing_building) = placing_building else {
         return;
     };
 
@@ -134,9 +138,13 @@ pub fn spawn_building(
 
 pub fn draw_placing_zones(
     mut gizmos: Gizmos,
-    placing_building: Res<PlacingBuilding>,
+    placing_building: Option<Res<PlacingBuilding>>,
     q_astres: Query<(&Astre, &GlobalTransform, &InheritedVisibility), Without<Asteroid>>,
 ) {
+    let Some(placing_building) = placing_building else {
+        return;
+    };
+
     let location = placing_building.0.data().location;
 
     for (astre, global_transform, _) in q_astres.iter().filter(|(_, _, v)| v.get()) {
