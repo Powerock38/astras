@@ -24,16 +24,15 @@ impl Material2d for BackgroundMaterial {
 }
 
 pub fn build_background(
-    c: &mut ChildBuilder,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<BackgroundMaterial>>,
-) {
-    c.spawn((
+) -> impl Bundle {
+    (
         Background,
         Mesh2d(meshes.add(Rectangle::default())),
         MeshMaterial2d(materials.add(BackgroundMaterial {
             seed: rand::rng().random::<f32>() * 1000.,
         })),
         Transform::from_translation(Vec3::new(0., 0., BACKGROUND_Z)),
-    ));
+    )
 }

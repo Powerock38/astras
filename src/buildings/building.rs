@@ -25,7 +25,7 @@ pub struct BuildingData {
 }
 
 impl BuildingData {
-    #[inline]
+
     pub fn sprite_path(&self) -> String {
         format!("sprites/{}.png", self.sprite_name)
     }
@@ -109,7 +109,7 @@ pub fn spawn_building(
                         Inventory::new(recipe_needed_space),
                     ));
 
-                    commands.entity(building_preview_entity).despawn_recursive();
+                    commands.entity(building_preview_entity).despawn();
 
                     commands.remove_resource::<PlacingBuilding>();
                 } else {
@@ -119,7 +119,7 @@ pub fn spawn_building(
 
             // Cancel placing building
             if right {
-                commands.entity(building_preview_entity).despawn_recursive();
+                commands.entity(building_preview_entity).despawn();
                 commands.remove_resource::<PlacingBuilding>();
             }
         } else {
@@ -210,7 +210,7 @@ pub fn add_highlight_selection(
 
 fn recolor_on<E>(color: Color) -> impl Fn(Trigger<E>, Query<&mut Sprite>) {
     move |ev, mut sprites| {
-        let Ok(mut sprite) = sprites.get_mut(ev.entity()) else {
+        let Ok(mut sprite) = sprites.get_mut(ev.target()) else {
             return;
         };
         sprite.color = color.with_alpha(sprite.color.alpha());

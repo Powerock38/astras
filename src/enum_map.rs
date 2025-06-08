@@ -22,7 +22,7 @@ macro_rules! enum_map {
                 )*
             ];
 
-            #[inline]
+
             pub fn data(&self) -> $data_type {
                 match self {
                     Self::$first_name => $first_data,

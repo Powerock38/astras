@@ -4,7 +4,7 @@ use crate::{
     buildings::Crafter,
     data::{BuildingId, ItemId},
     items::RecipeOutputs,
-    ui::{build_item_ui, spawn_building_header, HudWindow, HudWindowParent, InventoryUI, UiButton},
+    ui::{build_building_header, build_item_ui, HudWindow, HudWindowParent, InventoryUI, UiButton},
 };
 
 pub fn scan_crafter_ui(mut commands: Commands, q_crafters: Query<Entity, Added<Crafter>>) {
@@ -20,16 +20,16 @@ fn spawn_crafter_ui(
     window_parent: Single<Entity, With<HudWindowParent>>,
     q_crafter: Query<&Crafter>,
 ) {
-    let entity = trigger.entity();
+    let entity = trigger.target();
     let crafter = q_crafter.get(entity).unwrap();
 
     commands
         .entity(*window_parent)
-        .despawn_descendants()
+        .despawn_related::<Children>()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
                 let name = if crafter.is_construction_site() { "Construction site" } else { "Crafter" };
-                spawn_building_header(c, name);
+                c.spawn(build_building_header(name));
 
                 if !crafter.is_construction_site() {
                     // List recipes
@@ -63,51 +63,51 @@ fn spawn_crafter_ui(
 
                             c.spawn(UiButton)
                             .observe(callback)
+                            .with_children(|c| {
+                                let recipe = recipe.data();
+
+                                c.spawn(Node {
+                                        flex_direction: FlexDirection::Column,
+                                        row_gap: Val::Px(5.0),
+                                        ..default()
+                                })
                                 .with_children(|c| {
-                                    let recipe = recipe.data();
+                                    c.spawn(Node {
+                                            align_items: AlignItems::Center,
+                                            flex_direction: FlexDirection::Row,
+                                            column_gap: Val::Px(5.0),
+                                            ..default()
+                                    })
+                                    .with_children(
+                                        |c| match recipe.outputs() {
+                                            RecipeOutputs::Items(outputs) => {
+                                                build_item_list_ui(c, &asset_server, outputs);
+                                            }
+                                            RecipeOutputs::Building(id) => {
+                                                c.spawn(build_building_ui(id, &asset_server));
+                                            }
+                                        },
+                                    );
 
                                     c.spawn(Node {
-                                            flex_direction: FlexDirection::Column,
-                                            row_gap: Val::Px(5.0),
+                                            align_items: AlignItems::Center,
+                                            flex_direction: FlexDirection::Row,
+                                            column_gap: Val::Px(5.0),
                                             ..default()
                                     })
                                     .with_children(|c| {
-                                        c.spawn(Node {
-                                                align_items: AlignItems::Center,
-                                                flex_direction: FlexDirection::Row,
-                                                column_gap: Val::Px(5.0),
-                                                ..default()
-                                        })
-                                        .with_children(
-                                            |c| match recipe.outputs() {
-                                                RecipeOutputs::Items(outputs) => {
-                                                    build_item_list_ui(c, &asset_server, outputs);
-                                                }
-                                                RecipeOutputs::Building(id) => {
-                                                    build_building_ui(c, id, &asset_server);
-                                                }
-                                            },
-                                        );
+                                            c.spawn((Text::new("Needs"),
+                                                TextFont {
+                                                    font_size: 18.0,
+                                                    ..default()
+                                                },
+                                            ));
 
-                                        c.spawn(Node {
-                                                align_items: AlignItems::Center,
-                                                flex_direction: FlexDirection::Row,
-                                                column_gap: Val::Px(5.0),
-                                                ..default()
-                                        })
-                                        .with_children(|c| {
-                                                c.spawn((Text::new("Needs"),
-                                                    TextFont {
-                                                        font_size: 18.0,
-                                                        ..default()
-                                                    },
-                                                ));
-
-                                                build_item_list_ui(c, &asset_server, recipe.inputs());
-                                            },
-                                        );
-                                    });
+                                            build_item_list_ui(c, &asset_server, recipe.inputs());
+                                        },
+                                    );
                                 });
+                            });
                         }
                     });
                 }
@@ -119,7 +119,7 @@ fn spawn_crafter_ui(
 }
 
 fn build_item_list_ui(
-    c: &mut ChildBuilder,
+    c: &mut ChildSpawnerCommands,
     asset_server: &Res<AssetServer>,
     items: &[(ItemId, u32)],
 ) {
@@ -134,36 +134,37 @@ fn build_item_list_ui(
             ));
         }
 
-        build_item_ui(c, asset_server, *id, *quantity);
+        c.spawn(build_item_ui(asset_server, *id, *quantity));
     }
 }
 
-pub fn build_building_ui(c: &mut ChildBuilder, id: BuildingId, asset_server: &Res<AssetServer>) {
-    c.spawn(Node {
-        align_items: AlignItems::Center,
-        flex_direction: FlexDirection::Row,
-        column_gap: Val::Px(10.0),
-        ..default()
-    })
-    .with_children(|c| {
-        let building = id.data();
-        let icon = asset_server.load(building.sprite_path());
+pub fn build_building_ui(id: BuildingId, asset_server: &Res<AssetServer>) -> impl Bundle {
+    let building = id.data();
+    let icon = asset_server.load(building.sprite_path());
 
-        c.spawn((
-            Node {
-                max_width: Val::Px(30.),
-                height: Val::Px(30.),
-                ..default()
-            },
-            ImageNode::new(icon),
-        ));
-
-        c.spawn((
-            Text::new(building.name),
-            TextFont {
-                font_size: 18.0,
-                ..default()
-            },
-        ));
-    });
+    (
+        Node {
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Row,
+            column_gap: Val::Px(10.0),
+            ..default()
+        },
+        children![
+            (
+                Node {
+                    max_width: Val::Px(30.),
+                    height: Val::Px(30.),
+                    ..default()
+                },
+                ImageNode::new(icon),
+            ),
+            (
+                Text::new(building.name),
+                TextFont {
+                    font_size: 18.0,
+                    ..default()
+                },
+            )
+        ],
+    )
 }

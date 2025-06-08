@@ -11,7 +11,7 @@ use bevy::{
 use crate::{
     buildings::LogisticFreight,
     items::{LogisticProvider, LogisticScope},
-    ui::{spawn_building_header, HudWindow, HudWindowDependent, HudWindowParent, InventoryUI},
+    ui::{build_building_header, HudWindow, HudWindowDependent, HudWindowParent, InventoryUI},
 };
 
 pub fn scan_logistic_freighter(
@@ -38,17 +38,19 @@ fn spawn_cargo_shuttle_ui(
     mut commands: Commands,
     window_parent: Single<Entity, With<HudWindowParent>>,
 ) {
-    let entity = trigger.entity();
+    let entity = trigger.target();
 
     commands
         .entity(*window_parent)
-        .despawn_descendants()
+        .despawn_related::<Children>()
         .with_children(|c| {
-            c.spawn(HudWindow).with_children(|c| {
-                spawn_building_header(c, "Cargo Shuttle");
-
-                c.spawn(InventoryUI::new(entity));
-            });
+            c.spawn((
+                HudWindow,
+                children![
+                    build_building_header("Cargo Shuttle"),
+                    InventoryUI::new(entity)
+                ],
+            ));
         });
 }
 
@@ -60,7 +62,7 @@ fn spawn_interplanetary_freighter_ui(
     q_interplanetary_freighters: Query<&LogisticFreight>,
     q_providers: Query<Entity, With<LogisticProvider>>,
 ) {
-    let entity = trigger.entity();
+    let entity = trigger.target();
     let freight = q_interplanetary_freighters.get(entity).unwrap();
 
     let image_handle = if let Some(logistic_journey) = freight.logistic_journey() {
@@ -101,7 +103,7 @@ fn spawn_interplanetary_freighter_ui(
                         physical_size: UVec2::new(100, 100),
                         ..default()
                     }),
-                    target: RenderTarget::Image(image_handle.clone()),
+                    target: RenderTarget::Image(image_handle.clone().into()),
                     ..default()
                 },
             ));
@@ -114,10 +116,10 @@ fn spawn_interplanetary_freighter_ui(
 
     commands
         .entity(*window_parent)
-        .despawn_descendants()
+        .despawn_related::<Children>()
         .with_children(|c| {
             c.spawn(HudWindow).with_children(|c| {
-                spawn_building_header(c, "Interplanetary Freighter");
+                c.spawn(build_building_header("Interplanetary Freighter"));
 
                 // Provider minimap
 

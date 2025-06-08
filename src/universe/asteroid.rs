@@ -41,25 +41,27 @@ impl Material2d for AsteroidMaterial {
     }
 }
 
-pub fn build_asteroid_belt(c: &mut ChildBuilder, rng: &mut StdRng) {
+pub fn build_asteroid_belt(rng: &mut StdRng) -> Vec<impl Bundle> {
     let radius: f32 = rng.random_range(30_000.0..100_000.0);
     let nb_asteroids = rng.random_range(10..100);
 
     let radius_variation = rng.random_range(100.0..radius * 0.2);
 
-    for i in 0..nb_asteroids {
-        let angle = (i as f32 / nb_asteroids as f32) * 2. * PI;
+    (0..nb_asteroids)
+        .map(move |i| {
+            let angle = (i as f32 / nb_asteroids as f32) * 2. * PI;
+            let local_radius =
+                rng.random_range(radius - radius_variation..radius + radius_variation);
+            let z = i as f32 / nb_asteroids as f32;
 
-        let local_radius = rng.random_range(radius - radius_variation..radius + radius_variation);
+            let position = Vec3::new(local_radius * angle.cos(), local_radius * angle.sin(), z);
 
-        let z = i as f32 / nb_asteroids as f32;
-        let position = Vec3::new(local_radius * angle.cos(), local_radius * angle.sin(), z);
-
-        build_asteroid(c, rng, position);
-    }
+            build_asteroid(rng, position)
+        })
+        .collect()
 }
 
-fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
+fn build_asteroid(rng: &mut StdRng, position: Vec3) -> impl Bundle {
     let seed_asteroid = rng.random::<u64>();
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed_asteroid);
 
@@ -86,7 +88,7 @@ fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
         seed: rng.random::<f32>() * 1000.,
     };
 
-    c.spawn((
+    (
         Name::new("Asteroid"),
         Asteroid {
             initial_size,
@@ -100,7 +102,7 @@ fn build_asteroid(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec3) {
             mesh_type: MeshType::RandomPolygon(seed_asteroid, avg_radius),
         },
         transform,
-    ));
+    )
 }
 
 pub fn random_polygon(seed: u64, avg_radius: f32) -> Mesh {
@@ -198,7 +200,7 @@ pub fn update_asteroids(
         let scale = inventory.total_quantity() as f32 / asteroid.initial_size as f32;
 
         if scale * astre.surface_radius() < ASTEROID_MIN_RADIUS {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         } else {
             transform.scale = Vec3::splat(scale);
         }

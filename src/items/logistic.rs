@@ -34,21 +34,14 @@ impl std::fmt::Display for LogisticScope {
     }
 }
 
-#[derive(Component, Reflect, Default, Debug)]
+#[derive(Component, MapEntities, Reflect, Default, Debug)]
 #[reflect(Component, Default, MapEntities)]
 pub struct LogisticRequest {
     id: Uuid,
     items: ItemMap,
     scope: LogisticScope,
+    #[entities]
     pub freights: Vec<Entity>,
-}
-
-impl MapEntities for LogisticRequest {
-    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
-        for entity in &mut self.freights {
-            *entity = entity_mapper.map_entity(*entity);
-        }
-    }
 }
 
 impl LogisticRequest {
@@ -61,17 +54,14 @@ impl LogisticRequest {
         }
     }
 
-    #[inline]
     pub fn id(&self) -> Uuid {
         self.id
     }
 
-    #[inline]
     pub fn scope(&self) -> &LogisticScope {
         &self.scope
     }
 
-    #[inline]
     pub fn items(&self) -> &ItemMap {
         &self.items
     }
@@ -111,19 +101,12 @@ impl LogisticRequest {
 }
 
 // If a building has a LogisticProvider component, its Inventory component will be used to fulfill LogisticRequests
-#[derive(Component, Reflect, Default, Debug)]
+#[derive(Component, MapEntities, Reflect, Default, Debug)]
 #[reflect(Component, Default, MapEntities)]
 pub struct LogisticProvider {
     scope: LogisticScope,
+    #[entities]
     pub freights: Vec<Entity>,
-}
-
-impl MapEntities for LogisticProvider {
-    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
-        for entity in &mut self.freights {
-            *entity = entity_mapper.map_entity(*entity);
-        }
-    }
 }
 
 impl LogisticProvider {
@@ -134,25 +117,19 @@ impl LogisticProvider {
         }
     }
 
-    #[inline]
     pub fn scope(&self) -> &LogisticScope {
         &self.scope
     }
 }
 
-#[derive(Reflect, Debug, Clone, Copy)]
+#[derive(Reflect, MapEntities, Debug, Clone, Copy)]
 #[reflect(MapEntities)]
 pub struct LogisticJourney {
     request_id: Uuid,
+    #[entities]
     provider: Entity,
+    #[entities]
     requester: Entity,
-}
-
-impl MapEntities for LogisticJourney {
-    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
-        self.provider = entity_mapper.map_entity(self.provider);
-        self.requester = entity_mapper.map_entity(self.requester);
-    }
 }
 
 impl LogisticJourney {
@@ -166,17 +143,14 @@ impl LogisticJourney {
         }
     }
 
-    #[inline]
     pub fn request_id(&self) -> Uuid {
         self.request_id
     }
 
-    #[inline]
     pub fn provider(&self) -> Entity {
         self.provider
     }
 
-    #[inline]
     pub fn requester(&self) -> Entity {
         self.requester
     }

@@ -37,17 +37,17 @@ pub fn spawn_camera(
                 hdr: true,
                 ..default()
             },
-            OrthographicProjection {
+            Projection::Orthographic(OrthographicProjection {
                 scale: BASE_SCALE,
                 near: -1000.0,
                 far: 1000.0,
                 ..OrthographicProjection::default_2d()
-            },
+            }),
             Tonemapping::BlenderFilmic,
             Bloom::default(),
         ));
 
-        build_background(c, meshes, background_materials);
+        c.spawn(build_background(meshes, background_materials));
     });
 }
 
@@ -58,13 +58,16 @@ pub fn update_camera(
     mut ev_motion: EventReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     window: Single<&Window>,
-    q_camera: Single<(&Camera, &GlobalTransform, &mut OrthographicProjection), With<MainCamera>>,
+    q_camera: Single<(&Camera, &GlobalTransform, &mut Projection), With<MainCamera>>,
     ship: Single<&Ship>,
     mut bg_transform: Single<&mut Transform, With<Background>>,
 ) {
     let (camera, global_transform, mut projection) = q_camera.into_inner();
 
     let scroll = ev_scroll.read().map(|scroll| scroll.y).sum::<f32>();
+    let Projection::Orthographic(projection) = projection.as_mut() else {
+        return;
+    };
     projection.scale *= 1. - CAMERA_ZOOM_SPEED * scroll * time.delta_secs();
 
     if projection.scale > SWITCH_TO_UNIVERSE_MAP {
@@ -104,7 +107,10 @@ pub fn update_camera(
         * 1.5;
 }
 
-pub fn reset_camera_viewport(q_projection: Single<&mut OrthographicProjection, With<MainCamera>>) {
+pub fn reset_camera_viewport(q_projection: Single<&mut Projection, With<MainCamera>>) {
     let mut projection = q_projection.into_inner();
+    let Projection::Orthographic(projection) = projection.as_mut() else {
+        return;
+    };
     projection.viewport_origin = Vec2::new(0.5, 0.5);
 }

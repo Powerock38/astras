@@ -40,7 +40,7 @@ pub fn update_notifications(
 ) {
     for (entity, mut notification) in &mut q_notifications {
         if notification.timer.tick(time.delta()).just_finished() {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

@@ -9,7 +9,7 @@ use crate::{
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component, Default)]
-#[require(Inventory, LogisticProvider(|| LogisticProvider::new(LogisticScope::Planet)))]
+#[require(Inventory, LogisticProvider::new(LogisticScope::Planet))]
 pub struct Extractor {
     cooldown: Timer,
     amount_per_tick: u32,
@@ -57,14 +57,14 @@ impl Extractor {
 
 pub fn update_extractors(
     time: Res<Time>,
-    mut q_extractors: Query<(&mut Extractor, &mut Inventory, &Parent), Without<Astre>>,
+    mut q_extractors: Query<(&mut Extractor, &mut Inventory, &ChildOf), Without<Astre>>,
     mut q_astre_inventories: Query<&mut Inventory, With<Astre>>,
 ) {
-    for (mut extractor, mut extractor_inventory, parent) in &mut q_extractors {
+    for (mut extractor, mut extractor_inventory, child_of) in &mut q_extractors {
         extractor.cooldown.tick(time.delta());
 
         if extractor.cooldown.finished() && extractor_inventory.remaining_space() > 0 {
-            let mut astre_inventory = q_astre_inventories.get_mut(parent.get()).unwrap();
+            let mut astre_inventory = q_astre_inventories.get_mut(child_of.parent()).unwrap();
 
             let mut rng = rand::rng();
             if let Some(random_item_ids) = &extractor.cached_item_ids {

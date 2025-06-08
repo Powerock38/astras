@@ -107,12 +107,12 @@ pub fn load_universe(
 ) {
     // Remove all SolarSystems
     for solar_system in &q_solar_systems {
-        commands.entity(solar_system).try_despawn_recursive();
+        commands.entity(solar_system).try_despawn();
     }
 
     // HUD will be recreated when Ship is Added<>
     if let Some(hud) = hud {
-        commands.entity(*hud).despawn_recursive();
+        commands.entity(*hud).despawn();
     }
 
     let universe_name = trigger.0.clone();

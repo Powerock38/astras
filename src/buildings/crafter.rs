@@ -47,7 +47,7 @@ impl Crafter {
         &self.possible_recipes
     }
 
-    #[inline]
+
     pub fn is_construction_site(&self) -> bool {
         self.is_construction_site
     }
@@ -78,10 +78,11 @@ pub fn update_crafters(
         &mut Inventory,
         Option<&mut LogisticRequest>,
         &Transform,
-        &Parent,
+        &ChildOf,
     )>,
 ) {
-    for (entity, mut crafter, mut inventory, logistic_request, transform, parent) in &mut q_crafters
+    for (entity, mut crafter, mut inventory, logistic_request, transform, child_of) in
+        &mut q_crafters
     {
         // If a recipe is selected
         if let Some(recipe_crafter) = &mut crafter.recipe {
@@ -100,10 +101,10 @@ pub fn update_crafters(
                             debug!("Crafted building: {}", building.name);
 
                             if crafter.is_construction_site {
-                                commands.entity(entity).despawn_recursive();
+                                commands.entity(entity).despawn();
                             }
 
-                            commands.entity(parent.get()).with_children(|c| {
+                            commands.entity(child_of.parent()).with_children(|c| {
                                 let mut ec = c.spawn((
                                     BuildingHighlight,
                                     SpriteLoader {

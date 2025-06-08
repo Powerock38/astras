@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::spawn::SpawnIter, prelude::*};
 use rand::prelude::*;
 
 use crate::universe::{build_star, build_worm};
@@ -10,12 +10,10 @@ pub struct SolarSystem {
 }
 
 impl SolarSystem {
-    #[inline]
     pub fn x(&self) -> i32 {
         self.position[0]
     }
 
-    #[inline]
     pub fn y(&self) -> i32 {
         self.position[1]
     }
@@ -27,34 +25,29 @@ impl SolarSystem {
     }
 }
 
-pub fn spawn_solar_system(commands: &mut Commands, position: [i32; 2]) -> Entity {
+pub fn build_solar_system(position: [i32; 2]) -> impl Bundle {
     let solar_system = SolarSystem { position };
     let mut rng: StdRng = SeedableRng::seed_from_u64(solar_system.seed());
 
-    commands
-        .spawn((
-            Name::new("SolarSytem"),
-            solar_system,
-            Transform::default(),
-            Visibility::Visible,
-        ))
-        .with_children(|c| {
-            build_star(c, &mut rng, Vec2::ZERO);
+    let nb_worms = 3;
 
-            // Worms
-            let radius = 50000.;
-            let nb_worms = 3;
-
-            for _ in 0..nb_worms {
+    (
+        Name::new("SolarSytem"),
+        solar_system,
+        Transform::default(),
+        Visibility::Visible,
+        Children::spawn((
+            Spawn(build_star(&mut rng, Vec2::ZERO)),
+            SpawnIter((0..nb_worms).map(move |_| {
+                let worm_spawn_radius = 50000.;
                 let worm_position = Vec2::new(
-                    rng.random_range(-radius..radius),
-                    rng.random_range(-radius..radius),
+                    rng.random_range(-worm_spawn_radius..worm_spawn_radius),
+                    rng.random_range(-worm_spawn_radius..worm_spawn_radius),
                 );
-
-                build_worm(c, &mut rng, worm_position);
-            }
-        })
-        .id()
+                build_worm(&mut rng, worm_position)
+            })),
+        )),
+    )
 }
 
 #[derive(Component)]

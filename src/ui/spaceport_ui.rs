@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     buildings::Spaceport,
-    ui::{spawn_building_header, HudWindow, HudWindowParent, InventoryUI},
+    ui::{build_building_header, HudWindow, HudWindowParent, InventoryUI},
 };
 
 pub fn scan_spaceport_ui(mut commands: Commands, q_extractors: Query<Entity, Added<Spaceport>>) {
@@ -16,16 +16,18 @@ pub fn spawn_spaceport_ui(
     mut commands: Commands,
     window_parent: Single<Entity, With<HudWindowParent>>,
 ) {
-    let entity = trigger.entity();
+    let entity = trigger.target();
 
     commands
         .entity(*window_parent)
-        .despawn_descendants()
+        .despawn_related::<Children>()
         .with_children(|c| {
-            c.spawn(HudWindow).with_children(|c| {
-                spawn_building_header(c, "Spaceport");
-
-                c.spawn(InventoryUI::new(entity).with_edit_logistic());
-            });
+            c.spawn((
+                HudWindow,
+                children![
+                    build_building_header("Spaceport"),
+                    InventoryUI::new(entity).with_edit_logistic()
+                ],
+            ));
         });
 }

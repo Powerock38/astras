@@ -55,8 +55,34 @@ impl Material2d for PlanetMaterial {
     }
 }
 
-pub fn build_planet(
-    c: &mut ChildBuilder,
+pub fn build_planet_group(
+    c: &mut ChildSpawner,
+    rng: &mut StdRng,
+    radius: f32,
+    orbit_distance: f32,
+    nb_children: u32,
+    z_value: u32,
+) {
+    let mut orbit_distance = orbit_distance;
+
+    for i in 0..nb_children {
+        let c_nb_children = rng.random_range(0..=(0.1 * nb_children as f32) as u32);
+
+        let c_angle = (i as f32 / nb_children as f32) * 2. * PI;
+
+        let position = Vec2::new(
+            orbit_distance * c_angle.cos(),
+            orbit_distance * c_angle.sin(),
+        );
+
+        let r = build_planet(c, rng, radius, position, c_nb_children, z_value + i + 1);
+
+        orbit_distance += r * 2.0;
+    }
+}
+
+fn build_planet(
+    c: &mut ChildSpawner,
     rng: &mut StdRng,
     parent_radius: f32,
     position: Vec2,
@@ -175,7 +201,7 @@ pub fn build_planet(
         Transform::from_translation(position.extend(z_value as f32)),
     ))
     .with_children(|c| {
-        build_planet_children(
+        build_planet_group(
             c,
             rng,
             planet_radius,
@@ -186,32 +212,6 @@ pub fn build_planet(
     });
 
     planet_total_radius
-}
-
-pub fn build_planet_children(
-    c: &mut ChildBuilder,
-    rng: &mut StdRng,
-    radius: f32,
-    orbit_distance: f32,
-    nb_children: u32,
-    z_value: u32,
-) {
-    let mut orbit_distance = orbit_distance;
-
-    for i in 0..nb_children {
-        let c_nb_children = rng.random_range(0..=(0.1 * nb_children as f32) as u32);
-
-        let c_angle = (i as f32 / nb_children as f32) * 2. * PI;
-
-        let position = Vec2::new(
-            orbit_distance * c_angle.cos(),
-            orbit_distance * c_angle.sin(),
-        );
-
-        let r = build_planet(c, rng, radius, position, c_nb_children, z_value + i + 1);
-
-        orbit_distance += r * 2.0;
-    }
 }
 
 pub fn update_planet_shadows(

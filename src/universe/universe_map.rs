@@ -6,7 +6,7 @@ use rand::prelude::*;
 
 use super::ActiveSolarSystem;
 use crate::{
-    universe::{build_star, spawn_solar_system, MainCamera, Ship, SolarSystem},
+    universe::{build_solar_system, build_star, MainCamera, Ship, SolarSystem},
     GameState, SaveUniverse,
 };
 
@@ -67,18 +67,12 @@ pub fn spawn_universe_map(
                     );
 
                     let mut rng = StdRng::seed_from_u64(seed);
-                    let entity = build_star(c, &mut rng, map_position);
 
-                    // ugly way to add an observer
-                    c.enqueue_command(move |world: &mut World| {
-                        if let Ok(mut entity) = world.get_entity_mut(entity) {
-                            entity.observe(
-                                move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
-                                    commands.trigger(TravelToSolarSystem(position));
-                                },
-                            );
-                        }
-                    });
+                    c.spawn(build_star(&mut rng, map_position)).observe(
+                        move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                            commands.trigger(TravelToSolarSystem(position));
+                        },
+                    );
 
                     if x == current_solar_system.x() && y == current_solar_system.y() {
                         c.spawn((
@@ -89,12 +83,12 @@ pub fn spawn_universe_map(
                                 order: 1,
                                 ..default()
                             },
-                            OrthographicProjection {
+                            Projection::Orthographic(OrthographicProjection {
                                 scale: BASE_SCALE,
                                 near: -1000.0,
                                 far: 1000.0,
                                 ..OrthographicProjection::default_2d()
-                            },
+                            }),
                             Transform::from_translation(map_position.extend(0.)),
                         ));
                     }
@@ -117,10 +111,14 @@ pub fn update_universe_map(
     mut ev_motion: EventReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    q_camera: Single<(&mut Transform, &mut OrthographicProjection), With<UniverseMapCamera>>,
+    q_camera: Single<(&mut Transform, &mut Projection), With<UniverseMapCamera>>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     let (mut transform, mut projection) = q_camera.into_inner();
+
+    let Projection::Orthographic(projection) = projection.as_mut() else {
+        return;
+    };
 
     for scroll in ev_scroll.read() {
         projection.scale *= 1. - ZOOM_SPEED * scroll.y * time.delta_secs();
@@ -200,7 +198,9 @@ pub fn travel_to_solar_system(
             *visibility = Visibility::Visible;
             solar_system_entity
         } else {
-            spawn_solar_system(&mut commands, solar_system_position)
+            commands
+                .spawn(build_solar_system(solar_system_position))
+                .id()
         }
     };
 

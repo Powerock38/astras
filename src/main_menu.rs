@@ -3,7 +3,7 @@ use rand::Rng;
 
 use crate::{
     ui::{build_load_ui, UiButton},
-    universe::{build_ship, spawn_solar_system},
+    universe::{build_ship, build_solar_system},
     GameState, UniverseName,
 };
 
@@ -46,11 +46,9 @@ fn spawn_new_game(
     let timestamp = std::time::UNIX_EPOCH.elapsed().unwrap().as_millis();
     commands.insert_resource(UniverseName(format!("universe_{timestamp}")));
 
-    let entity = spawn_solar_system(&mut commands, solar_system_position);
-
-    commands.entity(entity).with_children(|c| {
-        build_ship(c);
-    });
+    commands
+        .spawn((build_solar_system(solar_system_position),))
+        .with_child(build_ship());
 
     next_state.set(GameState::GameSolarSystem);
 }

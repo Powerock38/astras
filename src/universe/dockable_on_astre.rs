@@ -32,7 +32,7 @@ pub fn update_dockable_on_astre(
     mut q_dockable: Query<(
         Entity,
         &mut DockableOnAstre,
-        Option<&Parent>,
+        Option<&ChildOf>,
         &mut Transform,
         &GlobalTransform,
     )>,
@@ -84,8 +84,8 @@ pub fn update_dockable_on_astre(
         if let Some((entity_astre, astre_global_transform, _)) = on_astre_option {
             // If already docked on this astre, skip
             if dockable.on_astre {
-                if let Some(dockable_parent) = dockable_parent {
-                    if dockable_parent.get() == entity_astre {
+                if let Some(dockable_child_of) = dockable_parent {
+                    if dockable_child_of.parent() == entity_astre {
                         continue;
                     }
                 }
@@ -96,7 +96,9 @@ pub fn update_dockable_on_astre(
             if dockable.adjust_z {
                 transform.translation.z = 0.5;
             }
-            commands.entity(entity_dockable).set_parent(entity_astre);
+            commands
+                .entity(entity_dockable)
+                .insert(ChildOf(entity_astre));
 
             // Dock
             dockable.on_astre = true;
@@ -126,7 +128,7 @@ pub fn update_dockable_on_astre(
                 }
                 commands
                     .entity(entity_dockable)
-                    .set_parent(entity_solar_system);
+                    .insert(ChildOf(entity_solar_system));
 
                 dockable.on_astre = false;
 

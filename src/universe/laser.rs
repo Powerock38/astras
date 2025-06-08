@@ -56,7 +56,7 @@ pub fn update_lasers(
 ) {
     for (entity, mut laser) in &mut q_lasers {
         if laser.ttl.tick(time.delta()).finished() {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

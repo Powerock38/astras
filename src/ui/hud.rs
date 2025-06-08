@@ -13,15 +13,15 @@ pub struct HudWindowDependent;
 
 #[derive(Component)]
 #[require(
-    Node(|| Node {
+    Node {
         width: Val::Percent(100.),
         height: Val::Percent(100.),
         flex_direction: FlexDirection::Column,
         padding: UiRect::all(Val::Px(10.)),
         margin: UiRect::all(Val::Px(5.)),
         ..default()
-    }),
-    BackgroundColor(|| BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.5)))
+    },
+    BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.5))
 )]
 pub struct HudWindow;
 
@@ -40,8 +40,8 @@ pub fn setup_hud(mut commands: Commands, camera: Single<Entity, Added<MainCamera
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
-            PickingBehavior::IGNORE,
-            TargetCamera(*camera),
+            Pickable::IGNORE,
+            UiTargetCamera(*camera),
         ))
         .with_children(|c| {
             c.spawn((
@@ -53,7 +53,7 @@ pub fn setup_hud(mut commands: Commands, camera: Single<Entity, Added<MainCamera
                     justify_content: JustifyContent::Center,
                     ..default()
                 },
-                PickingBehavior::IGNORE,
+                Pickable::IGNORE,
             ));
 
             c.spawn((
@@ -66,7 +66,7 @@ pub fn setup_hud(mut commands: Commands, camera: Single<Entity, Added<MainCamera
                     align_items: AlignItems::FlexEnd,
                     ..default()
                 },
-                PickingBehavior::IGNORE,
+                Pickable::IGNORE,
             ));
         });
 }
@@ -77,9 +77,11 @@ pub fn clear_ui(
     window_parent: Single<Entity, With<HudWindowParent>>,
     q_window_dependents: Query<Entity, With<HudWindowDependent>>,
 ) {
-    commands.entity(*window_parent).despawn_descendants();
+    commands
+        .entity(*window_parent)
+        .despawn_related::<Children>();
 
     for entity in &q_window_dependents {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }

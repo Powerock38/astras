@@ -51,9 +51,11 @@ pub fn clear_ui_or_spawn_ship_ui(
                                         commands.insert_resource(PlacingBuilding(*building_id));
                                     };
 
-                                c.spawn(UiButton).observe(callback).with_children(|c| {
-                                    build_building_ui(c, *building_id, &asset_server);
-                                });
+                                c.spawn((
+                                    UiButton,
+                                    children![build_building_ui(*building_id, &asset_server)],
+                                ))
+                                .observe(callback);
                             }
                         });
                     });

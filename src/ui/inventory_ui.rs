@@ -1,4 +1,5 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::prelude::*;
+use bevy_platform::collections::HashMap;
 
 use crate::{
     data::{ItemId, ELEMENTS},
@@ -8,14 +9,14 @@ use crate::{
 };
 
 #[derive(Component)]
-#[require(Node(|| Node {
+#[require(Node {
     width: Val::Percent(100.0),
     height: Val::Percent(100.0),
     align_items: AlignItems::Start,
     justify_content: JustifyContent::SpaceBetween,
     flex_direction: FlexDirection::Row,
     ..default()
-}))]
+})]
 pub struct InventoryUI {
     entity: Entity,
     just_added: bool,
@@ -76,11 +77,11 @@ pub fn update_inventory_ui(
             continue;
         };
 
-        let Some(mut ec) = commands.get_entity(ui_entity) else {
+        let Ok(mut ec) = commands.get_entity(ui_entity) else {
             continue;
         };
 
-        ec.despawn_descendants().with_children(|c| {
+        ec.despawn_related::<Children>().with_children(|c| {
             c.spawn(Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -113,11 +114,10 @@ pub fn update_inventory_ui(
                     if ship.is_none() {
                         let callback = item_transfer_callback(*id, *quantity, entity, false);
 
-                        c.spawn(UiButton).observe(callback).with_children(|c| {
-                            build_item_ui(c, &asset_server, *id, *quantity);
-                        });
+                        c.spawn((UiButton, build_item_ui(&asset_server, *id, *quantity)))
+                            .observe(callback);
                     } else {
-                        build_item_ui(c, &asset_server, *id, *quantity);
+                        c.spawn(build_item_ui(&asset_server, *id, *quantity));
                     }
                 }
             });
@@ -147,9 +147,11 @@ pub fn update_inventory_ui(
                     for (id, quantity) in logistic_request.items() {
                         let callback = item_transfer_callback(*id, *quantity, entity, true);
 
-                        c.spawn(UiButton).observe(callback).with_children(|c| {
-                            build_item_ui(c, &asset_server, *id, *quantity);
-                        });
+                        c.spawn((
+                            UiButton,
+                            children![build_item_ui(&asset_server, *id, *quantity)],
+                        ))
+                        .observe(callback);
                     }
                 });
             }
@@ -184,7 +186,11 @@ pub fn update_inventory_ui(
     }
 }
 
-pub fn build_logistic_request_ui(c: &mut ChildBuilder, entity: Entity, scope: LogisticScope) {
+pub fn build_logistic_request_ui(
+    c: &mut ChildSpawnerCommands,
+    entity: Entity,
+    scope: LogisticScope,
+) {
     c.spawn(UiButton)
         .with_child(Text::new("Change Request"))
         .observe(
@@ -198,14 +204,12 @@ pub fn build_logistic_request_ui(c: &mut ChildBuilder, entity: Entity, scope: Lo
                     ec.with_children(|c| {
                         c.spawn(UiButton).with_child(Text::new("Close")).observe(
                             move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
-                                commands
-                                    .entity(logistic_request_window_entity)
-                                    .despawn_recursive();
+                                commands.entity(logistic_request_window_entity).despawn();
                             },
                         );
 
                         for id in ItemId::ALL {
-                            c.spawn(UiButton)
+                            c.spawn((UiButton, children![build_item_ui(&asset_server, *id, 0)]))
                                 .observe(
                                     move |trigger: Trigger<Pointer<Click>>,
                                           mut commands: Commands,
@@ -227,10 +231,7 @@ pub fn build_logistic_request_ui(c: &mut ChildBuilder, entity: Entity, scope: Lo
                                             commands.entity(entity).insert(request);
                                         }
                                     },
-                                )
-                                .with_children(|c| {
-                                    build_item_ui(c, &asset_server, *id, 0);
-                                });
+                                );
                         }
                     });
                 });
@@ -238,74 +239,71 @@ pub fn build_logistic_request_ui(c: &mut ChildBuilder, entity: Entity, scope: Lo
         );
 }
 
-pub fn build_item_ui(
-    c: &mut ChildBuilder,
-    asset_server: &Res<AssetServer>,
-    id: ItemId,
-    quantity: u32,
-) {
+pub fn build_item_ui(asset_server: &Res<AssetServer>, id: ItemId, quantity: u32) -> impl Bundle {
     let item = id.data();
 
-    c.spawn(Node {
-        align_items: AlignItems::Center,
-        flex_direction: FlexDirection::Row,
-        column_gap: Val::Px(10.0),
-        ..default()
-    })
-    .with_children(|c| {
-        let (color, icon) = ELEMENTS
-            .get(&id)
-            .map_or((Color::WHITE.into(), "item"), |e| {
-                (
-                    e.color,
-                    match e.state {
-                        ElementState::Solid => "solid",
-                        ElementState::Liquid => "liquid",
-                        ElementState::Gas => "gas",
-                        ElementState::Plasma => "plasma",
-                    },
-                )
-            });
-
-        let icon = asset_server.load(format!("icons/{icon}.png"));
-
-        c.spawn((
-            Node {
-                width: Val::Px(30.),
-                height: Val::Px(30.),
-                ..default()
-            },
-            BackgroundColor(color.into()),
-            ImageNode::new(icon),
-        ));
-
-        c.spawn(Node {
-            flex_direction: FlexDirection::Column,
-            row_gap: Val::Px(5.0),
-            ..default()
-        })
-        .with_children(|c| {
-            c.spawn((
-                if quantity > 0 {
-                    Text::new(format!("{} (x{quantity})", item.name))
-                } else {
-                    Text::new(item.name)
+    let (color, icon) = ELEMENTS
+        .get(&id)
+        .map_or((Color::WHITE.into(), "item"), |e| {
+            (
+                e.color,
+                match e.state {
+                    ElementState::Solid => "solid",
+                    ElementState::Liquid => "liquid",
+                    ElementState::Gas => "gas",
+                    ElementState::Plasma => "plasma",
                 },
-                TextFont {
-                    font_size: 18.0,
-                    ..default()
-                },
-            ));
-
-            c.spawn((
-                Text::new(item.description),
-                TextFont {
-                    font_size: 12.0,
-                    ..default()
-                },
-            ));
+            )
         });
-    });
+
+    let icon = asset_server.load(format!("icons/{icon}.png"));
+
+    (
+        Node {
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Row,
+            column_gap: Val::Px(10.0),
+            ..default()
+        },
+        children![
+            (
+                Node {
+                    width: Val::Px(30.),
+                    height: Val::Px(30.),
+                    ..default()
+                },
+                BackgroundColor(color.into()),
+                ImageNode::new(icon),
+            ),
+            (
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(5.0),
+                    ..default()
+                },
+                children![
+                    (
+                        if quantity > 0 {
+                            Text::new(format!("{} (x{quantity})", item.name))
+                        } else {
+                            Text::new(item.name)
+                        },
+                        TextFont {
+                            font_size: 18.0,
+                            ..default()
+                        },
+                    ),
+                    (
+                        Text::new(item.description),
+                        TextFont {
+                            font_size: 12.0,
+                            ..default()
+                        },
+                    )
+                ]
+            )
+        ],
+    )
 }
 
 fn item_transfer_callback(

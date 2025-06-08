@@ -37,7 +37,7 @@ impl Inventory {
         }
     }
 
-    #[inline]
+
     pub fn remaining_space(&self) -> u32 {
         self.size.saturating_sub(
             self.items
@@ -128,22 +128,22 @@ impl Inventory {
         None
     }
 
-    #[inline]
+
     pub fn quantity(&self, id: ItemId) -> u32 {
         *self.items.get(&id).unwrap_or(&0)
     }
 
-    #[inline]
+
     pub fn all_ids(&self) -> Vec<ItemId> {
         self.items.keys().copied().collect()
     }
 
-    #[inline]
+
     pub fn items(&self) -> &ItemMap {
         &self.items
     }
 
-    #[inline]
+
     pub fn total_quantity(&self) -> u32 {
         self.items.values().sum()
     }

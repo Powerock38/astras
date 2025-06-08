@@ -1,9 +1,10 @@
-use bevy::prelude::*;
+use bevy::{ecs::spawn::SpawnWith, prelude::*};
 
 use crate::ui::{ClearUiEvent, UiButton};
 
-pub fn spawn_building_header(c: &mut ChildBuilder, name: &str) {
-    c.spawn((
+pub fn build_building_header(name: &str) -> impl Bundle {
+    let name = name.to_string();
+    (
         Node {
             align_items: AlignItems::Center,
             flex_direction: FlexDirection::Row,
@@ -14,20 +15,20 @@ pub fn spawn_building_header(c: &mut ChildBuilder, name: &str) {
             ..default()
         },
         BorderColor(Color::WHITE),
-    ))
-    .with_children(|c| {
-        c.spawn((
-            Text::new(name),
-            TextFont {
-                font_size: 18.0,
-                ..default()
-            },
-        ));
+        Children::spawn(SpawnWith(move |c: &mut ChildSpawner| {
+            c.spawn((
+                Text::new(name),
+                TextFont {
+                    font_size: 18.0,
+                    ..default()
+                },
+            ));
 
-        c.spawn(UiButton).with_child(Text::new("X")).observe(
-            move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
-                commands.trigger(ClearUiEvent);
-            },
-        );
-    });
+            c.spawn((UiButton, children![Text::new("X")])).observe(
+                move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                    commands.trigger(ClearUiEvent);
+                },
+            );
+        })),
+    )
 }

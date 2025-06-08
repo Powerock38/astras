@@ -31,7 +31,6 @@ pub struct Ship {
 }
 
 impl Ship {
-    #[inline]
     pub fn speed(&self) -> Vec2 {
         self.speed
     }
@@ -40,10 +39,10 @@ impl Ship {
 #[derive(Component)]
 pub struct ShipSprite;
 
-pub fn build_ship(c: &mut ChildBuilder) {
+pub fn build_ship() -> impl Bundle {
     let position = Vec2::new(0., 0.);
 
-    c.spawn((
+    (
         Name::new("Ship"),
         Ship {
             speed: Vec2::new(0., 0.),
@@ -56,7 +55,7 @@ pub fn build_ship(c: &mut ChildBuilder) {
         Transform::from_translation(position.extend(SHIP_Z)),
         Visibility::default(),
         Inventory::new(SHIP_INVENTORY_SIZE),
-    ));
+    )
 }
 
 pub fn spawn_ship_sprite(mut commands: Commands, ship: Single<Entity, Added<Ship>>) {
@@ -139,7 +138,7 @@ pub fn update_ship_mining(
         return;
     }
 
-    let astre_entity = trigger.entity();
+    let astre_entity = trigger.target();
 
     // TODO ship.mining_cooldown.tick(time.delta()).finished() ; ship.mining_cooldown.reset();
 

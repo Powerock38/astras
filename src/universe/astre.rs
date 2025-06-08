@@ -20,22 +20,18 @@ impl Astre {
         }
     }
 
-    #[inline]
     pub fn surface_radius(&self) -> f32 {
         self.surface
     }
 
-    #[inline]
     pub fn atmosphere_radius(&self) -> f32 {
         self.surface + self.atmosphere
     }
 
-    #[inline]
     pub fn has_atmosphere(&self) -> bool {
         self.atmosphere > 0.0
     }
 
-    #[inline]
     pub fn close_orbit_radius(&self) -> f32 {
         self.surface + self.atmosphere + self.close_orbit
     }

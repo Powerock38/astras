@@ -36,27 +36,27 @@ impl Recipe {
         }
     }
 
-    #[inline]
+
     pub fn time(&self) -> f32 {
         self.time
     }
 
-    #[inline]
+
     pub fn inputs(&self) -> RecipeItemQuantities {
         self.inputs
     }
 
-    #[inline]
+
     pub fn outputs(&self) -> RecipeOutputs {
         self.outputs
     }
 
-    #[inline]
+
     pub fn inputs_quantity(&self) -> u32 {
         self.inputs.iter().map(|(_, quantity)| quantity).sum()
     }
 
-    #[inline]
+
     pub fn outputs_quantity(&self) -> u32 {
         match self.outputs {
             RecipeOutputs::Items(items) => items.iter().map(|(_, quantity)| quantity).sum(),

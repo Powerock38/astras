@@ -7,15 +7,15 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 #[derive(Component)]
 #[require(
     Button,
-    Node(|| Node {
+    Node{
         padding: UiRect::all(Val::Px(5.0)),
         border: UiRect::all(Val::Px(2.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         ..default()
-    }),
-    BorderColor(|| BorderColor(Color::BLACK)),
-    BackgroundColor(|| BackgroundColor(NORMAL_BUTTON))
+    },
+    BorderColor(Color::BLACK),
+    BackgroundColor(NORMAL_BUTTON)
 )]
 pub struct UiButton;
 

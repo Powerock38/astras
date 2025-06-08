@@ -13,7 +13,7 @@ pub fn spawn_save_ui(
     if keyboard_input.just_pressed(KeyCode::KeyM) {
         commands
             .entity(*window_parent)
-            .despawn_descendants()
+            .despawn_related::<Children>()
             .with_children(|c| {
                 c.spawn(HudWindow).with_children(|c| {
                     build_load_ui(c);
@@ -22,7 +22,7 @@ pub fn spawn_save_ui(
     }
 }
 
-pub fn build_load_ui(c: &mut ChildBuilder) {
+pub fn build_load_ui(c: &mut ChildSpawnerCommands) {
     if let Ok(universes_names) = std::fs::read_dir(format!("assets/{SAVES_DIR}")).map(|dir| {
         dir.filter_map(|entry| {
             entry.ok().and_then(|entry| {
@@ -45,9 +45,8 @@ pub fn build_load_ui(c: &mut ChildBuilder) {
                 }
             };
 
-            c.spawn(UiButton).observe(callback).with_children(|c| {
-                c.spawn(Text::new(universe_name));
-            });
+            c.spawn((UiButton, children![Text::new(universe_name)]))
+                .observe(callback);
         }
     }
 }

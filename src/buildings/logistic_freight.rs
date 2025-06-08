@@ -1,8 +1,5 @@
-use bevy::{
-    ecs::{entity::MapEntities, reflect::ReflectMapEntities},
-    prelude::*,
-    utils::HashSet,
-};
+use bevy::prelude::*;
+use bevy_platform::collections::HashSet;
 
 use crate::items::{
     Inventory, ItemMap, LogisticJourney, LogisticProvider, LogisticRequest, LogisticScope,
@@ -14,7 +11,7 @@ const LOGISTIC_FREIGHTER_Z: f32 = 0.6;
 //TODO: implement Ship following (to move freighters manually)
 
 #[derive(Component, Reflect, Default)]
-#[reflect(Component, Default, MapEntities)]
+#[reflect(Component, Default)]
 #[require(Inventory)]
 pub struct LogisticFreight {
     cooldown: Timer,
@@ -22,17 +19,6 @@ pub struct LogisticFreight {
     journey: Option<(LogisticJourney, Option<Entity>)>, // (journey, target)
     scope: LogisticScope,
     speed: f32,
-}
-
-impl MapEntities for LogisticFreight {
-    fn map_entities<M: EntityMapper>(&mut self, entity_mapper: &mut M) {
-        if let Some((journey, target)) = &mut self.journey {
-            journey.map_entities(entity_mapper);
-            if let Some(target) = target {
-                *target = entity_mapper.map_entity(*target);
-            }
-        }
-    }
 }
 
 impl LogisticFreight {
@@ -56,12 +42,10 @@ impl LogisticFreight {
         }
     }
 
-    #[inline]
     pub fn logistic_journey(&self) -> Option<&LogisticJourney> {
         self.journey.as_ref().map(|(journey, _)| journey)
     }
 
-    #[inline]
     pub fn scope(&self) -> &LogisticScope {
         &self.scope
     }
@@ -91,23 +75,23 @@ pub fn update_logistic_freights(
         (
             Entity,
             &mut LogisticFreight,
-            &Parent,
+            &ChildOf,
             &GlobalTransform,
             &Inventory,
         ),
         (Without<LogisticRequest>, Without<LogisticProvider>),
     >,
-    q_requesters: Query<(Entity, &LogisticRequest, &Parent, &GlobalTransform)>,
+    q_requesters: Query<(Entity, &LogisticRequest, &ChildOf, &GlobalTransform)>,
     q_providers: Query<(
         Entity,
         &LogisticProvider,
-        &Parent,
+        &ChildOf,
         &GlobalTransform,
         &Inventory,
     )>,
-    q_parent: Query<&Parent>,
+    q_parent: Query<&ChildOf>,
 ) {
-    for (freight_entity, mut freight, parent, transform, inventory) in &mut q_logistic_freights {
+    for (freight_entity, mut freight, child_of, transform, inventory) in &mut q_logistic_freights {
         if freight.cooldown.tick(time.delta()).finished() {
             // If we already have a journey
             if let Some((journey, move_target)) = &mut freight.journey {
@@ -177,7 +161,9 @@ pub fn update_logistic_freights(
                         |(requester_entity, logistic_request, requester_parent, ..)| {
                             &freight.scope == logistic_request.scope()
                                 && match freight.scope {
-                                    LogisticScope::Planet => requester_parent.get() == parent.get(),
+                                    LogisticScope::Planet => {
+                                        requester_parent.parent() == child_of.parent()
+                                    }
                                     LogisticScope::SolarSystem => {
                                         let freight_ancestors = q_parent
                                             .iter_ancestors(freight_entity)
@@ -206,7 +192,7 @@ pub fn update_logistic_freights(
                     for (
                         provider_entity,
                         logistic_provider,
-                        provider_parent,
+                        provider_child_of,
                         _,
                         provider_inventory,
                     ) in &q_providers
@@ -217,7 +203,9 @@ pub fn update_logistic_freights(
 
                         let in_scope = &freight.scope == logistic_provider.scope()
                             && match freight.scope {
-                                LogisticScope::Planet => provider_parent.get() == parent.get(),
+                                LogisticScope::Planet => {
+                                    provider_child_of.parent() == child_of.parent()
+                                }
                                 LogisticScope::SolarSystem => {
                                     let freight_ancestors = q_parent
                                         .iter_ancestors(freight_entity)
@@ -267,16 +255,16 @@ pub fn update_logistic_freights(
 pub fn update_logistic_freights_movement(
     time: Res<Time>,
     q_global_transforms: Query<&GlobalTransform>,
-    mut q_logistic_freights: Query<(&LogisticFreight, &Parent, &mut Transform)>,
+    mut q_logistic_freights: Query<(&LogisticFreight, &ChildOf, &mut Transform)>,
 ) {
-    for (freight, parent, mut transform) in &mut q_logistic_freights {
+    for (freight, child_of, mut transform) in &mut q_logistic_freights {
         // Move towards target
         if let Some((_, Some(target))) = &freight.journey {
             let Ok(target_global_transform) = q_global_transforms.get(*target) else {
                 continue;
             };
 
-            let Ok(parent_global_transform) = q_global_transforms.get(parent.get()) else {
+            let Ok(parent_global_transform) = q_global_transforms.get(child_of.parent()) else {
                 continue;
             };
 

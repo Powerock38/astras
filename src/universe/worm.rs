@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use bevy::{ecs::spawn::SpawnIter, prelude::*};
 use rand::prelude::*;
 
 use crate::{universe::SHIP_Z, SpriteLoader};
@@ -25,7 +25,7 @@ pub struct Worm {
 #[reflect(Component, Default)]
 pub struct WormSegment;
 
-pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
+pub fn build_worm(rng: &mut StdRng, position: Vec2) -> impl Bundle {
     let size = rng.random_range(1. ..=10.);
     let length = rng.random_range(5..=50);
     let speed = rng.random_range(100. ..=1000.);
@@ -42,7 +42,7 @@ pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
         Transform::from_translation(position.extend(WORM_Z - (length as f32) * WORM_Z_DELTA))
             .with_scale(Vec3::splat(size));
 
-    c.spawn((
+    (
         Name::new("Worm"),
         Worm {
             length,
@@ -57,25 +57,23 @@ pub fn build_worm(c: &mut ChildBuilder, rng: &mut StdRng, position: Vec2) {
             color,
         },
         transform,
-    ))
-    .with_children(|c| {
-        for n_segment in 0..length {
+        Children::spawn(SpawnIter((0..length).map(move |n_segment| {
             let segment_position = Vec2::new(-(SEGMENT_WIDTH * n_segment as f32 + HEAD_WIDTH), 0.0);
 
             let transform = Transform::from_translation(
                 segment_position.extend(n_segment as f32 * WORM_Z_DELTA),
             );
 
-            c.spawn((
+            (
                 WormSegment,
                 SpriteLoader {
                     texture_path: "sprites/worm_segment.png".to_string(),
                     color,
                 },
                 transform,
-            ));
-        }
-    });
+            )
+        }))),
+    )
 }
 
 pub fn update_worms(
@@ -105,7 +103,7 @@ pub fn update_worms(
         // Wiggle
         let mut last_y = 0.0;
         for (i, segment) in segments.iter().enumerate() {
-            let mut segment_transform = q_segments.get_mut(*segment).unwrap();
+            let mut segment_transform = q_segments.get_mut(segment).unwrap();
 
             let x = (i as f32) / (worm.length as f32) * 2.0 * PI
                 + time.elapsed_secs()

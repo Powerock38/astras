@@ -30,7 +30,7 @@ impl Plugin for BuildingsPlugin {
         app.add_systems(
             Update,
             (
-                spawn_building.param_warn_once(),
+                spawn_building,
                 draw_placing_zones,
                 update_extractors,
                 update_logistic_freights,
