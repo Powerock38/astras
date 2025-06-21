@@ -1,5 +1,4 @@
-use bevy::prelude::*;
-use bevy_platform::collections::HashSet;
+use bevy::{platform::collections::HashSet, prelude::*};
 
 use crate::items::{
     Inventory, ItemMap, LogisticJourney, LogisticProvider, LogisticRequest, LogisticScope,

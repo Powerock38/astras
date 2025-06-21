@@ -1,4 +1,4 @@
-use bevy_platform::collections::HashMap;
+use bevy::platform::collections::HashMap;
 
 use crate::data::ItemId;
 

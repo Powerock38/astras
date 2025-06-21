@@ -1,5 +1,4 @@
-use bevy::prelude::*;
-use bevy_platform::collections::HashMap;
+use bevy::{platform::collections::HashMap, prelude::*};
 
 use crate::{
     data::{ItemId, ELEMENTS},

@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.16.1", features = ["bevy_remote"] }
-bevy_platform = "0.16.1"
 rand = "0.9"
 uuid = "*"
 

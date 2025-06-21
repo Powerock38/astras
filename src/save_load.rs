@@ -3,7 +3,10 @@ use std::{fs::File, io::Write, path::Path};
 use bevy::{
     ecs::system::SystemState,
     prelude::*,
-    render::camera::{CameraMainTextureUsages, CameraRenderGraph},
+    render::{
+        camera::{CameraMainTextureUsages, CameraRenderGraph},
+        view::VisibilityClass,
+    },
     tasks::IoTaskPool,
 };
 
@@ -67,6 +70,7 @@ impl Command for SaveUniverse {
             .deny_component::<MeshMaterial2d<BackgroundMaterial>>()
             .deny_component::<Mesh2d>()
             .deny_component::<Sprite>()
+            .deny_component::<VisibilityClass>() // contains a TypeId that is not serializable
             .extract_resources()
             .extract_entities(entities.into_iter())
             .remove_empty_entities()

@@ -1,7 +1,6 @@
 use std::sync::LazyLock;
 
-use bevy::{color::palettes::css::*, prelude::*};
-use bevy_platform::collections::HashMap;
+use bevy::{color::palettes::css::*, platform::collections::HashMap, prelude::*};
 
 use crate::{
     buildings::*,
