@@ -1,10 +1,10 @@
 use bevy::{platform::collections::HashMap, prelude::*};
 
 use crate::{
-    data::{ItemId, ELEMENTS},
+    data::{ELEMENTS, ItemId},
     items::{ElementState, Inventory, LogisticProvider, LogisticRequest, LogisticScope},
     ui::{HudWindow, HudWindowParent, UiButton},
-    universe::{Ship, SHIP_ACTION_RANGE},
+    universe::{SHIP_ACTION_RANGE, Ship},
 };
 
 #[derive(Component)]
@@ -163,7 +163,7 @@ pub fn update_inventory_ui(
                             "Currently exporting to the {}",
                             logistic_provider.scope()
                         )))
-                        .observe(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
+                        .observe(move |_: On<Pointer<Click>>, mut commands: Commands| {
                             commands.entity(entity).remove::<LogisticProvider>();
                         });
 
@@ -175,7 +175,7 @@ pub fn update_inventory_ui(
                     for scope in [LogisticScope::Planet, LogisticScope::SolarSystem] {
                         c.spawn(UiButton)
                             .with_child(Text::new(format!("Export to {scope}")))
-                            .observe(move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
+                            .observe(move |_: On<Pointer<Click>>, mut commands: Commands| {
                                 commands.entity(entity).insert(LogisticProvider::new(scope));
                             });
                     }
@@ -193,7 +193,7 @@ pub fn build_logistic_request_ui(
     c.spawn(UiButton)
         .with_child(Text::new("Change Request"))
         .observe(
-            move |_: Trigger<Pointer<Click>>,
+            move |_: On<Pointer<Click>>,
                   mut commands: Commands,
                   asset_server: Res<AssetServer>,
                   window_parent: Single<Entity, With<HudWindowParent>>| {
@@ -202,7 +202,7 @@ pub fn build_logistic_request_ui(
                     let logistic_request_window_entity = ec.id();
                     ec.with_children(|c| {
                         c.spawn(UiButton).with_child(Text::new("Close")).observe(
-                            move |_: Trigger<Pointer<Click>>, mut commands: Commands| {
+                            move |_: On<Pointer<Click>>, mut commands: Commands| {
                                 commands.entity(logistic_request_window_entity).despawn();
                             },
                         );
@@ -210,10 +210,10 @@ pub fn build_logistic_request_ui(
                         for id in ItemId::ALL {
                             c.spawn((UiButton, children![build_item_ui(&asset_server, *id, 0)]))
                                 .observe(
-                                    move |trigger: Trigger<Pointer<Click>>,
+                                    move |pointer_click: On<Pointer<Click>>,
                                           mut commands: Commands,
                                           mut query: Query<Option<&mut LogisticRequest>>| {
-                                        let remove = trigger.button == PointerButton::Secondary;
+                                        let remove = pointer_click.button == PointerButton::Secondary;
 
                                         if let Some(mut request) =
                                             query.get_mut(entity).ok().flatten()
@@ -311,13 +311,11 @@ fn item_transfer_callback(
     inventory_entity: Entity,
     from_ship: bool,
 ) -> impl FnMut(
-    Trigger<Pointer<Click>>,
+    On<Pointer<Click>>,
     Single<(&mut Inventory, &GlobalTransform), With<Ship>>,
     Query<(&mut Inventory, &GlobalTransform), Without<Ship>>,
 ) {
-    move |_trigger: Trigger<Pointer<Click>>,
-          q_ship: Single<(&mut Inventory, &GlobalTransform), With<Ship>>,
-          mut q_inventory: Query<(&mut Inventory, &GlobalTransform), Without<Ship>>| {
+    move |_pointer_click, q_ship, mut q_inventory| {
         let (mut ship_inventory, ship_transform) = q_ship.into_inner();
 
         let Ok((mut inventory, transform)) = q_inventory.get_mut(inventory_entity) else {

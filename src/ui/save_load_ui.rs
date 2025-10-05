@@ -40,7 +40,7 @@ pub fn build_load_ui(c: &mut ChildSpawnerCommands) {
         for universe_name in universes_names {
             let callback = {
                 let universe_name = universe_name.clone();
-                move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                move |_pointer_click: On<Pointer<Click>>, mut commands: Commands| {
                     commands.trigger(LoadUniverse(universe_name.clone()));
                 }
             };

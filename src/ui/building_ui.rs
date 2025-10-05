@@ -14,7 +14,7 @@ pub fn build_building_header(name: &str) -> impl Bundle {
             margin: UiRect::bottom(Val::Px(10.0)),
             ..default()
         },
-        BorderColor(Color::WHITE),
+        BorderColor::all(Color::WHITE),
         Children::spawn(SpawnWith(move |c: &mut ChildSpawner| {
             c.spawn((
                 Text::new(name),
@@ -25,7 +25,7 @@ pub fn build_building_header(name: &str) -> impl Bundle {
             ));
 
             c.spawn((UiButton, children![Text::new("X")])).observe(
-                move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                move |_pointer_click: On<Pointer<Click>>, mut commands: Commands| {
                     commands.trigger(ClearUiEvent);
                 },
             );

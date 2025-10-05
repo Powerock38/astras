@@ -1,13 +1,12 @@
 use std::f32::consts::PI;
 
 use bevy::{
+    asset::RenderAssetUsages,
+    mesh::{Indices, PrimitiveTopology},
     prelude::*,
-    render::{
-        mesh::{Indices, PrimitiveTopology},
-        render_asset::RenderAssetUsages,
-        render_resource::{AsBindGroup, ShaderRef},
-    },
-    sprite::Material2d,
+    render::render_resource::AsBindGroup,
+    shader::ShaderRef,
+    sprite_render::Material2d,
 };
 use rand::prelude::*;
 
@@ -41,24 +40,21 @@ impl Material2d for AsteroidMaterial {
     }
 }
 
-pub fn build_asteroid_belt(rng: &mut StdRng) -> Vec<impl Bundle> {
+pub fn build_asteroid_belt(c: &mut ChildSpawner, rng: &mut StdRng) {
     let radius: f32 = rng.random_range(30_000.0..100_000.0);
     let nb_asteroids = rng.random_range(10..100);
 
     let radius_variation = rng.random_range(100.0..radius * 0.2);
 
-    (0..nb_asteroids)
-        .map(move |i| {
-            let angle = (i as f32 / nb_asteroids as f32) * 2. * PI;
-            let local_radius =
-                rng.random_range(radius - radius_variation..radius + radius_variation);
-            let z = i as f32 / nb_asteroids as f32;
+    for i in 0..nb_asteroids {
+        let angle = (i as f32 / nb_asteroids as f32) * 2. * PI;
+        let local_radius = rng.random_range(radius - radius_variation..radius + radius_variation);
+        let z = i as f32 / nb_asteroids as f32;
 
-            let position = Vec3::new(local_radius * angle.cos(), local_radius * angle.sin(), z);
+        let position = Vec3::new(local_radius * angle.cos(), local_radius * angle.sin(), z);
 
-            build_asteroid(rng, position)
-        })
-        .collect()
+        c.spawn(build_asteroid(rng, position));
+    }
 }
 
 fn build_asteroid(rng: &mut StdRng, position: Vec3) -> impl Bundle {

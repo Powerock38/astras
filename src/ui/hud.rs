@@ -72,7 +72,7 @@ pub fn setup_hud(mut commands: Commands, camera: Single<Entity, Added<MainCamera
 }
 
 pub fn clear_ui(
-    _trigger: Trigger<ClearUiEvent>,
+    _clear_ui: On<ClearUiEvent>,
     mut commands: Commands,
     window_parent: Single<Entity, With<HudWindowParent>>,
     q_window_dependents: Query<Entity, With<HudWindowDependent>>,

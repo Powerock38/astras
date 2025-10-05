@@ -47,7 +47,7 @@ pub fn clear_ui_or_spawn_ship_ui(
                         .with_children(|c| {
                             for building_id in BuildingId::ALL {
                                 let callback =
-                                    |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                                    |_pointer_click: On<Pointer<Click>>, mut commands: Commands| {
                                         commands.insert_resource(PlacingBuilding(*building_id));
                                     };
 

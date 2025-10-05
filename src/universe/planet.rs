@@ -2,16 +2,17 @@ use std::f32::consts::PI;
 
 use bevy::{
     prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{AlphaMode2d, Material2d},
+    render::render_resource::AsBindGroup,
+    shader::ShaderRef,
+    sprite_render::{AlphaMode2d, Material2d},
 };
 use rand::prelude::*;
 
 use crate::{
+    MaterialLoader, MeshType,
     data::ELEMENTS,
     items::{ElementOnAstre, ElementState, Inventory},
     universe::{Astre, Orbit},
-    MaterialLoader, MeshType,
 };
 
 pub const NB_COLORS: usize = 3;

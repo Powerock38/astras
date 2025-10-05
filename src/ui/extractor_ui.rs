@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     buildings::Extractor,
-    ui::{build_building_header, HudWindow, HudWindowParent, InventoryUI},
+    ui::{HudWindow, HudWindowParent, InventoryUI, build_building_header},
 };
 
 pub fn scan_extractor_ui(mut commands: Commands, q_extractors: Query<Entity, Added<Extractor>>) {
@@ -12,12 +12,10 @@ pub fn scan_extractor_ui(mut commands: Commands, q_extractors: Query<Entity, Add
 }
 
 fn spawn_extractor_ui(
-    trigger: Trigger<Pointer<Click>>,
+    pointer_click: On<Pointer<Click>>,
     mut commands: Commands,
     window_parent: Single<Entity, With<HudWindowParent>>,
 ) {
-    let entity = trigger.target();
-
     commands
         .entity(*window_parent)
         .despawn_related::<Children>()
@@ -26,7 +24,7 @@ fn spawn_extractor_ui(
                 HudWindow,
                 children![
                     build_building_header("Element Extractor"),
-                    InventoryUI::new(entity)
+                    InventoryUI::new(pointer_click.entity)
                 ],
             ));
         });

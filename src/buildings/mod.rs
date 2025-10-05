@@ -3,25 +3,20 @@ use bevy::prelude::*;
 use crate::SolarSystemSet;
 
 mod building;
-pub use building::*;
-
-mod extractor;
-pub use extractor::*;
-
-mod warehouse;
-pub use warehouse::*;
-
-mod logistic_freight;
-pub use logistic_freight::*;
-
 mod crafter;
-pub use crafter::*;
-
-mod spaceport;
-pub use spaceport::*;
-
+mod extractor;
 mod interstellar_gate;
+mod logistic_freight;
+mod spaceport;
+mod warehouse;
+
+pub use building::*;
+pub use crafter::*;
+pub use extractor::*;
 pub use interstellar_gate::*;
+pub use logistic_freight::*;
+pub use spaceport::*;
+pub use warehouse::*;
 
 pub struct BuildingsPlugin;
 
@@ -42,13 +37,6 @@ impl Plugin for BuildingsPlugin {
         )
         .add_observer(observe_unregister_freight)
         .add_observer(observe_freight_inventory_transfer)
-        .add_observer(observe_register_freight)
-        .register_type::<BuildingHighlight>()
-        .register_type::<LogisticFreight>()
-        .register_type::<Spaceport>()
-        .register_type::<Warehouse>()
-        .register_type::<Extractor>()
-        .register_type::<InterstellarGate>()
-        .register_type::<Crafter>();
+        .add_observer(observe_register_freight);
     }
 }

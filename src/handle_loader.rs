@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::{prelude::*, render::mesh::CircleMeshBuilder, sprite::Material2d};
+use bevy::{mesh::CircleMeshBuilder, prelude::*, sprite_render::Material2d};
 
 use crate::universe::random_polygon;
 
@@ -84,7 +84,6 @@ macro_rules! register_material {
         $(
             $app
                 .add_plugins(Material2dPlugin::<$material>::default())
-                .register_type::<$crate::MaterialLoader<$material>>()
                 .add_systems(Update, $crate::scan_material_loaders::<$material>.in_set($crate::GameSet));
         )*
     };

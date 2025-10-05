@@ -14,7 +14,7 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
         align_items: AlignItems::Center,
         ..default()
     },
-    BorderColor(Color::BLACK),
+    BorderColor::all(Color::BLACK),
     BackgroundColor(NORMAL_BUTTON)
 )]
 pub struct UiButton;
@@ -29,15 +29,15 @@ pub fn update_ui_buttons(
         match *interaction {
             Interaction::Pressed => {
                 *color = PRESSED_BUTTON.into();
-                border_color.0 = bevy::color::palettes::css::RED.into();
+                *border_color = bevy::color::palettes::css::RED.into();
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
+                *border_color = Color::WHITE.into();
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
+                *border_color = Color::BLACK.into();
             }
         }
     }

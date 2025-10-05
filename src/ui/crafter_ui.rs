@@ -4,7 +4,7 @@ use crate::{
     buildings::Crafter,
     data::{BuildingId, ItemId},
     items::RecipeOutputs,
-    ui::{build_building_header, build_item_ui, HudWindow, HudWindowParent, InventoryUI, UiButton},
+    ui::{HudWindow, HudWindowParent, InventoryUI, UiButton, build_building_header, build_item_ui},
 };
 
 pub fn scan_crafter_ui(mut commands: Commands, q_crafters: Query<Entity, Added<Crafter>>) {
@@ -14,13 +14,13 @@ pub fn scan_crafter_ui(mut commands: Commands, q_crafters: Query<Entity, Added<C
 }
 
 fn spawn_crafter_ui(
-    trigger: Trigger<Pointer<Click>>,
+    pointer_click: On<Pointer<Click>>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     window_parent: Single<Entity, With<HudWindowParent>>,
     q_crafter: Query<&Crafter>,
 ) {
-    let entity = trigger.target();
+    let entity = pointer_click.entity;
     let crafter = q_crafter.get(entity).unwrap();
 
     commands
@@ -55,7 +55,7 @@ fn spawn_crafter_ui(
                         for recipe in crafter.possible_recipes() {
                             let callback = {
                                 let recipe = *recipe;
-                                move |_trigger: Trigger<Pointer<Click>> ,mut q_crafter: Query<&mut Crafter>| {
+                                move |_pointer_click: On<Pointer<Click>> ,mut q_crafter: Query<&mut Crafter>| {
                                     let mut crafter = q_crafter.get_mut(entity).unwrap();
                                     crafter.set_recipe(recipe);
                                 }

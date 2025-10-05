@@ -6,8 +6,8 @@ use rand::prelude::*;
 
 use super::ActiveSolarSystem;
 use crate::{
-    universe::{build_solar_system, build_star, MainCamera, Ship, SolarSystem},
     GameState, SaveUniverse,
+    universe::{MainCamera, Ship, SolarSystem, build_solar_system, build_star},
 };
 
 const OBSERVABLE_UNIVERSE_RADIUS: i32 = 5;
@@ -37,7 +37,7 @@ pub fn spawn_universe_map(
     commands
         .spawn((
             Name::new("UniverseMap"),
-            StateScoped(GameState::GameUniverseMap),
+            DespawnOnExit(GameState::GameUniverseMap),
             Transform::from_scale(Vec3::splat(SOLAR_SYSTEMS_SCALE)),
             Visibility::default(),
         ))
@@ -69,7 +69,7 @@ pub fn spawn_universe_map(
                     let mut rng = StdRng::seed_from_u64(seed);
 
                     c.spawn(build_star(&mut rng, map_position)).observe(
-                        move |_trigger: Trigger<Pointer<Click>>, mut commands: Commands| {
+                        move |_pointer_click: On<Pointer<Click>>, mut commands: Commands| {
                             commands.trigger(TravelToSolarSystem(position));
                         },
                     );
@@ -107,8 +107,8 @@ pub fn clean_universe_map(
 
 pub fn update_universe_map(
     time: Res<Time>,
-    mut ev_scroll: EventReader<MouseWheel>,
-    mut ev_motion: EventReader<MouseMotion>,
+    mut ev_scroll: MessageReader<MouseWheel>,
+    mut ev_motion: MessageReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     q_camera: Single<(&mut Transform, &mut Projection), With<UniverseMapCamera>>,
@@ -163,7 +163,7 @@ pub fn update_universe_map(
 pub struct TravelToSolarSystem(pub [i32; 2]);
 
 pub fn travel_to_solar_system(
-    trigger: Trigger<TravelToSolarSystem>,
+    travel: On<TravelToSolarSystem>,
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
     mut set: ParamSet<(
@@ -177,12 +177,12 @@ pub fn travel_to_solar_system(
     )>,
     ship_entity: Single<Entity, With<Ship>>,
 ) {
-    info!("Travelling to solar system at {:?}", trigger.0);
+    info!("Travelling to solar system at {:?}", travel.0);
 
     // save game just in case
     commands.queue(SaveUniverse);
 
-    let solar_system_position = trigger.0;
+    let solar_system_position = travel.0;
 
     let (active_entity, mut active_solar_system_visibility) = set.p0().into_inner();
     *active_solar_system_visibility = Visibility::Hidden;

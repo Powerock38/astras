@@ -2,17 +2,17 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    ui::{build_load_ui, UiButton},
-    universe::{build_ship, build_solar_system},
     GameState, UniverseName,
+    ui::{UiButton, build_load_ui},
+    universe::{build_ship, build_solar_system},
 };
 
 pub fn setup_main_menu(mut commands: Commands) {
-    commands.spawn((StateScoped(GameState::MainMenu), Camera2d));
+    commands.spawn((DespawnOnExit(GameState::MainMenu), Camera2d));
 
     commands
         .spawn((
-            StateScoped(GameState::MainMenu),
+            DespawnOnExit(GameState::MainMenu),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -34,7 +34,7 @@ pub fn setup_main_menu(mut commands: Commands) {
 }
 
 fn spawn_new_game(
-    _trigger: Trigger<Pointer<Click>>,
+    _pointer_click: On<Pointer<Click>>,
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
 ) {

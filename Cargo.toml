@@ -1,15 +1,15 @@
 [package]
 name = "astras"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-bevy = { version = "0.16.1", features = ["bevy_remote"] }
+bevy = "0.17.2"
 rand = "0.9"
 uuid = "*"
 
 [features]
-dev = ["bevy/dynamic_linking", "bevy/file_watcher"]
+dev = ["bevy/dynamic_linking", "bevy/file_watcher", "bevy/bevy_dev_tools", "bevy/bevy_remote"]
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }

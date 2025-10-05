@@ -15,13 +15,13 @@ pub struct Notification {
 }
 
 pub fn observe_notifications(
-    trigger: Trigger<NotificationEvent>,
+    notif: On<NotificationEvent>,
     mut commands: Commands,
     zone: Single<Entity, With<NotificationZone>>,
 ) {
     commands.entity(*zone).with_children(|c| {
         c.spawn((
-            Text::new(trigger.0.clone()),
+            Text::new(notif.0.clone()),
             TextFont {
                 font_size: NOTIFICATION_SIZE,
                 ..default()

@@ -70,10 +70,10 @@ pub fn update_dockable_on_astre(
             if can_dock {
                 let astre_global_z = astre_global_transform.translation().z;
 
-                if let Some((_, _, z)) = on_astre_option {
-                    if z >= astre_global_z {
-                        continue; // Already on a closer astre (on the z plane)
-                    }
+                if let Some((_, _, z)) = on_astre_option
+                    && z >= astre_global_z
+                {
+                    continue; // Already on a closer astre (on the z plane)
                 }
 
                 on_astre_option = Some((entity_astre, astre_global_transform, astre_global_z));
@@ -83,12 +83,11 @@ pub fn update_dockable_on_astre(
         // Found an astre to dock on
         if let Some((entity_astre, astre_global_transform, _)) = on_astre_option {
             // If already docked on this astre, skip
-            if dockable.on_astre {
-                if let Some(dockable_child_of) = dockable_parent {
-                    if dockable_child_of.parent() == entity_astre {
-                        continue;
-                    }
-                }
+            if dockable.on_astre
+                && let Some(dockable_child_of) = dockable_parent
+                && dockable_child_of.parent() == entity_astre
+            {
+                continue;
             }
 
             // Entity goes in referential of astre

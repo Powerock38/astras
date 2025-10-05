@@ -1,11 +1,6 @@
-use bevy::{
-    input::common_conditions::input_just_pressed,
-    prelude::*,
-    remote::{http::RemoteHttpPlugin, RemotePlugin},
-};
+use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use buildings::BuildingsPlugin;
 use handle_loader::*;
-use items::ItemsPlugin;
 use main_menu::*;
 use save_load::*;
 use state::*;
@@ -25,16 +20,16 @@ mod universe;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugins(MeshPickingPlugin)
-        // .add_plugins((bevy::diagnostic::LogDiagnosticsPlugin::default(), bevy::diagnostic::FrameTimeDiagnosticsPlugin))
         .add_plugins((
-            RemotePlugin::default(),
-            RemoteHttpPlugin::default().with_header("Access-Control-Allow-Origin", "*"),
+            DefaultPlugins,
+            MeshPickingPlugin,
+            // bevy::diagnostic::LogDiagnosticsPlugin::default(),
+            // bevy::diagnostic::FrameTimeDiagnosticsPlugin
+            // RemotePlugin::default(),
+            // RemoteHttpPlugin::default().with_header("Access-Control-Allow-Origin", "*"),
         ))
+        .add_plugins((UniversePlugin, UIPlugin, BuildingsPlugin))
         .insert_resource(ClearColor(Color::BLACK))
-        .register_type::<SpriteLoader>()
-        .add_plugins((UniversePlugin, UIPlugin, ItemsPlugin, BuildingsPlugin))
         .configure_sets(
             PreUpdate,
             (SolarSystemSet.run_if(in_state(GameState::GameSolarSystem)),),
@@ -68,6 +63,5 @@ fn main() {
         )
         .add_observer(load_universe)
         .init_state::<GameState>()
-        .enable_state_scoped_entities::<GameState>()
         .run();
 }

@@ -1,8 +1,6 @@
 use bevy::{
-    prelude::*,
-    reflect::TypePath,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
+    prelude::*, reflect::TypePath, render::render_resource::AsBindGroup, shader::ShaderRef,
+    sprite_render::Material2d,
 };
 use rand::Rng;
 

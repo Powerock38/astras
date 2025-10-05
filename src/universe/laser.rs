@@ -1,7 +1,8 @@
 use bevy::{
     prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{AlphaMode2d, Material2d},
+    render::render_resource::AsBindGroup,
+    shader::ShaderRef,
+    sprite_render::{AlphaMode2d, Material2d},
 };
 use rand::Rng;
 
@@ -55,7 +56,7 @@ pub fn update_lasers(
     mut q_lasers: Query<(Entity, &mut Laser)>,
 ) {
     for (entity, mut laser) in &mut q_lasers {
-        if laser.ttl.tick(time.delta()).finished() {
+        if laser.ttl.tick(time.delta()).is_finished() {
             commands.entity(entity).despawn();
         }
     }

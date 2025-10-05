@@ -1,22 +1,20 @@
 use std::{fs::File, io::Write, path::Path};
 
 use bevy::{
+    camera::{CameraMainTextureUsages, visibility::VisibilityClass},
     ecs::system::SystemState,
     prelude::*,
-    render::{
-        camera::{CameraMainTextureUsages, CameraRenderGraph},
-        view::VisibilityClass,
-    },
+    render::camera::CameraRenderGraph,
     tasks::IoTaskPool,
 };
 
 use crate::{
+    GameState,
     ui::{Hud, NotificationEvent},
     universe::{
         AsteroidMaterial, BackgroundMaterial, LaserMaterial, PlanetMaterial, Ship, SolarSystem,
         StarMaterial,
     },
-    GameState,
 };
 
 pub const SAVES_DIR: &str = "saves";
@@ -101,7 +99,7 @@ impl Command for SaveUniverse {
 }
 
 pub fn load_universe(
-    trigger: Trigger<LoadUniverse>,
+    load_universe: On<LoadUniverse>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut scene_spawner: ResMut<SceneSpawner>,
@@ -119,7 +117,7 @@ pub fn load_universe(
         commands.entity(*hud).despawn();
     }
 
-    let universe_name = trigger.0.clone();
+    let universe_name = load_universe.0.clone();
 
     commands.insert_resource(UniverseName(universe_name.clone()));
 

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::seq::IndexedRandom;
 
 use crate::{
-    data::{ItemId, ELEMENTS},
+    data::{ELEMENTS, ItemId},
     items::{ElementState, Inventory, LogisticProvider, LogisticScope},
     universe::Astre,
 };
@@ -63,7 +63,7 @@ pub fn update_extractors(
     for (mut extractor, mut extractor_inventory, child_of) in &mut q_extractors {
         extractor.cooldown.tick(time.delta());
 
-        if extractor.cooldown.finished() && extractor_inventory.remaining_space() > 0 {
+        if extractor.cooldown.is_finished() && extractor_inventory.remaining_space() > 0 {
             let mut astre_inventory = q_astre_inventories.get_mut(child_of.parent()).unwrap();
 
             let mut rng = rand::rng();

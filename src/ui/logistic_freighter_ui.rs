@@ -1,17 +1,15 @@
 use bevy::{
+    camera::{RenderTarget, Viewport},
     prelude::*,
-    render::{
-        camera::{RenderTarget, Viewport},
-        render_resource::{
-            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
-        },
+    render::render_resource::{
+        Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
     },
 };
 
 use crate::{
     buildings::LogisticFreight,
     items::{LogisticProvider, LogisticScope},
-    ui::{build_building_header, HudWindow, HudWindowDependent, HudWindowParent, InventoryUI},
+    ui::{HudWindow, HudWindowDependent, HudWindowParent, InventoryUI, build_building_header},
 };
 
 pub fn scan_logistic_freighter(
@@ -34,12 +32,10 @@ pub fn scan_logistic_freighter(
 }
 
 fn spawn_cargo_shuttle_ui(
-    trigger: Trigger<Pointer<Click>>,
+    pointer_click: On<Pointer<Click>>,
     mut commands: Commands,
     window_parent: Single<Entity, With<HudWindowParent>>,
 ) {
-    let entity = trigger.target();
-
     commands
         .entity(*window_parent)
         .despawn_related::<Children>()
@@ -48,21 +44,21 @@ fn spawn_cargo_shuttle_ui(
                 HudWindow,
                 children![
                     build_building_header("Cargo Shuttle"),
-                    InventoryUI::new(entity)
+                    InventoryUI::new(pointer_click.entity)
                 ],
             ));
         });
 }
 
 fn spawn_interplanetary_freighter_ui(
-    trigger: Trigger<Pointer<Click>>,
+    pointer_click: On<Pointer<Click>>,
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
     window_parent: Single<Entity, With<HudWindowParent>>,
     q_interplanetary_freighters: Query<&LogisticFreight>,
     q_providers: Query<Entity, With<LogisticProvider>>,
 ) {
-    let entity = trigger.target();
+    let entity = pointer_click.entity;
     let freight = q_interplanetary_freighters.get(entity).unwrap();
 
     let image_handle = if let Some(logistic_journey) = freight.logistic_journey() {

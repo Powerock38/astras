@@ -1,15 +1,13 @@
 use bevy::{
-    ecs::spawn::SpawnWith,
-    prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
+    ecs::spawn::SpawnWith, prelude::*, render::render_resource::AsBindGroup, shader::ShaderRef,
+    sprite_render::Material2d,
 };
 use rand::prelude::*;
 
 use crate::{
-    items::{ElementOnAstre, ElementState, Inventory},
-    universe::{build_asteroid_belt, build_planet_group, Astre},
     MaterialLoader, MeshType,
+    items::{ElementOnAstre, ElementState, Inventory},
+    universe::{Astre, build_asteroid_belt, build_planet_group},
 };
 
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect, Default)]
@@ -33,7 +31,7 @@ impl Material2d for StarMaterial {
 #[require(Astre, MaterialLoader<StarMaterial>)]
 pub struct Star;
 
-pub fn build_star(rng: &mut StdRng, position: Vec2) -> impl Bundle {
+pub fn build_star(rng: &mut StdRng, position: Vec2) -> impl Bundle + use<> {
     let radius = rng.random_range((10_000.)..30_000.);
 
     let nb_planets = rng.random_range(4..=15);
@@ -66,7 +64,6 @@ pub fn build_star(rng: &mut StdRng, position: Vec2) -> impl Bundle {
         rotation: rotation_direction * rotation_speed,
     };
 
-    let asteroids = build_asteroid_belt(rng);
     let mut rng = rng.clone();
 
     (
@@ -80,9 +77,7 @@ pub fn build_star(rng: &mut StdRng, position: Vec2) -> impl Bundle {
         },
         Transform::from_translation(position.extend(0.)),
         Children::spawn((SpawnWith(move |c: &mut ChildSpawner| {
-            for asteroid in asteroids {
-                c.spawn(asteroid);
-            }
+            build_asteroid_belt(c, &mut rng);
             build_planet_group(c, &mut rng, radius / 2., orbit_distance, nb_planets, 0);
         }),)),
     )

@@ -1,65 +1,42 @@
 use bevy::{
-    input::common_conditions::input_just_pressed, prelude::*, sprite::Material2dPlugin,
-    transform::TransformSystem,
+    input::common_conditions::input_just_pressed, prelude::*, sprite_render::Material2dPlugin,
 };
 
-use crate::{register_material, GameSet, GameState, SolarSystemSet, UniverseMapSet};
-
-mod universe_map;
-pub use universe_map::*;
-
-mod solar_system;
-pub use solar_system::*;
-
-mod camera;
-pub use camera::*;
-
-mod background;
-pub use background::*;
-
-mod ship;
-pub use ship::*;
-
-mod astre;
-pub use astre::*;
-
-mod planet;
-pub use planet::*;
-
-mod star;
-pub use star::*;
-
-mod dockable_on_astre;
-pub use dockable_on_astre::*;
-
-mod orbit;
-pub use orbit::*;
-
-mod worm;
-pub use worm::*;
-
-mod laser;
-pub use laser::*;
+use crate::{GameSet, GameState, SolarSystemSet, UniverseMapSet, register_material};
 
 mod asteroid;
+mod astre;
+mod background;
+mod camera;
+mod dockable_on_astre;
+mod laser;
+mod orbit;
+mod planet;
+mod ship;
+mod solar_system;
+mod star;
+mod universe_map;
+mod worm;
+
 pub use asteroid::*;
+pub use astre::*;
+pub use background::*;
+pub use camera::*;
+pub use dockable_on_astre::*;
+pub use laser::*;
+pub use orbit::*;
+pub use planet::*;
+pub use ship::*;
+pub use solar_system::*;
+pub use star::*;
+pub use universe_map::*;
+pub use worm::*;
 
 pub struct UniversePlugin;
 
 impl Plugin for UniversePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(Material2dPlugin::<BackgroundMaterial>::default())
-            .register_type::<SolarSystem>()
-            .register_type::<Ship>()
-            .register_type::<Astre>()
-            .register_type::<Planet>()
-            .register_type::<Star>()
-            .register_type::<Asteroid>()
-            .register_type::<Laser>()
-            .register_type::<DockableOnAstre>()
-            .register_type::<Orbit>()
-            .register_type::<Worm>()
-            .register_type::<WormSegment>()
             .add_systems(OnEnter(GameState::GameUniverseMap), spawn_universe_map)
             .add_systems(OnExit(GameState::GameUniverseMap), clean_universe_map)
             .add_systems(PreUpdate, (set_active_solar_system).in_set(SolarSystemSet))
@@ -99,7 +76,7 @@ impl Plugin for UniversePlugin {
             )
             .add_systems(
                 PostUpdate,
-                (update_dockable_on_astre.after(TransformSystem::TransformPropagate))
+                (update_dockable_on_astre.after(TransformSystems::Propagate))
                     .in_set(SolarSystemSet),
             )
             .add_observer(travel_to_solar_system);

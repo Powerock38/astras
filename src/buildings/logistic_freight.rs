@@ -91,7 +91,7 @@ pub fn update_logistic_freights(
     q_parent: Query<&ChildOf>,
 ) {
     for (freight_entity, mut freight, child_of, transform, inventory) in &mut q_logistic_freights {
-        if freight.cooldown.tick(time.delta()).finished() {
+        if freight.cooldown.tick(time.delta()).is_finished() {
             // If we already have a journey
             if let Some((journey, move_target)) = &mut freight.journey {
                 if let Ok((requester_entity, logistic_request, _, requester_transform)) =
@@ -312,27 +312,37 @@ pub struct RegisterFreight {
 }
 
 pub fn observe_register_freight(
-    trigger: Trigger<RegisterFreight>,
+    register_freight: On<RegisterFreight>,
     mut q_logistic_freights: Query<
         &mut LogisticFreight,
         (Without<LogisticRequest>, Without<LogisticProvider>),
     >,
     mut paramset: ParamSet<(Query<&mut LogisticRequest>, Query<&mut LogisticProvider>)>,
 ) {
-    let mut freight = q_logistic_freights.get_mut(trigger.freight).unwrap();
+    let mut freight = q_logistic_freights
+        .get_mut(register_freight.freight)
+        .unwrap();
 
     {
         let mut q_logistic_provider = paramset.p1();
-        let mut logistic_provider = q_logistic_provider.get_mut(trigger.provider).unwrap();
-        logistic_provider.freights.push(trigger.freight);
+        let mut logistic_provider = q_logistic_provider
+            .get_mut(register_freight.provider)
+            .unwrap();
+        logistic_provider.freights.push(register_freight.freight);
     }
 
     let mut q_logistic_request = paramset.p0();
-    let mut logistic_request = q_logistic_request.get_mut(trigger.requester).unwrap();
-    logistic_request.freights.push(trigger.freight);
+    let mut logistic_request = q_logistic_request
+        .get_mut(register_freight.requester)
+        .unwrap();
+    logistic_request.freights.push(register_freight.freight);
 
     freight.journey = Some((
-        LogisticJourney::new(logistic_request.id(), trigger.provider, trigger.requester),
+        LogisticJourney::new(
+            logistic_request.id(),
+            register_freight.provider,
+            register_freight.requester,
+        ),
         None,
     ));
 }
@@ -341,14 +351,14 @@ pub fn observe_register_freight(
 pub struct UnregisterFreight(Entity);
 
 pub fn observe_unregister_freight(
-    trigger: Trigger<UnregisterFreight>,
+    unregister_freight: On<UnregisterFreight>,
     mut q_logistic_freights: Query<
         &mut LogisticFreight,
         (Without<LogisticRequest>, Without<LogisticProvider>),
     >,
     mut paramset: ParamSet<(Query<&mut LogisticRequest>, Query<&mut LogisticProvider>)>,
 ) {
-    let freight_entity = trigger.0;
+    let freight_entity = unregister_freight.0;
     let mut freight = q_logistic_freights.get_mut(freight_entity).unwrap();
 
     if let Some((journey, _)) = freight.journey.take() {
@@ -373,24 +383,24 @@ pub struct FreightInventoryTransfer {
 }
 
 pub fn observe_freight_inventory_transfer(
-    trigger: Trigger<FreightInventoryTransfer>,
+    freight_inv_transfer: On<FreightInventoryTransfer>,
     mut commands: Commands,
     mut q_freight: Query<(&LogisticFreight, &mut Inventory)>,
     mut q_providers_or_requesters: Query<&mut Inventory, Without<LogisticFreight>>,
 ) {
-    let (freight, freight_inventory) = q_freight.get_mut(trigger.freight).unwrap();
+    let (freight, freight_inventory) = q_freight.get_mut(freight_inv_transfer.freight).unwrap();
     let other_inventory = q_providers_or_requesters
-        .get_mut(trigger.provider_or_requester)
+        .get_mut(freight_inv_transfer.provider_or_requester)
         .unwrap();
 
-    let (mut from, mut to) = if trigger.is_provider {
+    let (mut from, mut to) = if freight_inv_transfer.is_provider {
         (other_inventory, freight_inventory)
     } else {
         (freight_inventory, other_inventory)
     };
 
     // Try transfering some items
-    for (&item_id, &quantity) in &trigger.items {
+    for (&item_id, &quantity) in &freight_inv_transfer.items {
         let q = from.transfer_to(
             &mut to,
             item_id,
@@ -404,5 +414,5 @@ pub fn observe_freight_inventory_transfer(
     }
 
     // We didn't transfer any items (didn't reach return above), unregister freight
-    commands.trigger(UnregisterFreight(trigger.freight));
+    commands.trigger(UnregisterFreight(freight_inv_transfer.freight));
 }

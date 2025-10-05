@@ -1,11 +1,11 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 
 use crate::{
+    SpriteLoader,
     buildings::Crafter,
     data::{BuildingId, RecipeId},
     items::{Inventory, RecipeOutputs},
     universe::{Asteroid, Astre, DockableOnAstre, SHIP_Z},
-    SpriteLoader,
 };
 
 const BUILDING_PREVIEW_Z: f32 = SHIP_Z - 1.0;
@@ -25,7 +25,6 @@ pub struct BuildingData {
 }
 
 impl BuildingData {
-
     pub fn sprite_path(&self) -> String {
         format!("sprites/{}.png", self.sprite_name)
     }
@@ -208,9 +207,9 @@ pub fn add_highlight_selection(
     }
 }
 
-fn recolor_on<E>(color: Color) -> impl Fn(Trigger<E>, Query<&mut Sprite>) {
+fn recolor_on<E: EntityEvent>(color: Color) -> impl Fn(On<E>, Query<&mut Sprite>) {
     move |ev, mut sprites| {
-        let Ok(mut sprite) = sprites.get_mut(ev.target()) else {
+        let Ok(mut sprite) = sprites.get_mut(ev.event_target()) else {
             return;
         };
         sprite.color = color.with_alpha(sprite.color.alpha());

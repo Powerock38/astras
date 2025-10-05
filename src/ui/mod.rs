@@ -2,38 +2,29 @@ use bevy::prelude::*;
 
 use crate::SolarSystemSet;
 
-mod buttons;
-pub use buttons::*;
-
-mod hud;
-pub use hud::*;
-
-mod notification;
-pub use notification::*;
-
-mod save_load_ui;
-pub use save_load_ui::*;
-
-mod ship_ui;
-pub use ship_ui::*;
-
-mod inventory_ui;
-pub use inventory_ui::*;
-
 mod building_ui;
-pub use building_ui::*;
-
+mod buttons;
 mod crafter_ui;
-pub use crafter_ui::*;
-
 mod extractor_ui;
-pub use extractor_ui::*;
-
-mod spaceport_ui;
-pub use spaceport_ui::*;
-
+mod hud;
+mod inventory_ui;
 mod logistic_freighter_ui;
+mod notification;
+mod save_load_ui;
+mod ship_ui;
+mod spaceport_ui;
+
+pub use building_ui::*;
+pub use buttons::*;
+pub use crafter_ui::*;
+pub use extractor_ui::*;
+pub use hud::*;
+pub use inventory_ui::*;
 pub use logistic_freighter_ui::*;
+pub use notification::*;
+pub use save_load_ui::*;
+pub use ship_ui::*;
+pub use spaceport_ui::*;
 
 pub struct UIPlugin;
 

@@ -2,12 +2,12 @@ use bevy::prelude::*;
 use rand::seq::IndexedRandom;
 
 use crate::{
+    MaterialLoader, MeshType, SpriteLoader,
     buildings::PlacingBuilding,
     data::ELEMENTS,
     items::{ElementState, Inventory},
     ui::NotificationEvent,
     universe::{Astre, DockableOnAstre, Laser, LaserMaterial},
-    MaterialLoader, MeshType, SpriteLoader,
 };
 
 pub const SHIP_Z: f32 = 100.;
@@ -124,13 +124,13 @@ pub fn update_ship(
 }
 
 pub fn update_ship_mining(
-    mut trigger: Trigger<Pointer<Click>>,
+    mut pointer_click: On<Pointer<Click>>,
     mut commands: Commands,
     placing_building: Option<Res<PlacingBuilding>>,
     q_ship: Single<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
     mut q_astres: Query<(&Astre, &mut Inventory, &GlobalTransform), Without<Ship>>,
 ) {
-    trigger.propagate(false);
+    pointer_click.propagate(false);
 
     let (ship_entity, ship, transform, mut inventory) = q_ship.into_inner();
 
@@ -138,74 +138,72 @@ pub fn update_ship_mining(
         return;
     }
 
-    let astre_entity = trigger.target();
-
     // TODO ship.mining_cooldown.tick(time.delta()).finished() ; ship.mining_cooldown.reset();
 
-    if let Ok((astre, mut astre_inventory, astre_global_transform)) = q_astres.get_mut(astre_entity)
+    if let Ok((astre, mut astre_inventory, astre_global_transform)) =
+        q_astres.get_mut(pointer_click.entity)
+        && let Some(position) = pointer_click.hit.position
     {
-        if let Some(position) = trigger.hit.position {
-            let position = position.truncate();
-            let ship_position = transform.translation().truncate();
-            let astre_position = astre_global_transform.translation().truncate();
+        let position = position.truncate();
+        let ship_position = transform.translation().truncate();
+        let astre_position = astre_global_transform.translation().truncate();
 
-            if position.distance(astre_position) < astre.atmosphere_radius()
-                && position.distance(ship_position) < SHIP_ACTION_RANGE
-            {
-                let atmosphere_mining = position.distance(astre_position) > astre.surface_radius();
+        if position.distance(astre_position) < astre.atmosphere_radius()
+            && position.distance(ship_position) < SHIP_ACTION_RANGE
+        {
+            let atmosphere_mining = position.distance(astre_position) > astre.surface_radius();
 
-                let item_ids = astre_inventory
-                    .all_ids()
-                    .iter()
-                    .filter(|id| {
-                        ELEMENTS
-                            .get(*id)
-                            .is_some_and(|e| !atmosphere_mining || e.state == ElementState::Gas)
-                    })
-                    .copied()
-                    .collect::<Vec<_>>();
+            let item_ids = astre_inventory
+                .all_ids()
+                .iter()
+                .filter(|id| {
+                    ELEMENTS
+                        .get(*id)
+                        .is_some_and(|e| !atmosphere_mining || e.state == ElementState::Gas)
+                })
+                .copied()
+                .collect::<Vec<_>>();
 
-                let mut rng = rand::rng();
-                let random_item_id =
-                    item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(*id));
+            let mut rng = rand::rng();
+            let random_item_id =
+                item_ids.choose_weighted(&mut rng, |id| astre_inventory.quantity(*id));
 
-                if let Ok(item_id) = random_item_id {
-                    let quantity = astre_inventory
-                        .quantity(*item_id)
-                        .min(ship.mining_amount_per_tick);
+            if let Ok(item_id) = random_item_id {
+                let quantity = astre_inventory
+                    .quantity(*item_id)
+                    .min(ship.mining_amount_per_tick);
 
-                    astre_inventory.transfer_to(&mut inventory, *item_id, quantity);
+                astre_inventory.transfer_to(&mut inventory, *item_id, quantity);
 
-                    // Laser beam
-                    let color = ELEMENTS
-                        .get(item_id)
-                        .map_or(Color::WHITE.into(), |e| e.color.into());
+                // Laser beam
+                let color = ELEMENTS
+                    .get(item_id)
+                    .map_or(Color::WHITE.into(), |e| e.color.into());
 
-                    let relative_position = ship_position - position;
-                    let angle = relative_position.y.atan2(relative_position.x);
+                let relative_position = ship_position - position;
+                let angle = relative_position.y.atan2(relative_position.x);
 
-                    commands.entity(ship_entity).with_children(|c| {
-                        c.spawn((
-                            Laser::new(0.5),
-                            MaterialLoader {
-                                mesh_type: MeshType::Rectangle(
-                                    Vec2::ZERO,
-                                    Vec2::new(relative_position.length(), MINING_LASER_WIDTH),
-                                ),
-                                material: LaserMaterial::new(color),
-                            },
-                            Transform::from_translation((-relative_position / 2.0).extend(-0.1))
-                                .with_rotation(Quat::from_rotation_z(angle)),
-                        ));
-                    });
+                commands.entity(ship_entity).with_children(|c| {
+                    c.spawn((
+                        Laser::new(0.5),
+                        MaterialLoader {
+                            mesh_type: MeshType::Rectangle(
+                                Vec2::ZERO,
+                                Vec2::new(relative_position.length(), MINING_LASER_WIDTH),
+                            ),
+                            material: LaserMaterial::new(color),
+                        },
+                        Transform::from_translation((-relative_position / 2.0).extend(-0.1))
+                            .with_rotation(Quat::from_rotation_z(angle)),
+                    ));
+                });
 
-                    let item = item_id.data();
+                let item = item_id.data();
 
-                    commands.trigger(NotificationEvent(format!(
-                        "Mined {} (x{quantity})",
-                        item.name
-                    )));
-                }
+                commands.trigger(NotificationEvent(format!(
+                    "Mined {} (x{quantity})",
+                    item.name
+                )));
             }
         }
     }

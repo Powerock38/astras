@@ -1,12 +1,13 @@
 use bevy::{
-    core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
+    core_pipeline::tonemapping::Tonemapping,
     input::mouse::{MouseMotion, MouseWheel},
+    post_process::bloom::Bloom,
     prelude::*,
 };
 
 use crate::{
-    universe::{build_background, Background, BackgroundMaterial, Ship},
     GameState,
+    universe::{Background, BackgroundMaterial, Ship, build_background},
 };
 
 const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
@@ -33,10 +34,6 @@ pub fn spawn_camera(
             Name::new("MainCamera"),
             MainCamera,
             Camera2d,
-            Camera {
-                hdr: true,
-                ..default()
-            },
             Projection::Orthographic(OrthographicProjection {
                 scale: BASE_SCALE,
                 near: -1000.0,
@@ -54,8 +51,8 @@ pub fn spawn_camera(
 pub fn update_camera(
     time: Res<Time>,
     mut next_state: ResMut<NextState<GameState>>,
-    mut ev_scroll: EventReader<MouseWheel>,
-    mut ev_motion: EventReader<MouseMotion>,
+    mut ev_scroll: MessageReader<MouseWheel>,
+    mut ev_motion: MessageReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     window: Single<&Window>,
     q_camera: Single<(&Camera, &GlobalTransform, &mut Projection), With<MainCamera>>,

@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
 use crate::{
+    SpriteLoader,
     buildings::BuildingHighlight,
     data::RecipeId,
     items::{CanCraftResult, Inventory, LogisticRequest, LogisticScope},
-    SpriteLoader,
 };
 
 #[derive(Component, Reflect, Default)]
@@ -46,7 +46,6 @@ impl Crafter {
     pub fn possible_recipes(&self) -> &Vec<RecipeId> {
         &self.possible_recipes
     }
-
 
     pub fn is_construction_site(&self) -> bool {
         self.is_construction_site
@@ -92,7 +91,7 @@ pub fn update_crafters(
                 CanCraftResult::Yes => {
                     commands.entity(entity).remove::<LogisticRequest>();
 
-                    if recipe_crafter.progress.tick(time.delta()).finished() {
+                    if recipe_crafter.progress.tick(time.delta()).is_finished() {
                         recipe_crafter.progress.reset();
                         let building_output = inventory.craft(recipe_crafter.recipe);
 

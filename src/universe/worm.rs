@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::{ecs::spawn::SpawnIter, prelude::*};
 use rand::prelude::*;
 
-use crate::{universe::SHIP_Z, SpriteLoader};
+use crate::{SpriteLoader, universe::SHIP_Z};
 
 const WORM_Z: f32 = SHIP_Z - 2.0;
 const WORM_Z_DELTA: f32 = 0.001;
@@ -25,7 +25,7 @@ pub struct Worm {
 #[reflect(Component, Default)]
 pub struct WormSegment;
 
-pub fn build_worm(rng: &mut StdRng, position: Vec2) -> impl Bundle {
+pub fn build_worm(rng: &mut StdRng, position: Vec2) -> impl Bundle + use<> {
     let size = rng.random_range(1. ..=10.);
     let length = rng.random_range(5..=50);
     let speed = rng.random_range(100. ..=1000.);
@@ -82,7 +82,11 @@ pub fn update_worms(
     mut q_segments: Query<&mut Transform, (With<WormSegment>, Without<Worm>)>,
 ) {
     for (mut worm, mut transform, segments) in &mut q_worms {
-        if worm.change_direction_cooldown.tick(time.delta()).finished() {
+        if worm
+            .change_direction_cooldown
+            .tick(time.delta())
+            .is_finished()
+        {
             let clamped_angle = PI / 1024.;
             let add_angle = rand::rng().random_range(0.0..=clamped_angle) - clamped_angle;
 
