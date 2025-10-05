@@ -21,11 +21,14 @@ pub fn scan_sprite_loaders(
 ) {
     for (entity, sprite_loader) in &query {
         let image = asset_server.load(sprite_loader.texture_path.clone());
-        commands.entity(entity).insert(Sprite {
-            image,
-            color: sprite_loader.color,
-            ..default()
-        });
+        commands.entity(entity).insert((
+            Sprite {
+                image,
+                color: sprite_loader.color,
+                ..default()
+            },
+            Pickable::default(),
+        ));
     }
 }
 

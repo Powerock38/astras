@@ -124,14 +124,12 @@ pub fn update_ship(
 }
 
 pub fn update_ship_mining(
-    mut pointer_click: On<Pointer<Click>>,
+    pointer_click: On<Pointer<Click>>,
     mut commands: Commands,
     placing_building: Option<Res<PlacingBuilding>>,
     q_ship: Single<(Entity, &Ship, &GlobalTransform, &mut Inventory)>,
     mut q_astres: Query<(&Astre, &mut Inventory, &GlobalTransform), Without<Ship>>,
 ) {
-    pointer_click.propagate(false);
-
     let (ship_entity, ship, transform, mut inventory) = q_ship.into_inner();
 
     if placing_building.is_some() {

@@ -161,7 +161,7 @@ fn build_planet(
 
     let atmosphere_density = match planet_type {
         PlanetType::Airless => 0.0,
-        PlanetType::Gas => rng.random_range(0.5..0.9),
+        PlanetType::Gas => rng.random_range(0.8..1.0),
         PlanetType::Classic => rng.random_range(0.01..0.3),
     };
 

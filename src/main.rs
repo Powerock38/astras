@@ -23,11 +23,14 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             MeshPickingPlugin,
+            // bevy::dev_tools::picking_debug::DebugPickingPlugin,
             // bevy::diagnostic::LogDiagnosticsPlugin::default(),
             // bevy::diagnostic::FrameTimeDiagnosticsPlugin
-            // RemotePlugin::default(),
-            // RemoteHttpPlugin::default().with_header("Access-Control-Allow-Origin", "*"),
+            bevy::remote::RemotePlugin::default(),
+            bevy::remote::http::RemoteHttpPlugin::default()
+                .with_header("Access-Control-Allow-Origin", "*"),
         ))
+        // .insert_resource(bevy::dev_tools::picking_debug::DebugPickingMode::Normal)
         .add_plugins((UniversePlugin, UIPlugin, BuildingsPlugin))
         .insert_resource(ClearColor(Color::BLACK))
         .configure_sets(

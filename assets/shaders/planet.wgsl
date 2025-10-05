@@ -40,7 +40,7 @@ fn fragment(
     }
 
     if len > material.surface_ratio / 2.0 {
-        let d = length(in.uv - vec2f(0.5)) * 2.0;
+        let d = len * material.surface_ratio * 4.0;
         let atmo_alpha = material.atmosphere_density * (1.0 - d);
         color = atmo;
         alpha = atmo_alpha;

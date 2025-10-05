@@ -12,7 +12,7 @@ use crate::{
 
 const CAMERA_DOLLY_MAX_LENGTH: f32 = 0.05;
 const CAMEAR_DOLLY_SPEED: f32 = 0.00001;
-const CAMERA_ZOOM_SPEED: f32 = 2.0;
+const CAMERA_ZOOM_SPEED: f32 = 10.0;
 const CAMERA_CHANGE_LERP: f32 = 0.1;
 const CAMERA_PAN_SPEED: f32 = 0.07;
 
